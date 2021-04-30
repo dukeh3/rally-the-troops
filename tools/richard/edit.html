@@ -1,0 +1,268 @@
+<html>
+<style>
+html{background:#9aa}
+</style>
+<svg id="map" width="1688" height="1950">
+<image href="map.jpg" x="0" y="0" width="1688" height="1950" opacity="1.0"/>
+<g id="nodes"/>
+<g id="major" stroke="gold" stroke-width="2"/>
+<g id="minor" stroke="brown" stroke-width="2" stroke-dasharray="4,4"/>
+<g id="river" stroke="skyblue" stroke-width="2"/>
+<g id="sea" stroke="blue" stroke-width="2" stroke-dasharray="4,4"/>
+</svg>
+<p><button onclick="save()">Save</button>
+<p id="data"></p>
+<script>
+
+let print = console.log;
+
+let edges = {}
+let nodes = {
+	"Ireland":{"x":56,"y":362},
+	"Isle of Man":{"x":326,"y":535},
+	"Scotland":{"x":573,"y":97},
+	"Northumbria":{"x":849,"y":233},
+	"Cumbria":{"x":674,"y":431},
+	"North Yorks":{"x":914,"y":544},
+	"East Yorks":{"x":1115,"y":537},
+	"South Yorks":{"x":1049,"y":727},
+	"Lancaster":{"x":766,"y":680},
+	"Caernarvon":{"x":488,"y":901},
+	"Chester":{"x":739,"y":906},
+	"Derby":{"x":936,"y":882},
+	"Lincoln":{"x":1189,"y":808},
+	"Pembroke":{"x":398,"y":1216},
+	"Powys":{"x":566,"y":1100},
+	"Hereford":{"x":727,"y":1177},
+	"Warwick":{"x":877,"y":1081},
+	"Leicester":{"x":1107,"y":1061},
+	"Rutland":{"x":1265,"y":1060},
+	"East Anglia":{"x":1456,"y":1045},
+	"Glamorgan":{"x":570,"y":1325},
+	"Gloucester":{"x":878,"y":1298},
+	"Oxford":{"x":1043,"y":1283},
+	"Middlesex":{"x":1222,"y":1275},
+	"Essex":{"x":1387,"y":1280},
+	"Somerset":{"x":695,"y":1532},
+	"Wilts":{"x":960,"y":1435},
+	"Sussex":{"x":1164,"y":1518},
+	"Kent":{"x":1427,"y":1507},
+	"Cornwall":{"x":313,"y":1736},
+	"Dorset":{"x":747,"y":1621},
+	"France":{"x":260,"y":110},
+	"Calais":{"x":1406,"y":1855},
+	"Irish Sea":{"x":280,"y":684},
+	"North Sea":{"x":1434,"y":375},
+	"English Channel":{"x":915,"y":1820}
+}
+
+function initMap() {
+	edges = {}
+
+	function addEdge(A,B,T) {
+		if (A > B) {
+			let C = B; B = A; A = C;
+		}
+		let id = A + "/" + B;
+		edges[id] = { A: A, B: B, type: T }
+	}
+
+	function yellow(A,B) { addEdge(A,B,"major"); }
+	function red(A,B) { addEdge(A,B,"minor"); }
+	function blue(A,B) { addEdge(A,B,"river"); }
+	function sea(A,B) { addEdge(A,B,"sea"); }
+
+	red("Scotland", "Cumbria");
+	red("Scotland", "Northumbria");
+	red("Cumbria", "Northumbria");
+	red("Cumbria", "North Yorks");
+	red("Cumbria", "Lancaster");
+	blue("Northumbria", "North Yorks");
+	blue("Northumbria", "East Yorks");
+
+	yellow("North Yorks", "East Yorks");
+	yellow("North Yorks", "South Yorks");
+	red("North Yorks", "Lancaster");
+	blue("East Yorks", "South Yorks");
+	red("Lancaster", "South Yorks");
+	blue("Lancaster", "Chester");
+	red("Lancaster", "Derby");
+	yellow("South Yorks", "Derby");
+	blue("South Yorks", "Lincoln");
+
+	blue("Caernarvon", "Chester");
+	red("Caernarvon", "Powys");
+	red("Caernarvon", "Pembroke");
+	yellow("Chester", "Powys");
+	yellow("Chester", "Derby");
+	blue("Chester", "Hereford");
+	yellow("Chester", "Warwick");
+	blue("Derby", "Warwick");
+	blue("Derby", "Leicester");
+	blue("Derby", "Lincoln");
+	yellow("Lincoln", "Leicester");
+	blue("Lincoln", "Rutland");
+
+	red("Pembroke", "Powys");
+	yellow("Pembroke", "Glamorgan");
+	red("Powys", "Hereford");
+	blue("Powys", "Glamorgan");
+	blue("Hereford", "Warwick");
+	blue("Hereford", "Gloucester");
+	blue("Hereford", "Glamorgan");
+	yellow("Warwick", "Leicester");
+	blue("Warwick", "Oxford");
+	blue("Warwick", "Gloucester");
+	yellow("Leicester", "Rutland");
+	blue("Leicester", "Essex");
+	yellow("Leicester", "Middlesex");
+	yellow("Leicester", "Oxford");
+	blue("Rutland", "East Anglia");
+	blue("Rutland", "Essex");
+	yellow("East Anglia", "Essex");
+
+	yellow("Gloucester", "Oxford");
+	blue("Gloucester", "Wilts");
+	yellow("Gloucester", "Somerset");
+	yellow("Oxford", "Middlesex");
+	blue("Oxford", "Wilts");
+	blue("Oxford", "Sussex");
+	blue("Middlesex", "Sussex");
+	blue("Middlesex", "Kent");
+	yellow("Middlesex", "Essex");
+
+	yellow("Cornwall", "Somerset");
+	yellow("Cornwall", "Dorset");
+	yellow("Somerset", "Wilts");
+	yellow("Somerset", "Dorset");
+	yellow("Wilts", "Dorset");
+	yellow("Wilts", "Sussex");
+	blue("Sussex", "Dorset");
+	yellow("Sussex", "Kent");
+
+	sea("Irish Sea", "Ireland");
+	sea("Irish Sea", "Isle of Man");
+	sea("Irish Sea", "Scotland");
+	sea("Irish Sea", "Cumbria");
+	sea("Irish Sea", "Lancaster");
+	sea("Irish Sea", "Chester");
+	sea("Irish Sea", "Caernarvon");
+	sea("Irish Sea", "Pembroke");
+	sea("Irish Sea", "Glamorgan");
+	sea("Irish Sea", "Somerset");
+	sea("Irish Sea", "Cornwall");
+
+	sea("North Sea", "Scotland");
+	sea("North Sea", "Northumbria");
+	sea("North Sea", "East Yorks");
+	sea("North Sea", "Lincoln");
+	sea("North Sea", "Rutland");
+	sea("North Sea", "East Anglia");
+	sea("North Sea", "Essex");
+	sea("North Sea", "Middlesex");
+	sea("North Sea", "Kent");
+
+	sea("English Channel", "Cornwall")
+	sea("English Channel", "Dorset");
+	sea("English Channel", "Sussex");
+	sea("English Channel", "Kent");
+}
+
+//if (window.localStorage.nodes) {
+	//nodes = JSON.parse(window.localStorage.nodes);
+	//edges = JSON.parse(window.localStorage.edges);
+//} else {
+	//initMap();
+//}
+initMap();
+
+function save() {
+	window.localStorage.nodes = JSON.stringify(nodes);
+	window.localStorage.edges = JSON.stringify(edges);
+	document.getElementById("data").textContent = JSON.stringify(nodes);
+}
+
+const svgNS = "http://www.w3.org/2000/svg";
+
+let selection = null;
+let downX = 0, startX = 0;
+let downY = 0, startY = 0;
+function startdrag(evt) {
+	selection = evt.target;
+	downX = evt.clientX;
+	downY = evt.clientY;
+	startX = parseInt(selection.getAttribute("cx"));
+	startY = parseInt(selection.getAttribute("cy"));
+}
+function movedrag(evt) {
+	if (selection) {
+		evt.preventDefault();
+		let deltaX = (evt.clientX - downX);
+		let deltaY = (evt.clientY - downY);
+		selection.setAttribute("cx", startX + deltaX);
+		selection.setAttribute("cy", startY + deltaY);
+		let g = selection.parentElement;
+		let text = g.querySelector("text");
+		text.setAttribute("x", startX + deltaX);
+		text.setAttribute("y", startY + deltaY);
+		nodes[g.id].x = startX + deltaX;
+		nodes[g.id].y = startY + deltaY;
+	}
+}
+function enddrag(evt) {
+	selection = null;
+	buildMap()
+}
+
+function clearGroup(name) {
+	let container = document.getElementById("map").getElementById(name);
+	while (container.firstChild)
+		container.removeChild(container.firstChild);
+}
+
+function buildMap() {
+	clearGroup("nodes");
+	clearGroup("major");
+	clearGroup("minor");
+	clearGroup("river");
+	clearGroup("sea");
+
+	for (let name in nodes) {
+		let node = nodes[name];
+		let svg_g = document.createElementNS(svgNS, "g");
+		svg_g.setAttribute("id", name);
+		let svg_circle = document.createElementNS(svgNS, "circle");
+		svg_circle.setAttribute("cx", node.x || 100);
+		svg_circle.setAttribute("cy", node.y || 100);
+		svg_circle.setAttribute("r", 32);
+		svg_circle.setAttribute("fill", "white");
+		svg_circle.setAttribute("fill-opacity", "0.5");
+		svg_circle.setAttribute("stroke", "red");
+		svg_circle.addEventListener("mousedown", startdrag);
+		svg_circle.addEventListener("mouseup", enddrag);
+		svg_g.appendChild(svg_circle);
+		let svg_text = document.createElementNS(svgNS, "text");
+		svg_text.setAttribute("pointer-events", "none");
+		svg_text.setAttribute("x", (node.x || 100));
+		svg_text.setAttribute("y", (node.y || 100));
+		svg_text.setAttribute("text-anchor", "middle");
+		svg_text.textContent = name;
+		svg_g.appendChild(svg_text);
+		document.getElementById("map").getElementById("nodes").appendChild(svg_g);
+	}
+	document.getElementById("map").addEventListener("mousemove", movedrag);
+
+	for (let id in edges) {
+		let edge = edges[id];
+		let A = nodes[edge.A];
+		let B = nodes[edge.B];
+		let line = document.createElementNS(svgNS, "line");
+		line.setAttribute("x1", A.x); line.setAttribute("y1", A.y);
+		line.setAttribute("x2", B.x); line.setAttribute("y2", B.y);
+		document.getElementById("map").getElementById(edge.type).appendChild(line);
+	}
+}
+
+buildMap()
+
+</script>

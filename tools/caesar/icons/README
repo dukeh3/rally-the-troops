@@ -1,0 +1,2 @@
+Download SVG from https://game-icons.net/ (#fff or #000 size 512)
+Delete everything except <path> node and delete color attributes.

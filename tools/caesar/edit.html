@@ -1,0 +1,388 @@
+<html>
+<svg id="map" width="2097" height="1080">
+<image href="../../public/julius-caesar/map.jpg" x="0" y="0" width="2097" height="1080" opacity="0.3"/>
+<g id="nodes"/>
+<g id="major" stroke="brown" stroke-width="2"/>
+<g id="minor" stroke="brown" stroke-width="2" stroke-dasharray="4,4"/>
+<g id="strait" stroke="blue" stroke-width="8"/>
+<g id="sea" stroke="blue" stroke-width="1" stroke-dasharray="4,10"/>
+</svg>
+<p><button onclick="save()">Save</button>
+<script>
+
+let print = console.log;
+
+let edges = {}
+let nodes = {
+	"ALEXANDRIA":{"x":1736,"y":918,"value":2,"type":"major-port"},
+	"ANTIOCH":{"x":2000,"y":594,"value":1,"type":"port"},
+	"ATHENA":{"x":1474,"y":562,"value":1,"type":"major-port"},
+	"BYZANTIUM":{"x":1689,"y":360,"value":1,"type":"port"},
+	"CARTHAGO NOVA":{"x":406,"y":694,"value":1,"type":"major-port"},
+	"EPHESUS":{"x":1622,"y":541,"value":1,"type":"major-port"},
+	"MASSILIA":{"x":674,"y":336,"value":1,"type":"major-port"},
+	"ROME":{"x":985,"y":380,"value":2,"type":"port"},
+	"SYRACUSE":{"x":1102,"y":662,"value":1,"type":"major-port"},
+	"TARRACO":{"x":478,"y":508,"value":1,"type":"port"},
+	"UTICA":{"x":887,"y":676,"value":1,"type":"major-port"},
+	"Aenos":{"x":1587,"y":393,"type":"port"},
+	"Aleria":{"x":861,"y":398,"type":"port"},
+	"Ambracia":{"x":1341,"y":509,"type":"port"},
+	"Ancyra":{"x":1861,"y":407,"type":"city"},
+	"Appia":{"x":1732,"y":469,"type":"city"},
+	"Aquileia":{"x":1023,"y":175,"type":"port"},
+	"Asculum":{"x":1040,"y":334,"type":"city"},
+	"Asturica":{"x":197,"y":484,"type":"city"},
+	"Badias":{"x":765,"y":828,"type":"city"},
+	"Bilbilis":{"x":389,"y":496,"type":"city"},
+	"Brundisium":{"x":1222,"y":440,"type":"port"},
+	"Burdigala":{"x":423,"y":272,"type":"port"},
+	"Caralis":{"x":842,"y":565,"type":"port"},
+	"Catabathmus":{"x":1602,"y":916,"type":"port"},
+	"Cenabum":{"x":551,"y":112,"type":"city"},
+	"Cordoba":{"x":269,"y":710,"type":"city"},
+	"Creta":{"x":1521,"y":714,"type":"major-port"},
+	"Cyrene":{"x":1343,"y":885,"type":"port"},
+	"Damascus":{"x":2046,"y":728,"type":"city"},
+	"Dyrrachium":{"x":1290,"y":400,"type":"port"},
+	"Emerita":{"x":169,"y":644,"type":"city"},
+	"Eusebia":{"x":1964,"y":472,"type":"city"},
+	"Gades":{"x":197,"y":785,"type":"port"},
+	"Genua":{"x":844,"y":266,"type":"port"},
+	"Iomnium":{"x":647,"y":722,"type":"port"},
+	"Jerusalem":{"x":1970,"y":843,"type":"city"},
+	"Lilybaeum":{"x":994,"y":620,"type":"port"},
+	"Lugdunum":{"x":672,"y":205,"type":"city"},
+	"Memphis":{"x":1784,"y":989,"type":"city"},
+	"Messana":{"x":1098,"y":602,"type":"port"},
+	"Narbo":{"x":582,"y":386,"type":"port"},
+	"Neapolis":{"x":1090,"y":450,"type":"major-port"},
+	"Nicomedia":{"x":1739,"y":373,"type":"port"},
+	"Olisipo":{"x":78,"y":687,"type":"port"},
+	"Pelusium":{"x":1846,"y":906,"type":"port"},
+	"Perga":{"x":1770,"y":587,"type":"port"},
+	"Pergamum":{"x":1622,"y":454,"type":"city"},
+	"Portus":{"x":87,"y":535,"type":"port"},
+	"Pylos":{"x":1384,"y":622,"type":"port"},
+	"Ravenna":{"x":979,"y":246,"type":"major-port"},
+	"Rhegium":{"x":1143,"y":588,"type":"port"},
+	"Sala":{"x":174,"y":923,"type":"port"},
+	"Salamis":{"x":1911,"y":670,"type":"major-port"},
+	"Salone":{"x":1133,"y":271,"type":"port"},
+	"Serdica":{"x":1432,"y":300,"type":"city"},
+	"Siga":{"x":400,"y":837,"type":"port"},
+	"Sinope":{"x":1952,"y":288,"type":"port"},
+	"Sipontum":{"x":1127,"y":394,"type":"port"},
+	"Sirmium":{"x":1238,"y":177,"type":"city"},
+	"Tacape":{"x":898,"y":864,"type":"port"},
+	"Tarsus":{"x":1936,"y":569,"type":"port"},
+	"Thessalonika":{"x":1432,"y":411,"type":"port"},
+	"Thubactus":{"x":1082,"y":919,"type":"port"},
+	"Tingis":{"x":218,"y":838,"type":"port"},
+	"Toletum":{"x":305,"y":604,"type":"city"},
+	"Treveri":{"x":729,"y":58,"type":"city"},
+	"Mare Aegaeum":{"x":1516,"y":491,"type":"sea"},
+	"Mare Egypticum":{"x":1692,"y":762,"type":"sea"},
+	"Mare Hadriaticum":{"x":1154,"y":347,"type":"sea"},
+	"Mare Hispanum":{"x":713,"y":606,"type":"sea"},
+	"Mare Internum":{"x":1213,"y":766,"type":"sea"},
+	"Mare Tyrrhenum":{"x":952,"y":480,"type":"sea"},
+	"Oceanus Atlanticus":{"x":104,"y":849,"type":"sea"},
+	"Pontus Euxinus":{"x":1866,"y":242,"type":"sea"},
+	"Propontis":{"x":1652,"y":397,"type":"sea"}
+}
+
+
+function initMap() {
+	edges = {}
+
+	function addNode(A) {
+		if (!(A in nodes)) {
+			nodes[A] = { x: 100, y: 100 }
+		}
+		// if (!nodes[A].type) nodes[A].type = "city";
+		if (!nodes[A].value) delete nodes[A].value;
+		// if (!nodes[A].exits) nodes[A].exits = []
+	}
+
+	function addEdge(A,B,T) {
+		addNode(A);
+		addNode(B);
+		if (A > B) {
+			let C = B; B = A; A = C;
+		}
+		let id = A + "--" + B;
+		edges[id] = { A: A, B: B, type: T }
+		//nodes[A].exits.push(B);
+		//nodes[B].exits.push(A);
+	}
+
+	function major(A,B) { addEdge(A,B,"major"); }
+	function minor(A,B) { addEdge(A,B,"minor"); }
+	function strait(A,B) { addEdge(A,B,"strait"); }
+	function sea(A,B) { addEdge(A,B,"sea"); }
+
+	major("ALEXANDRIA","Catabathmus");
+	major("ALEXANDRIA","Memphis");
+	major("ANTIOCH","Damascus");
+	major("ANTIOCH","Tarsus");
+	major("ATHENA","Thessalonika");
+	major("Aenos","BYZANTIUM");
+	major("Aenos","Thessalonika");
+	major("Ancyra","Appia");
+	major("Ancyra","Eusebia");
+	major("Ancyra","Nicomedia");
+	major("Appia","EPHESUS");
+	major("Aquileia","Ravenna");
+	major("Aquileia","Salone");
+	major("Aquileia","Sirmium");
+	major("Asculum","Ravenna");
+	major("Badias","UTICA");
+	major("Bilbilis","Burdigala");
+	major("Bilbilis","Toletum");
+	major("Brundisium","Neapolis");
+	major("Burdigala","Narbo");
+	major("CARTHAGO NOVA","Cordoba");
+	major("CARTHAGO NOVA","TARRACO");
+	major("Catabathmus","Cyrene");
+	major("Cenabum","Lugdunum");
+	major("Cordoba","Gades");
+	major("Cordoba","Toletum");
+	major("Damascus","Jerusalem");
+	major("Dyrrachium","Thessalonika");
+	major("Eusebia","Tarsus");
+	major("Genua","MASSILIA");
+	major("Genua","ROME");
+	major("Genua","Ravenna");
+	major("Iomnium","UTICA");
+	major("Jerusalem","Pelusium");
+	major("Lugdunum","MASSILIA");
+	major("MASSILIA","Narbo");
+	major("Memphis","Pelusium");
+	major("Narbo","TARRACO");
+	major("Neapolis","ROME");
+	major("Neapolis","Rhegium");
+	major("Serdica","Sirmium");
+	major("Serdica","Thessalonika");
+	major("Tacape","UTICA");
+	minor("ALEXANDRIA","Pelusium");
+	minor("ATHENA","Ambracia");
+	minor("ATHENA","Pylos");
+	minor("Aenos","Serdica");
+	minor("Ambracia","Dyrrachium");
+	minor("Ancyra","Sinope");
+	minor("Appia","Nicomedia");
+	minor("Appia","Perga");
+	minor("Asculum","ROME");
+	minor("Asculum","Sipontum");
+	minor("Asturica","Bilbilis");
+	minor("Asturica","Emerita");
+	minor("Asturica","Portus");
+	minor("Asturica","Toletum");
+	minor("Badias","Iomnium");
+	minor("Badias","Tacape");
+	minor("Bilbilis","TARRACO");
+	minor("Brundisium","Sipontum");
+	minor("Burdigala","Cenabum");
+	minor("CARTHAGO NOVA","Gades");
+	minor("CARTHAGO NOVA","Toletum");
+	minor("Cenabum","Treveri");
+	minor("Cyrene","Thubactus");
+	minor("Dyrrachium","Salone");
+	minor("EPHESUS","Perga");
+	minor("EPHESUS","Pergamum");
+	minor("Emerita","Gades");
+	minor("Emerita","Olisipo");
+	minor("Eusebia","Sinope");
+	minor("Gades","Olisipo");
+	minor("Genua","Lugdunum");
+	minor("Iomnium","Siga");
+	minor("Lilybaeum","Messana");
+	minor("Lilybaeum","SYRACUSE");
+	minor("Lugdunum","Treveri");
+	minor("Messana","SYRACUSE");
+	minor("Neapolis","Sipontum");
+	minor("Nicomedia","Pergamum");
+	minor("Nicomedia","Sinope");
+	minor("Olisipo","Portus");
+	minor("Perga","Tarsus");
+	minor("ROME","Ravenna");
+	minor("Sala","Siga");
+	minor("Sala","Tingis");
+	minor("Salone","Sirmium");
+	minor("Siga","Tingis");
+	minor("Tacape","Thubactus");
+
+	strait("Aenos","Pergamum");
+	strait("BYZANTIUM","Nicomedia");
+	strait("Gades","Tingis");
+	strait("Messana","Rhegium");
+
+	sea("ALEXANDRIA","Mare Egypticum");
+	sea("ANTIOCH","Mare Egypticum");
+	sea("ATHENA","Mare Aegaeum");
+	sea("Aenos","Mare Aegaeum");
+	sea("Aleria","Mare Tyrrhenum");
+	sea("Ambracia","Mare Internum");
+	sea("Aquileia","Mare Hadriaticum");
+	sea("BYZANTIUM","Pontus Euxinus");
+	sea("BYZANTIUM","Propontis");
+	sea("Brundisium","Mare Hadriaticum");
+	sea("Brundisium","Mare Internum");
+	sea("Burdigala","Oceanus Atlanticus");
+	sea("CARTHAGO NOVA","Mare Hispanum");
+	sea("Caralis","Mare Hispanum");
+	sea("Caralis","Mare Tyrrhenum");
+	sea("Catabathmus","Mare Egypticum");
+	sea("Creta","Mare Aegaeum");
+	sea("Creta","Mare Egypticum");
+	sea("Creta","Mare Internum");
+	sea("Cyrene","Mare Internum");
+	sea("Dyrrachium","Mare Hadriaticum");
+	sea("EPHESUS","Mare Aegaeum");
+	sea("Gades","Oceanus Atlanticus");
+	sea("Genua","Mare Hispanum");
+	sea("Genua","Mare Tyrrhenum");
+	sea("Iomnium","Mare Hispanum");
+	sea("Lilybaeum","Mare Internum");
+	sea("Lilybaeum","Mare Tyrrhenum");
+	sea("MASSILIA","Mare Hispanum");
+	sea("Mare Aegaeum","Mare Egypticum");
+	sea("Mare Aegaeum","Mare Internum");
+	sea("Mare Aegaeum","Propontis");
+	sea("Mare Aegaeum","Thessalonika");
+	sea("Mare Egypticum","Mare Internum");
+	sea("Mare Egypticum","Pelusium");
+	sea("Mare Egypticum","Perga");
+	sea("Mare Egypticum","Salamis");
+	sea("Mare Egypticum","Tarsus");
+	sea("Mare Hadriaticum","Mare Internum");
+	sea("Mare Hadriaticum","Ravenna");
+	sea("Mare Hadriaticum","Salone");
+	sea("Mare Hadriaticum","Sipontum");
+	sea("Mare Hispanum","Mare Tyrrhenum");
+	sea("Mare Hispanum","Narbo");
+	sea("Mare Hispanum","Oceanus Atlanticus");
+	sea("Mare Hispanum","Siga");
+	sea("Mare Hispanum","TARRACO");
+	sea("Mare Hispanum","Tingis");
+	sea("Mare Hispanum","UTICA");
+	sea("Mare Internum","Mare Tyrrhenum");
+	sea("Mare Internum","Messana");
+	sea("Mare Internum","Pylos");
+	sea("Mare Internum","Rhegium");
+	sea("Mare Internum","SYRACUSE");
+	sea("Mare Internum","Tacape");
+	sea("Mare Internum","Thubactus");
+	sea("Mare Internum","UTICA");
+	sea("Mare Tyrrhenum","Messana");
+	sea("Mare Tyrrhenum","Neapolis");
+	sea("Mare Tyrrhenum","ROME");
+	sea("Mare Tyrrhenum","Rhegium");
+	sea("Mare Tyrrhenum","UTICA");
+	sea("Nicomedia","Propontis");
+	sea("Oceanus Atlanticus","Olisipo");
+	sea("Oceanus Atlanticus","Portus");
+	sea("Oceanus Atlanticus","Sala");
+	sea("Oceanus Atlanticus","Tingis");
+	sea("Pontus Euxinus","Propontis");
+	sea("Pontus Euxinus","Sinope");
+}
+
+//if (window.localStorage.nodes) {
+	//nodes = JSON.parse(window.localStorage.nodes);
+	//edges = JSON.parse(window.localStorage.edges);
+//} else {
+	//initMap();
+//}
+initMap();
+
+function save() {
+	window.localStorage.nodes = JSON.stringify(nodes);
+	window.localStorage.edges = JSON.stringify(edges);
+}
+
+const svgNS = "http://www.w3.org/2000/svg";
+
+let selection = null;
+let downX = 0, startX = 0;
+let downY = 0, startY = 0;
+function startdrag(evt) {
+	selection = evt.target;
+	downX = evt.clientX;
+	downY = evt.clientY;
+	startX = parseInt(selection.getAttribute("cx"));
+	startY = parseInt(selection.getAttribute("cy"));
+}
+function movedrag(evt) {
+	if (selection) {
+		evt.preventDefault();
+		let deltaX = (evt.clientX - downX);
+		let deltaY = (evt.clientY - downY);
+		selection.setAttribute("cx", startX + deltaX);
+		selection.setAttribute("cy", startY + deltaY);
+		let g = selection.parentElement;
+		let text = g.querySelector("text");
+		text.setAttribute("x", startX + deltaX);
+		text.setAttribute("y", startY + deltaY);
+		nodes[g.id].x = startX + deltaX;
+		nodes[g.id].y = startY + deltaY;
+	}
+}
+function enddrag(evt) {
+	selection = null;
+	buildMap()
+}
+
+function clearGroup(name) {
+	let container = document.getElementById("map").getElementById(name);
+	while (container.firstChild)
+		container.removeChild(container.firstChild);
+}
+
+function buildMap() {
+	clearGroup("nodes");
+	clearGroup("major");
+	clearGroup("minor");
+	clearGroup("strait");
+	clearGroup("sea");
+
+	for (let name in nodes) {
+		let node = nodes[name];
+		let svg_g = document.createElementNS(svgNS, "g");
+		svg_g.setAttribute("id", name);
+		let svg_circle = document.createElementNS(svgNS, "circle");
+		svg_circle.setAttribute("cx", node.x || 100);
+		svg_circle.setAttribute("cy", node.y || 100);
+		svg_circle.setAttribute("r", 20);
+		svg_circle.setAttribute("fill", "white");
+		svg_circle.setAttribute("fill-opacity", "0.5");
+		svg_circle.setAttribute("stroke", "red");
+		svg_circle.addEventListener("mousedown", startdrag);
+		svg_circle.addEventListener("mouseup", enddrag);
+		svg_g.appendChild(svg_circle);
+		let svg_text = document.createElementNS(svgNS, "text");
+		svg_text.setAttribute("x", (node.x || 100));
+		svg_text.setAttribute("y", (node.y || 100));
+		svg_text.setAttribute("text-anchor", "middle");
+		svg_text.setAttribute("pointer-events", "none");
+		svg_text.textContent = name;
+		svg_g.appendChild(svg_text);
+		document.getElementById("map").getElementById("nodes").appendChild(svg_g);
+	}
+	document.getElementById("map").addEventListener("mousemove", movedrag);
+
+	for (let id in edges) {
+		let edge = edges[id];
+		let A = nodes[edge.A];
+		let B = nodes[edge.B];
+		let line = document.createElementNS(svgNS, "line");
+		line.setAttribute("x1", A.x); line.setAttribute("y1", A.y);
+		line.setAttribute("x2", B.x); line.setAttribute("y2", B.y);
+		document.getElementById("map").getElementById(edge.type).appendChild(line);
+	}
+}
+
+buildMap()
+
+</script>

@@ -1780,11 +1780,15 @@ states.retreat = {
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		view.prompt = "Retreat: Choose an army to move.";
 		gen_action_undo(view);
-		if (!is_contested_area(game.where))
-			gen_action(view, 'end_retreat');
-		for (let b in BLOCKS)
-			if (game.location[b] == game.where && can_block_retreat(b))
+		let can_retreat = false;
+		for (let b in BLOCKS) {
+			if (game.location[b] == game.where && can_block_retreat(b)) {
 				gen_action(view, 'block', b);
+				can_retreat = true;
+			}
+		}
+		if (!is_contested_area(game.where) || !can_retreat)
+			gen_action(view, 'end_retreat');
 	},
 	end_retreat: function () {
 		for (let b in BLOCKS)

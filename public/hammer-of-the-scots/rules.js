@@ -2217,7 +2217,7 @@ function goto_moray() {
 	delete game.bruce_home;
 	delete game.comyn_home;
 
-	if (is_on_map(MORAY)) {
+	if (is_on_map(MORAY) && game.location[MORAY] != "Moray" && is_friendly_or_neutral_area("Moray")) {
 		game.state = 'moray';
 		game.active = SCOTLAND;
 		game.who = MORAY;
@@ -2230,12 +2230,9 @@ states.moray = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for Scotland to move Moray.";
-		view.prompt = "Nobles go Home: Move Moray to his home area, remain where he is, or disband.";
-		gen_action(view, 'disband');
-		if (is_within_castle_limit(game.location[MORAY]))
-			gen_action(view, 'area', game.location[MORAY]);
-		if (is_friendly_or_neutral_area("Moray"))
-			gen_action(view, 'area', "Moray");
+		view.prompt = "Nobles go Home: Move Moray to his home area or remain where he is.";
+		gen_action(view, 'area', game.location[MORAY]);
+		gen_action(view, 'area', "Moray");
 	},
 	disband: function () {
 		game.turn_log.push(["Moray", "Pool"]);
@@ -2253,10 +2250,18 @@ states.moray = {
 	},
 }
 
+function king_can_go_home(current) {
+	for (let where in AREAS)
+		if (where != current && is_cathedral_area(where))
+			if (is_friendly_or_neutral_area(where))
+				return true;
+	return false;
+}
+
 function goto_scottish_king() {
 	print_turn_log_no_count("Scottish nobles go home:");
 
-	if (is_on_map(KING)) {
+	if (is_on_map(KING) && king_can_go_home(game.location[KING])) {
 		game.state = 'scottish_king';
 		game.active = SCOTLAND;
 		game.who = KING;
@@ -2269,10 +2274,8 @@ states.scottish_king = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for Scotland to move the King.";
-		view.prompt = "Scottish King: Move the King to a cathedral, remain where he is, or disband.";
-		gen_action(view, 'disband');
-		if (is_within_castle_limit(game.location[KING]))
-			gen_action(view, 'area', game.location[KING]);
+		view.prompt = "Scottish King: Move the King to a cathedral or remain where he is.";
+		gen_action(view, 'area', game.location[KING]);
 		for (let where in AREAS) {
 			if (is_cathedral_area(where))
 				if (is_friendly_or_neutral_area(where))
@@ -2321,26 +2324,42 @@ function goto_edward_wintering() {
 	goto_english_disbanding();
 }
 
+function disband_edward() {
+	log("Edward disbands.");
+	disband(EDWARD);
+	game.who = null;
+	game.wintered_last_year = false;
+	goto_english_disbanding();
+}
+
+function winter_edward() {
+	log("Edward winters in " + game.location[EDWARD] + ".");
+	game.who = null;
+	game.wintered_last_year = true;
+	goto_english_disbanding();
+}
+
 states.edward_wintering = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for England to winter in Scotland or disband.";
 		view.prompt = "Edward Wintering: Winter in Scotland or disband.";
+		gen_action(view, 'winter');
 		gen_action(view, 'disband');
 		gen_action(view, 'area', game.location[EDWARD]);
+		gen_action(view, 'area', ENGLAND);
+	},
+	winter: function (to) {
+		winter_edward();
 	},
 	disband: function () {
-		log("Edward disbands.");
-		disband(EDWARD);
-		game.who = null;
-		game.wintered_last_year = false;
-		goto_english_disbanding();
+		disband_endward();
 	},
 	area: function (to) {
-		log("Edward winters in " + to + ".");
-		game.who = null;
-		game.wintered_last_year = true;
-		goto_english_disbanding();
+		if (to == ENGLAND)
+			disband_edward();
+		else
+			winter_edward();
 	},
 }
 

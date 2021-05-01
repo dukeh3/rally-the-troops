@@ -202,6 +202,10 @@ function on_button_disband(evt) {
 	send_action('disband');
 }
 
+function on_button_winter(evt) {
+	send_action('winter');
+}
+
 function on_button_end_disbanding(evt) {
 	send_action('end_disbanding');
 }
@@ -711,6 +715,7 @@ function on_update(state, player) {
 	show_action_button("#end_move_phase_button", "end_move_phase");
 	show_action_button("#end_regroup_button", "end_regroup");
 	show_action_button("#end_retreat_button", "end_retreat");
+	show_action_button("#winter_button", "winter");
 	show_action_button("#eliminate_button", "eliminate");
 	show_action_button("#disband_button", "disband");
 	show_action_button("#end_disbanding_button", "end_disbanding");

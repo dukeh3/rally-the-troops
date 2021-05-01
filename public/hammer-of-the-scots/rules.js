@@ -7,8 +7,6 @@ exports.scenarios = [
 ];
 
 // TODO: delay retreats to end of battle initiative step so they are hidden
-// TODO: prohibit moving back to last location?
-// TODO: undo builds
 
 const { CARDS, BLOCKS, AREAS, BORDERS } = require('./data');
 

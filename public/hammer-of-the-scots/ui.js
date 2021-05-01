@@ -425,9 +425,25 @@ function position_block(location, row, n_rows, col, n_cols, element) {
 		layout_major = 1;
 		layout_minor = 1;
 		break;
+	case "Argyll":
+		layout_major = 0.5;
+		layout_minor = 1.0;
+		break;
+	case "Carrick":
+		layout_major = 0.75;
+		layout_minor = 0.5;
+		break;
+	case "Dunbar":
+		layout_major = 0.25;
+		layout_minor = 0.75;
+		break;
 	case "Fife":
 		layout_major = 0.25;
 		layout_minor = 0.5;
+		break;
+	case "Lennox":
+		layout_major = 0.75;
+		layout_minor = 0.75;
 		break;
 	case "Mentieth":
 		layout_major = 0.5;

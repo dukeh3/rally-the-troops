@@ -535,7 +535,7 @@ function eliminate_block(who, reason) {
 		}
 	} else if (who == KING) {
 		game.location[who] = null;
-		if (reason == 'combat') {
+		if (reason == 'combat' || reason == 'retreat') {
 			game.victory = "England wins because the Scottish king has died in battle!";
 			game.result = ENGLAND
 		}

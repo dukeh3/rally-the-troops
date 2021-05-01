@@ -898,11 +898,7 @@ function reveal_cards() {
 	game.prior_c_card = game.c_card;
 	game.prior_p_card = game.p_card;
 
-	// Tournament rule: Caesar always goes first on the first turn of the game.
-	if (game.year == 705 && game.turn == 1) {
-		game.p1 = CAESAR;
-		game.p2 = POMPEIUS;
-	} else if (CARDS[game.c_card].event) {
+	if (CARDS[game.c_card].event) {
 		game.p1 = CAESAR;
 		game.p2 = POMPEIUS;
 	} else if (CARDS[game.p_card].event) {
@@ -914,6 +910,15 @@ function reveal_cards() {
 	} else {
 		game.p1 = CAESAR;
 		game.p2 = POMPEIUS;
+	}
+
+	// Tournament rule: Caesar always goes first on the first turn of the game.
+	if (game.year == 705 && game.turn == 1) {
+		if (game.p1 != CAESAR) {
+			log("Tournament rule:\nCaesar is the first player on the very first turn of the game.");
+			game.p1 = CAESAR;
+			game.p2 = POMPEIUS;
+		}
 	}
 
 	game.show_cards = true;

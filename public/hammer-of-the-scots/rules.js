@@ -2613,7 +2613,7 @@ states.english_builds = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for England to build.";
-		view.prompt = "English Builds: Deploy or reinforce armies.";
+		view.prompt = "English Builds: Reinforce armies.";
 		gen_action_undo(view);
 		gen_action(view, 'end_builds');
 		for (let where in game.rp) {

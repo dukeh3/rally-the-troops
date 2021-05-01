@@ -2439,9 +2439,22 @@ states.english_disbanding = {
 	undo: pop_undo
 }
 
+function heal_wallace() {
+	let old = game.steps[WALLACE];
+	game.steps[WALLACE] = Math.min(block_max_steps(WALLACE), game.steps[WALLACE] + 2);
+	let n = game.steps[WALLACE] - old;
+	if (n == 1)
+		log("Wallace gains 1 step.");
+	else if (n == 2)
+		log("Wallace gains 2 steps.");
+}
+
 function goto_wallace() {
 	game.active = SCOTLAND;
-	if (is_on_map(WALLACE) && is_friendly_or_neutral_area("Selkirk")) {
+	if (game.location[WALLACE] == "Selkirk") {
+		heal_wallace();
+		goto_scottish_disbanding();
+	} else if (is_on_map(WALLACE) && is_friendly_or_neutral_area("Selkirk")) {
 		game.state = 'wallace';
 		game.who = WALLACE;
 	} else {
@@ -2459,10 +2472,8 @@ states.wallace = {
 	},
 	area: function (to) {
 		if (to == "Selkirk") {
-			if (to != game.location[WALLACE])
-				log("Wallace goes home to " + to + ".");
-			game.steps[WALLACE] = Math.min(block_max_steps(WALLACE), game.steps[WALLACE] + 2);
-			log("Wallace gains 2 steps.");
+			log("Wallace goes home to " + to + ".");
+			heal_wallace();
 		}
 		game.location[WALLACE] = to;
 		game.who = null;

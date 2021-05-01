@@ -2033,17 +2033,19 @@ function find_noble_home(who) {
 	return null;
 }
 
-function go_home_to(who, home) {
+function go_home_to(who, home, defected = false) {
 	let name = block_name(who);
 	let from = game.location[who];
 	if (from != home) {
 		game.location[who] = home;
 		if (is_contested_area(home)) {
-			game.turn_log.push([name, home + " \u2727"]);
 			who = swap_blocks(who);
-		} else {
-			game.turn_log.push([name, home]);
+			defected = true;
 		}
+		if (defected)
+			game.turn_log.push([name, home + " \u2727"]);
+		else
+			game.turn_log.push([name, home]);
 	}
 }
 
@@ -2109,8 +2111,11 @@ function send_bruce_home() {
 		return end_bruce();
 	}
 	if (!annan && !carrick) {
+		game.bruce_defected = true;
 		game.active = ENEMY[game.active];
 		game.who = swap_blocks(game.who);
+	} else {
+		game.bruce_defected = false;
 	}
 	game.state = 'bruce';
 }
@@ -2124,7 +2129,7 @@ states.bruce = {
 		gen_action(view, 'area', "Carrick");
 	},
 	area: function (to) {
-		go_home_to(game.who, to);
+		go_home_to(game.who, to, game.bruce_defected);
 		game.who = null;
 		end_bruce();
 	},
@@ -2133,6 +2138,7 @@ states.bruce = {
 function end_bruce() {
 	game.who = null;
 	game.active = game.going_home;
+	delete game.bruce_defected;
 	if (game.going_home == ENGLAND)
 		goto_e_comyn();
 	else
@@ -2170,8 +2176,11 @@ function send_comyn_home() {
 		return end_comyn();
 	}
 	if (!lochaber && !badenoch) {
+		game.comyn_defected = true;
 		game.active = ENEMY[game.active];
 		game.who = swap_blocks(game.who);
+	} else {
+		game.comyn_defected = false;
 	}
 	game.state = 'comyn';
 }
@@ -2185,7 +2194,7 @@ states.comyn = {
 		gen_action(view, 'area', "Lochaber");
 	},
 	area: function (to) {
-		go_home_to(game.who, to);
+		go_home_to(game.who, to, game.comyn_defected);
 		game.who = null;
 		end_comyn();
 	},
@@ -2194,6 +2203,7 @@ states.comyn = {
 function end_comyn() {
 	game.who = null;
 	game.active = game.going_home;
+	delete game.comyn_defected;
 	if (game.active == ENGLAND) {
 		print_turn_log_no_count("English nobles go home:");
 		scottish_nobles_go_home();

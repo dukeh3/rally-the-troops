@@ -24,6 +24,7 @@ const SPARTA = "Sparta";
 const PELLA = "Pella";
 
 // Greek event numbers
+const MINES_OF_LAURION = 1;
 const LEONIDAS = 8;
 const EVANGELION = 10;
 const MOLON_LABE = 12;
@@ -554,7 +555,9 @@ function goto_persian_preparation_draw() {
 function goto_greek_preparation_draw() {
 	game.active = GREECE;
 	game.state = 'greek_preparation_draw';
-	if (game.trigger.acropolis_on_fire)
+	if (game.event == MINES_OF_LAURION)
+		game.talents = 3;
+	else if (game.trigger.acropolis_on_fire)
 		game.talents = 5;
 	else
 		game.talents = 6;
@@ -600,9 +603,10 @@ states.persian_preparation_draw = {
 
 states.greek_preparation_draw = {
 	prompt: function (view, current) {
+		let name = (game.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
 		if (is_inactive_player(current))
-			return view.prompt = "Greek Preparation Phase.";
-		view.prompt = "Greek Preparation Phase: Draw up to 6 cards. " + game.talents + " talents left.";
+			return view.prompt = name + ".";
+		view.prompt = name + ": Draw up to 6 cards. " + game.talents + " talents left.";
 		if (game.greek.draw < 6 && game.talents >= 1 && can_draw_card(game.greek.draw))
 			gen_action(view, 'draw');
 		gen_action_undo(view);
@@ -689,16 +693,18 @@ function goto_greek_preparation_build() {
 
 states.greek_preparation_build = {
 	prompt: function (view, current) {
+		let name = (game.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
 		if (is_inactive_player(current))
-			return view.prompt = "Greek Preparation Phase.";
-		view.prompt = "Greek Preparation Phase: Build fleets and armies. ";
+			return view.prompt = name + ".";
+		view.prompt = name + ": Build fleets and armies. ";
 		view.prompt += game.talents + " talents left.";
 		if (game.talents >= 1 && count_greek_armies(RESERVE) > 0) {
 			for (let space of CITIES)
 				if (is_greek_control(space))
 					gen_action(view, 'city', space);
 		}
-		if (game.built_fleets < 2 && game.talents >= 1 && count_greek_fleets(RESERVE) > 0) {
+		let can_build_fleet = (game.event == MINES_OF_LAURION) || (game.built_fleets < 2);
+		if (can_build_fleet && game.talents >= 1 && count_greek_fleets(RESERVE) > 0) {
 			for (let space of PORTS)
 				if (is_greek_control(space) && count_persian_fleets(space) == 0)
 					gen_action(view, 'port', space);
@@ -723,7 +729,10 @@ states.greek_preparation_build = {
 		clear_undo();
 		game.talents = 0;
 		game.trigger.acropolis_on_fire = 0;
-		end_preparation_phase();
+		if (game.event == MINES_OF_LAURION)
+			end_greek_operation();
+		else
+			end_preparation_phase();
 	},
 	undo: pop_undo,
 }
@@ -1718,7 +1727,7 @@ function can_play_persian_event(card) {
 	case 1: return can_play_cavalry_of_mardonius();
 	case 2: return can_play_tribute_of_earth_and_water();
 	case 3: return can_play_tribute_of_earth_and_water();
-	case 4: return true; // carneia_festival
+	case 4: return can_play_carneia_festival();
 	case 5: return false; // the_immortals
 	case 6: return can_play_ostracism();
 	case 7: return can_play_the_great_king();
@@ -1790,6 +1799,10 @@ function can_play_cavalry_of_mardonius() {
 
 function play_cavalry_of_mardonius() {
 	goto_persian_movement(true, false, CAVALRY_OF_MARDONIUS);
+}
+
+function can_play_carneia_festival() {
+	return true;
 }
 
 function play_carneia_festival() {
@@ -2049,7 +2062,7 @@ function can_play_greek_event(card) {
 	if (game.trigger.carneia_festival && SPARTA_CARDS.includes(card))
 		return false;
 	switch (card) {
-	case 1: return true; // mines_of_laurion
+	case 1: return can_play_mines_of_laurion();
 	case 2: return can_play_ionian_revolt();
 	case 3: return can_play_wrath_of_poseidon();
 	case 4: return false; // miltiades
@@ -2085,6 +2098,15 @@ function play_greek_event(card) {
 	case 16: return play_desertion_of_greek_soldiers();
 	}
 	throw Error("unimplemented event: " + GREEK_EVENT_NAMES[card]);
+}
+
+function can_play_mines_of_laurion() {
+	return true;
+}
+
+function play_mines_of_laurion() {
+	game.event = MINES_OF_LAURION;
+	goto_greek_preparation_draw();
 }
 
 function can_play_ionian_revolt() {

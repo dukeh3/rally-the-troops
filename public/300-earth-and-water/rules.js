@@ -26,11 +26,13 @@ const PELLA = "Pella";
 // Greek event numbers
 const MINES_OF_LAURION = 1;
 const MILTIADES = 4;
+const PAUSANIAS = 6;
 const LEONIDAS = 8;
 const EVANGELION = 10;
 const MOLON_LABE = 12;
 const TRIREMES = 13;
 const TRIREMES_TWO = 113;
+const THREE_HUNDRED_SPARTANS = 15;
 
 // Persian event numbers
 const CAVALRY_OF_MARDONIUS = 1;
@@ -1471,6 +1473,28 @@ states.persian_land_battle_react = {
 		view.prompt = "Persian Land Battle: Persia attacks " + game.where + " with " +
 			count_persian_armies(game.where) + " armies!";
 		gen_action(view, 'next');
+
+		if (game.greek.hand.includes(MILTIADES) && can_play_miltiades_defense())
+			gen_action(view, 'card_event', MILTIADES);
+		if (!game.trigger.carneia_festival) {
+			if (game.event == CAVALRY_OF_MARDONIUS && game.greek.hand.includes(PAUSANIAS))
+				gen_action(view, 'card_event', PAUSANIAS);
+			if (game.event != MILTIADES && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
+				gen_action(view, 'card_event', THREE_HUNDRED_SPARTANS);
+		}
+	},
+	card_event: function (card) {
+		switch (card) {
+		case MILTIADES:
+			play_miltiades_defense();
+			break;
+		case PAUSANIAS:
+			play_pausanias();
+			break;
+		case THREE_HUNDRED_SPARTANS:
+			play_300_spartans();
+			break;
+		}
 	},
 	next: function () {
 		game.active = PERSIA;
@@ -1492,15 +1516,31 @@ states.greek_land_battle_react = {
 	},
 }
 
+function greek_battle_dice() {
+	if (game.event == MILTIADES)
+		return 3;
+	if (game.event == LEONIDAS)
+		return 2;
+	if (game.event == THREE_HUNDRED_SPARTANS)
+		return 3;
+	return count_greek_armies(game.where);
+}
+
 function persian_land_battle_round() {
 	log("Persia attacks " + game.where + "!");
 	let p_max = (game.where == ABYDOS || game.where == EPHESOS) ? 5 : 4;
+	if (game.event == CAVALRY_OF_MARDONIUS)
+		p_max = 6;
 	let g_max = 6;
 	let p_hit = roll_battle_dice("Persia", count_persian_armies(game.where), p_max);
-	let g_hit = roll_battle_dice("Greece", count_greek_armies(game.where), g_max);
+	let g_hit = roll_battle_dice("Greece", greek_battle_dice(), g_max);
 	if (p_hit >= g_hit) {
 		log("Greece loses one army.");
 		move_greek_army(game.where, RESERVE);
+		if (game.event == THREE_HUNDRED_SPARTANS) {
+			log("300 Spartans advantage lost.");
+			game.event = 0;
+		}
 	}
 	if (g_hit >= p_hit) {
 		log("Persia loses one army.");
@@ -1517,7 +1557,7 @@ function greek_land_battle_round() {
 	let p_max = (game.where == ABYDOS || game.where == EPHESOS) ? 5 : 4;
 	let g_max = 6;
 	let p_hit = roll_battle_dice("Persia", count_persian_armies(game.where), p_max);
-	let g_hit = roll_battle_dice("Greece", count_greek_armies(game.where), g_max);
+	let g_hit = roll_battle_dice("Greece", greek_battle_dice(), g_max);
 	if (p_hit >= g_hit) {
 		log("Greece loses one army.");
 		move_greek_army(game.where, RESERVE);
@@ -2191,6 +2231,7 @@ function can_play_leonidas() {
 }
 
 function play_leonidas() {
+	game.event = LEONIDAS;
 	if (count_greek_armies(RESERVE) > 0) {
 		game.trigger.leonidas = 1;
 		remove_greek_army(RESERVE);
@@ -2362,6 +2403,52 @@ states.miltiades_attack_pay = {
 		game.state = 'greek_land_movement_confirm';
 	},
 	undo: pop_undo,
+}
+
+function can_play_miltiades_defense() {
+	return !game.trigger.miltiades && game.event != THREE_HUNDRED_SPARTANS;
+}
+
+function play_miltiades_defense() {
+	play_greek_event_card(MILTIADES);
+	game.event = MILTIADES;
+	if (count_greek_armies(RESERVE) > 0) {
+		remove_greek_army(RESERVE);
+		game.trigger.miltiades = 1;
+	} else {
+		game.state = 'miltiades_defense_pay';
+	}
+}
+
+states.miltiades_defense_pay = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Miltiades: Remove one Greek army to pay for the event.";
+		for (let city of CITIES) {
+			let need = (city == game.where) ? 2 : 1;
+			if (count_greek_armies(city) >= need)
+				gen_action(view, 'city', city);
+		}
+		gen_action_undo(view);
+	},
+	city: function (space) {
+		push_undo();
+		remove_greek_army(space);
+		game.trigger.miltiades = 1;
+		game.state = 'persian_land_battle_react';
+	},
+	undo: pop_undo,
+}
+
+function play_pausanias() {
+	play_greek_event_card(PAUSANIAS);
+	game.event = 0;
+}
+
+function play_300_spartans() {
+	play_greek_event_card(THREE_HUNDRED_SPARTANS);
+	game.event = THREE_HUNDRED_SPARTANS;
 }
 
 // SUPPLY PHASE

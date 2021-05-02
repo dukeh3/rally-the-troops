@@ -26,6 +26,8 @@ const PELLA = "Pella";
 const LEONIDAS = 8;
 const EVANGELION = 10;
 const MOLON_LABE = 12;
+const TRIREMES = 13;
+const TRIREMES_TWO = 113;
 
 // Persian event numbers
 const CAVALRY_OF_MARDONIUS = 1;
@@ -68,6 +70,7 @@ const GREEK_EVENT_NAMES = {
 	14: "Support from Syracuse",
 	15: "300 Spartans",
 	16: "Desertion of Greek Soldiers",
+	113: "Triremes", // for second movement
 };
 
 const CITIES = [
@@ -811,6 +814,12 @@ function end_persian_movement() {
 
 function end_greek_movement() {
 	switch (game.event) {
+	case TRIREMES:
+		if (greek_can_naval_move())
+			goto_greek_movement(false, true, TRIREMES_TWO);
+		else
+			end_greek_operation();
+		break;
 	case MOLON_LABE:
 		end_persian_operation();
 		break;
@@ -1095,6 +1104,8 @@ states.greek_naval_movement = {
 		view.prompt = "Greek Naval Movement: Select fleets to move, armies to transport, and then a destination.";
 		view.naval_movement = game.from;
 		if (game.trigger.carneia_festival && game.from == SPARTA)
+			view.naval_transport = 0;
+		else if (game.event == TRIREMES || game.event == TRIREMES_TWO)
 			view.naval_transport = 0;
 		else
 			view.naval_transport = 1;
@@ -2033,6 +2044,14 @@ function play_molon_labe() {
 	move_persian_army(game.tribute_of_earth_and_water, RESERVE, 1);
 	game.tribute_of_earth_and_water = null;
 	goto_greek_land_movement_event(MOLON_LABE);
+}
+
+function can_play_triremes() {
+	return greek_can_naval_move();
+}
+
+function play_triremes() {
+	goto_greek_movement(false, true, TRIREMES);
 }
 
 function can_play_support_from_syracuse() {

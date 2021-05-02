@@ -19,6 +19,7 @@ const RESERVE = "reserve";
 const ABYDOS = "Abydos";
 const EPHESOS = "Ephesos";
 const ATHENAI = "Athenai";
+const THEBAI = "Thebai";
 const SPARTA = "Sparta";
 const PELLA = "Pella";
 
@@ -450,7 +451,8 @@ function gen_persian_fleets(view) {
 
 // DEATH OF A KING
 
-function goto_sudden_death_of_darius() {
+function goto_sudden_death_of_darius(skip_scoring) {
+	game.skip_scoring = skip_scoring;
 	game.trigger.darius = 1;
 	log("Sudden Death of Darius!");
 	game.state = 'sudden_death_of_darius';
@@ -480,12 +482,18 @@ states.sudden_death_of_darius = {
 	},
 	next: function () {
 		discard_persian_hand();
-		reshuffle();
-		end_campaign();
+		if (game.skip_scoring) {
+			game.skip_scoring = 0;
+			reshuffle();
+			end_campaign();
+		} else {
+			end_operation_phase();
+		}
 	},
 }
 
-function goto_assassination_of_xerxes() {
+function goto_assassination_of_xerxes(skip_scoring) {
+	game.skip_scoring = skip_scoring;
 	game.trigger.xerxes = 1;
 	log("Assassination of Xerxes!");
 	game.state = 'assassination_of_xerxes';
@@ -515,8 +523,13 @@ states.assassination_of_xerxes = {
 	},
 	next: function () {
 		discard_persian_hand();
-		reshuffle();
-		end_campaign();
+		if (game.skip_scoring) {
+			game.skip_scoring = 0;
+			reshuffle();
+			end_campaign();
+		} else {
+			end_operation_phase();
+		}
 	},
 }
 
@@ -576,9 +589,9 @@ states.persian_preparation_draw = {
 		game.persian.draw = 0;
 		if (sudden_death) {
 			if (!game.trigger.darius)
-				return goto_sudden_death_of_darius();
+				return goto_sudden_death_of_darius(true);
 			if (!game.trigger.xerxes)
-				return goto_assassination_of_xerxes();
+				return goto_assassination_of_xerxes(true);
 		}
 		goto_persian_preparation_build();
 	},
@@ -1712,8 +1725,12 @@ function can_play_persian_event(card) {
 	case 8: return can_play_the_royal_road();
 	case 9: return can_play_hippias();
 	case 10: return can_play_separate_peace();
+	case 11: return false; // sudden_death_of_the_great_king
+	case 12: return can_play_defection_of_thebes();
 	case 13: return can_play_tribute_of_earth_and_water();
+	case 14: return false; // alliance_with_carthage
 	case 15: return can_play_acropolis_on_fire();
+	case 16: return can_play_pacification_of_babylon_or_egypt();
 	}
 	return false;
 }
@@ -1730,8 +1747,10 @@ function play_persian_event(card) {
 	case 8: return play_the_royal_road();
 	case 9: return play_hippias();
 	case 10: return play_separate_peace();
+	case 12: return play_defection_of_thebes();
 	case 13: return play_tribute_of_earth_and_water();
 	case 15: return play_acropolis_on_fire();
+	case 16: return play_pacification_of_babylon_or_egypt();
 	}
 	throw Error("unimplemented event: " + PERSIAN_EVENT_NAMES[card]);
 }
@@ -1865,12 +1884,106 @@ function play_hippias() {
 	game.state = 'hippias';
 }
 
+states.hippias = {
+	prompt: function (view, current) {
+		view.show_greek_hand = 1;
+		if (is_inactive_player(current))
+			return view.prompt = "Hippias.";
+		view.prompt = "Hippias: Choose one card to discard from the Greek hand."
+		for (let card of game.greek.hand)
+			gen_action(view, 'discard', card);
+	},
+	discard: function (card) {
+		discard_card("Greece", game.greek.hand, card);
+		end_persian_operation();
+	},
+}
+
 function can_play_separate_peace() {
 	return game.greek.hand.length > 1;
 }
 
 function play_separate_peace() {
-	game.state = 'separate_peace';
+	let g_die = roll_d6();
+	let p_die = roll_d6();
+	log("Greece rolls " + g_die + ".");
+	log("Persia rolls " + p_die + ".");
+	if (p_die > g_die) {
+		log("The Athens and Sparta alliance breaks!");
+		game.state = 'separate_peace';
+	} else {
+		log("The Athens and Sparta alliance remains unbroken.");
+		end_persian_operation();
+	}
+}
+
+states.separate_peace = {
+	prompt: function (view, current) {
+		view.show_greek_hand = 1;
+		if (is_inactive_player(current))
+			return view.prompt = "Separate Peace.";
+		view.prompt = "Separate Peace: Discard all the Sparta cards from the Greek hand.";
+		let no_sparta_cards = true;
+		for (let card of game.greek.hand) {
+			if (SPARTA_CARDS.includes(card)) {
+				gen_action(view, 'discard', card);
+				no_sparta_cards = false;;
+			}
+		}
+		if (no_sparta_cards)
+			gen_action(view, 'next');
+	},
+	discard: function (card) {
+		discard_card("Greece", game.greek.hand, card);
+	},
+	next: function () {
+		end_persian_operation();
+	}
+}
+
+function can_play_defection_of_thebes() {
+	if (count_greek_armies(THEBAI) > 0) {
+		for (let city of CITIES)
+			if (city != THEBAI && is_greek_control(city))
+				return true;
+		return false;
+	}
+	if (count_persian_armies(RESERVE) > 0)
+		return true;
+	return false;
+}
+
+function play_defection_of_thebes() {
+	if (count_greek_armies(THEBAI) > 0) {
+		game.active = GREECE;
+		game.state = 'defection_of_thebes';
+	} else {
+		if (count_persian_armies(RESERVE) > 0) {
+			log("Persia places 1 army in Thebai.");
+			move_persian_army(RESERVE, THEBAI, 1);
+		}
+		end_persian_operation();
+	}
+}
+
+states.defection_of_thebes = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Defection of Thebes.";
+		view.prompt = "Defection of Thebes: Move all Greek armies in Thebes to another Greek-controlled city.";
+		for (let city of CITIES)
+			if (city != THEBAI && is_greek_control(city))
+				gen_action(view, 'city', city);
+	},
+	city: function (city) {
+		log("Greece moves all armies from Thebai to " + city + ".");
+		move_greek_army(THEBAI, city, count_greek_armies(THEBAI));
+		if (count_persian_armies(RESERVE) > 0) {
+			log("Persia places 1 army in Thebai.");
+			move_persian_army(RESERVE, THEBAI, 1);
+		}
+		end_persian_operation();
+	},
 }
 
 function can_play_acropolis_on_fire() {
@@ -1879,6 +1992,51 @@ function can_play_acropolis_on_fire() {
 
 function play_acropolis_on_fire() {
 	game.trigger.acropolis_on_fire = 1;
+}
+
+function can_play_pacification_of_babylon_or_egypt() {
+	return true;
+}
+
+function play_pacification_of_babylon_or_egypt() {
+	game.state = 'pacification_of_babylon_or_egypt';
+	game.persian.draw = 1;
+}
+
+states.pacification_of_babylon_or_egypt = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Pacification of Babylon or Egypt.";
+		view.prompt = "Pacification of Babylon or Egypt: Discard cards, then draw replacements.";
+		for (let card of game.persian.hand)
+			gen_action(view, 'discard', card);
+		gen_action(view, 'next');
+		gen_action_undo(view);
+	},
+	discard: function (card) {
+		push_undo();
+		discard_card("Persia", game.persian.hand, card);
+		++game.persian.draw;
+	},
+	next: function () {
+		let sudden_death = 0;
+		log("Persia draws " + game.persian.draw + " cards.");
+		for (let i = 0; i < game.persian.draw; ++i) {
+			let card = draw_card(game.deck);
+			if (card == SUDDEN_DEATH_OF_THE_GREAT_KING)
+				sudden_death = 1;
+			game.persian.hand.push(card);
+		}
+		game.persian.draw = 0;
+		if (sudden_death) {
+			if (!game.trigger.darius)
+				return goto_sudden_death_of_darius(false);
+			if (!game.trigger.xerxes)
+				return goto_assassination_of_xerxes(false);
+		}
+		end_persian_operation();
+	},
+	undo: pop_undo,
 }
 
 // GREEK EVENTS
@@ -2506,6 +2664,9 @@ exports.view = function(state, current) {
 	if (current == PERSIA) {
 		view.hand = game.persian.hand;
 		view.draw = game.persian.draw;
+	}
+	if (view.show_greek_hand) {
+		view.hand = game.greek.hand;
 	}
 
 	return view;

@@ -302,6 +302,12 @@ function on_update(state, player) {
 			ui.backs[c].classList.remove('show');
 	}
 
+	console.log("show_greek_hand", game.show_greek_hand);
+	if (game.show_greek_hand)
+		document.querySelector(".hand").classList.add("greek");
+	else
+		document.querySelector(".hand").classList.remove("greek");
+
 	function update_units(index, elements) {
 		let overflow = [];
 		let extra = elements.extra;

@@ -2178,11 +2178,33 @@ function play_oracle_of_delphi() {
 }
 
 function can_play_leonidas() {
-	return greek_can_land_move();
+	return !game.trigger.leonidas && greek_can_land_move();
 }
 
 function play_leonidas() {
-	game.state = 'leonidas';
+	if (count_greek_armies(RESERVE) > 0) {
+		game.trigger.leonidas = 1;
+		remove_greek_army(RESERVE);
+		game.state = 'leonidas';
+	} else {
+		game.state = 'leonidas_pay';
+	}
+}
+
+states.leonidas_pay = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Leonidas: Remove one Greek army to pay for the event.";
+		gen_greek_armies(view);
+	},
+	city: function (space) {
+		push_undo();
+		log("Greece removes 1 army in " + space + ".");
+		game.trigger.leonidas = 1;
+		remove_greek_army(space);
+		game.state = 'leonidas';
+	},
 }
 
 states.leonidas = {
@@ -2191,10 +2213,12 @@ states.leonidas = {
 			return view.prompt = "Leonidas.";
 		view.prompt = "Leonidas: Select one Greek army and move it.";
 		gen_greek_land_movement(view);
+		gen_action_undo(view);
 	},
 	city: function (space) {
 		goto_greek_land_movement_leonidas(space);
 	},
+	undo: pop_undo,
 }
 
 function can_play_evangelion() {

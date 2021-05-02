@@ -1235,6 +1235,7 @@ function roll_battle_dice(who, count, cap) {
 }
 
 function goto_persian_naval_battle() {
+	// TODO: window to play Themistocles!
 	game.naval_battle = 1;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0)
 		goto_persian_naval_battle_react();
@@ -2624,6 +2625,45 @@ states.miltiades_defense_pay = {
 		game.state = 'persian_land_battle_react';
 	},
 	undo: pop_undo,
+}
+
+function can_play_themistocles() {
+	if (!game.trigger.themistocles) {
+		for (let port of PORTS)
+			if (port != game.where && count_greek_fleets(port) > 0)
+				return true;
+	}
+	return false;
+}
+
+function play_themistocles() {
+	game.event = THEMISTOCLES;
+	if (count_greek_armies(RESERVE) > 0) {
+		game.trigger.themistocles = 1;
+		remove_greek_army(RESERVE);
+		goto_themistocles();
+	} else {
+		game.state = 'themistocles_pay';
+	}
+}
+
+states.themistocles_pay = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Leonidas: Remove one Greek army to pay for the event.";
+		gen_greek_armies(view);
+	},
+	city: function (space) {
+		push_undo();
+		game.trigger.themistocles = 1;
+		remove_greek_army(space);
+		goto_themistocles();
+	},
+}
+
+function goto_themistocles() {
+	throw Error("Themistocles not implemented!");
 }
 
 function play_pausanias() {

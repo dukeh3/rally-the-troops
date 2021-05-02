@@ -25,6 +25,7 @@ const PELLA = "Pella";
 
 // Greek event numbers
 const MINES_OF_LAURION = 1;
+const MILTIADES = 4;
 const LEONIDAS = 8;
 const EVANGELION = 10;
 const MOLON_LABE = 12;
@@ -1077,9 +1078,17 @@ states.greek_land_movement_confirm = {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Land Movement.";
 		view.prompt = "Greek Land Movement: Confirm destination.";
+		if (game.greek.hand.includes(MILTIADES) && can_play_miltiades_attack()) {
+			view.prompt += " You may also play Miltiades.";
+			gen_action(view, 'card_event', MILTIADES);
+		}
 		gen_action(view, 'city', game.where);
 		gen_action(view, 'next');
 		gen_action(view, 'undo');
+	},
+	card_event: function (card) {
+		push_undo();
+		play_miltiades_attack();
 	},
 	city: function () {
 		clear_undo();
@@ -2200,7 +2209,6 @@ states.leonidas_pay = {
 	},
 	city: function (space) {
 		push_undo();
-		log("Greece removes 1 army in " + space + ".");
 		game.trigger.leonidas = 1;
 		remove_greek_army(space);
 		game.state = 'leonidas';
@@ -2316,6 +2324,44 @@ states.desertion_of_greek_soldiers = {
 		move_persian_army(city, RESERVE, 1);
 		end_greek_operation();
 	}
+}
+
+// GREEK REACTION EVENTS
+
+function can_play_miltiades_attack() {
+	return !game.trigger.miltiades && count_persian_armies(game.where) > 0;
+}
+
+function play_miltiades_attack() {
+	play_greek_event_card(MILTIADES);
+	game.event = MILTIADES;
+	if (count_greek_armies(RESERVE) > 0) {
+		remove_greek_army(RESERVE);
+		game.trigger.miltiades = 1;
+	} else {
+		game.state = 'miltiades_attack_pay';
+	}
+}
+
+states.miltiades_attack_pay = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Miltiades: Remove one Greek army to pay for the event.";
+		for (let city of CITIES) {
+			let need = (city == game.where) ? 2 : 1;
+			if (count_greek_armies(city) >= need)
+				gen_action(view, 'city', city);
+		}
+		gen_action_undo(view);
+	},
+	city: function (space) {
+		push_undo();
+		remove_greek_army(space);
+		game.trigger.miltiades = 1;
+		game.state = 'greek_land_movement_confirm';
+	},
+	undo: pop_undo,
 }
 
 // SUPPLY PHASE

@@ -4,11 +4,8 @@
 // Diary: 2021-04-24 - Saturday - Art, UI, preparation phase.
 // Diary: 2021-04-25 - Sunday - Supply, movement and battle.
 // Diary: 2021-04-26 - Monday Evening - Redid piece layout. Transport armies on fleets.
-// Diary: 2021-05-01 - Saturday Evening - Added undo. Started simple events.
-
-// TODO: rewrite battle and movement states to common with is_friendly/etc
-// TODO: undo in preparation phase
-// TODO: separate land/port moves?
+// Diary: 2021-05-01 - Saturday Evening - Added undo. Tribute, Ostracism, and simple greek events.
+// Diary: 2021-05-02 - Sunday - Movement events.
 
 exports.scenarios = [
 	"Default"
@@ -25,7 +22,14 @@ const ATHENAI = "Athenai";
 const SPARTA = "Sparta";
 const PELLA = "Pella";
 
+// Greek event numbers
+const LEONIDAS = 8;
+const EVANGELION = 10;
 const MOLON_LABE = 12;
+
+// Persian event numbers
+const CAVALRY_OF_MARDONIUS = 1;
+const THE_GREAT_KING = 7;
 const SUDDEN_DEATH_OF_THE_GREAT_KING = 11;
 
 const PERSIAN_EVENT_NAMES = {
@@ -90,6 +94,8 @@ const PORTS = [
 	"Sparta",
 	"Thebai",
 ];
+
+const SPARTA_CARDS = [ 6, 8, 11, 15 ];
 
 const CITIES_WITH_ROADS = [
 	"Abydos",
@@ -349,6 +355,45 @@ function is_greek_control(where) {
 	return count_greek_armies(where) > 0;
 }
 
+function persian_can_land_move() {
+	for (let city of CITIES_WITH_ROADS)
+		if (count_persian_armies(city) > 0)
+			return true;
+	return false;
+}
+
+function greek_can_land_move() {
+	for (let city of CITIES_WITH_ROADS) {
+		if (city == SPARTA && game.trigger.festival)
+			continue;
+		if (count_greek_armies(city) > 0)
+			return true;
+	}
+	return false;
+}
+
+function persian_can_naval_move() {
+	for (let port of PORTS)
+		if (count_persian_fleets(port) > 0)
+			return true;
+	return false;
+}
+
+function greek_can_naval_move() {
+	for (let port of PORTS)
+		if (count_greek_fleets(port) > 0)
+			return true;
+	return false;
+}
+
+function persian_can_move() {
+	return persian_can_land_move() || have_persian_naval_move();
+}
+
+function greek_can_move() {
+	return greek_can_land_move() || have_greek_naval_move();
+}
+
 function gen_greek_cities(view) {
 	for (let city of CITIES)
 		if (is_greek_control(city))
@@ -369,6 +414,21 @@ function gen_greek_armies(view) {
 
 function gen_persian_armies(view) {
 	for (let city of CITIES)
+		if (count_persian_armies(city) > 0)
+			gen_action(view, 'city', city);
+}
+
+function gen_greek_land_movement(view) {
+	for (let city of CITIES_WITH_ROADS) {
+		if (city == SPARTA && game.trigger.festival)
+			continue;
+		if (count_greek_armies(city) > 0)
+			gen_action(view, 'city', city);
+	}
+}
+
+function gen_persian_land_movement(view) {
+	for (let city of CITIES_WITH_ROADS)
 		if (count_persian_armies(city) > 0)
 			gen_action(view, 'city', city);
 }
@@ -687,15 +747,17 @@ states.persian_operation = {
 			return view.prompt = "Persian Operation Phase.";
 		view.prompt = "Persian Operation Phase: Play a card or pass.";
 		for (let card of game.persian.hand) {
-			gen_action(view, 'card_move', card);
+			if (persian_can_move())
+				gen_action(view, 'card_move', card);
 			if (can_play_persian_event(card))
 				gen_action(view, 'card_event', card);
 		}
 		gen_action(view, 'pass');
 	},
 	card_move: function (card) {
+		push_undo();
 		play_card("Persia", game.persian.hand, card, " for movement.");
-		game.state = 'persian_movement';
+		goto_persian_movement(true, true, 0);
 	},
 	card_event: function (card) {
 		play_persian_event(card);
@@ -713,15 +775,17 @@ states.greek_operation = {
 			return view.prompt = "Greek Operation Phase.";
 		view.prompt = "Greek Operation Phase: Play a card or pass.";
 		for (let card of game.greek.hand) {
-			gen_action(view, 'card_move', card);
+			if (greek_can_move())
+				gen_action(view, 'card_move', card);
 			if (can_play_greek_event(card))
 				gen_action(view, 'card_event', card);
 		}
 		gen_action(view, 'pass');
 	},
 	card_move: function (card) {
+		push_undo();
 		play_card("Greece", game.greek.hand, card, " for movement.");
-		game.state = 'greek_movement';
+		goto_greek_movement(true, true, 0);
 	},
 	card_event: function (card) {
 		play_greek_event(card);
@@ -734,9 +798,7 @@ states.greek_operation = {
 }
 
 function end_persian_movement() {
-	let event = game.event;
-	game.event = null;
-	switch (event) {
+	switch (game.event) {
 	default:
 		end_persian_operation();
 		break;
@@ -744,10 +806,7 @@ function end_persian_movement() {
 }
 
 function end_greek_movement() {
-	let event = game.event;
-	console.log("end_greek_movement event=", game.event);
-	game.event = null;
-	switch (event) {
+	switch (game.event) {
 	case MOLON_LABE:
 		end_persian_operation();
 		break;
@@ -758,6 +817,10 @@ function end_greek_movement() {
 }
 
 function end_persian_operation() {
+	clear_undo();
+	game.event = 0;
+	game.land_movement = 0;
+	game.naval_movement = 0;
 	game.move_list = null;
 	game.transport = 0;
 	game.attacker = 0;
@@ -767,6 +830,10 @@ function end_persian_operation() {
 }
 
 function end_greek_operation() {
+	clear_undo();
+	game.event = 0;
+	game.land_movement = 0;
+	game.naval_movement = 0;
 	game.move_list = null;
 	game.transport = 0;
 	game.attacker = 0;
@@ -807,60 +874,33 @@ function list_greek_land_moves(seen, from) {
 				list_greek_land_moves(seen, to);
 }
 
-function goto_persian_land_movement_event(event) {
-	game.event = event;
+function goto_persian_movement(land, naval, event) {
 	game.active = PERSIA;
-	game.state = 'persian_land_movement_event';
-}
-
-function goto_greek_land_movement_event(event) {
+	game.state = 'persian_movement';
+	game.land_movement = land;
+	game.naval_movement = naval;
 	game.event = event;
+}
+
+function goto_greek_movement(land, naval, event) {
 	game.active = GREECE;
-	game.state = 'greek_land_movement_event';
-}
-
-states.persian_land_movement_event = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = PERSIAN_EVENT_NAMES[game.event] + ".";
-		view.prompt = PERSIAN_EVENT_NAMES[game.event] + ": Choose an origin.";
-		gen_persian_armies(view);
-		gen_action(view, 'pass');
-	},
-	city: function (space) {
-		push_undo();
-		goto_persian_land_movement(space);
-	},
-	pass: function () {
-		end_land_movement_event();
-	},
-}
-
-states.greek_land_movement_event = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = GREEK_EVENT_NAMES[game.event] + ".";
-		view.prompt = GREEK_EVENT_NAMES[game.event] + ": Choose an origin.";
-		gen_greek_armies(view);
-		gen_action(view, 'pass');
-	},
-	city: function (space) {
-		push_undo();
-		goto_greek_land_movement(space);
-	},
-	pass: function () {
-		end_land_movement_event();
-	},
+	game.state = 'greek_movement';
+	game.land_movement = land;
+	game.naval_movement = naval;
+	game.event = event;
 }
 
 states.persian_movement = {
 	prompt: function (view, current) {
+		let name = game.event ? PERSIAN_EVENT_NAMES[game.event] : "Persian Movement";
 		if (is_inactive_player(current))
-			return view.prompt = "Persian Movement.";
-		view.prompt = "Persian Movement: Choose an origin.";
-		gen_persian_armies(view);
-		gen_persian_fleets(view);
-		gen_action(view, 'pass');
+			return view.prompt = name + "."
+		view.prompt = name + ": Choose an origin.";
+		if (game.land_movement)
+			gen_persian_land_movement(view);
+		if (game.naval_movement)
+			gen_persian_fleets(view);
+		gen_action_undo(view);
 	},
 	city: function (space) {
 		goto_persian_land_movement(space);
@@ -869,19 +909,20 @@ states.persian_movement = {
 		game.from = space;
 		game.state = 'persian_naval_movement';
 	},
-	pass: function () {
-		end_persian_movement();
-	},
+	undo: pop_undo,
 }
 
 states.greek_movement = {
 	prompt: function (view, current) {
+		let name = game.event ? GREEK_EVENT_NAMES[game.event] : "Greek Movement";
 		if (is_inactive_player(current))
-			return view.prompt = "Greek Movement.";
-		view.prompt = "Greek Movement: Choose an origin.";
-		gen_greek_armies(view);
-		gen_greek_fleets(view);
-		gen_action(view, 'pass');
+			return view.prompt = name + "."
+		view.prompt = name + ": Choose an origin.";
+		if (game.land_movement)
+			gen_greek_land_movement(view);
+		if (game.naval_movement)
+			gen_greek_fleets(view);
+		gen_action_undo(view);
 	},
 	city: function (space) {
 		goto_greek_land_movement(space);
@@ -890,20 +931,27 @@ states.greek_movement = {
 		game.from = space;
 		game.state = 'greek_naval_movement';
 	},
-	pass: function () {
-		end_greek_movement();
-	},
+	undo: pop_undo,
 }
 
 function goto_persian_land_movement(space) {
+	push_undo();
 	game.from = space;
 	game.state = 'persian_land_movement';
 	list_persian_land_moves(game.move_list = {}, game.from);
 }
 
 function goto_greek_land_movement(space) {
+	push_undo();
 	game.from = space;
 	game.state = 'greek_land_movement';
+	list_greek_land_moves(game.move_list = {}, game.from);
+}
+
+function goto_greek_land_movement_leonidas(space) {
+	push_undo();
+	game.from = space;
+	game.state = 'greek_land_movement_leonidas';
 	list_greek_land_moves(game.move_list = {}, game.from);
 }
 
@@ -924,9 +972,6 @@ states.persian_land_movement = {
 		move_persian_army(game.from, to, armies);
 		game.where = to;
 		game.state = 'persian_land_movement_confirm';
-	},
-	pass: function () {
-		end_persian_movement();
 	},
 	undo: pop_undo,
 }
@@ -949,8 +994,25 @@ states.greek_land_movement = {
 		game.where = to;
 		game.state = 'greek_land_movement_confirm';
 	},
-	pass: function () {
-		end_greek_movement();
+	undo: pop_undo,
+}
+
+states.greek_land_movement_leonidas = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Greek Land Movement.";
+		view.prompt = "Greek Land Movement: Select a destination.";
+		for (let to in game.move_list)
+			if (to != game.from)
+				gen_action(view, 'city', to);
+		gen_action(view, 'undo');
+	},
+	city: function (to) {
+		push_undo();
+		log("Greece moves " + 1 + " armies from " + game.from + " to " + to + ".");
+		move_greek_army(game.from, to, 1);
+		game.where = to;
+		game.state = 'greek_land_movement_confirm';
 	},
 	undo: pop_undo,
 }
@@ -1016,9 +1078,6 @@ states.persian_naval_movement = {
 		game.where = to;
 		game.state = 'persian_naval_movement_confirm';
 	},
-	pass: function () {
-		end_persian_movement();
-	},
 	undo: function () {
 		game.from = 0;
 		game.state = 'persian_movement';
@@ -1031,6 +1090,10 @@ states.greek_naval_movement = {
 			return view.prompt = "Greek Naval Movement.";
 		view.prompt = "Greek Naval Movement: Select fleets to move, armies to transport, and then a destination.";
 		view.naval_movement = game.from;
+		if (game.trigger.festival && game.from == SPARTA)
+			view.naval_transport = 0;
+		else
+			view.naval_transport = 1;
 		for (let port of PORTS)
 			if (port != game.from)
 				gen_action(view, 'port', port);
@@ -1045,9 +1108,6 @@ states.greek_naval_movement = {
 		game.attacker = GREECE;
 		game.where = to;
 		game.state = 'greek_naval_movement_confirm';
-	},
-	pass: function () {
-		end_greek_movement();
 	},
 	undo: function () {
 		game.from = 0;
@@ -1627,9 +1687,12 @@ function play_persian_event_card(card) {
 
 function can_play_persian_event(card) {
 	switch (card) {
+	case 1: return can_play_cavalry_of_mardonius();
 	case 2: return can_play_tribute_of_earth_and_water();
 	case 3: return can_play_tribute_of_earth_and_water();
+	case 4: return true; // carneia_festival
 	case 6: return can_play_ostracism();
+	case 7: return can_play_the_great_king();
 	case 13: return can_play_tribute_of_earth_and_water();
 	}
 	return false;
@@ -1638,12 +1701,36 @@ function can_play_persian_event(card) {
 function play_persian_event(card) {
 	play_persian_event_card(card);
 	switch (card) {
+	case 1: return play_cavalry_of_mardonius();
 	case 2: return play_tribute_of_earth_and_water();
 	case 3: return play_tribute_of_earth_and_water();
+	case 4: return play_carneia_festival();
 	case 6: return play_ostracism();
+	case 7: return play_the_great_king();
 	case 13: return play_tribute_of_earth_and_water();
 	}
 	end_persian_operation();
+}
+
+function play_carneia_festival() {
+	game.trigger.festival = 1;
+	end_persian_operation();
+}
+
+function can_play_cavalry_of_mardonius() {
+	return persian_can_land_move();
+}
+
+function play_cavalry_of_mardonius() {
+	goto_persian_movement(true, false, CAVALRY_OF_MARDONIUS);
+}
+
+function can_play_the_great_king() {
+	return persian_can_land_move();
+}
+
+function play_the_great_king() {
+	goto_persian_movement(true, false, THE_GREAT_KING);
 }
 
 function can_play_tribute_of_earth_and_water() {
@@ -1693,10 +1780,14 @@ function play_greek_event_card(card) {
 }
 
 function can_play_greek_event(card) {
+	if (game.trigger.festival && SPARTA_CARDS.includes(card))
+		return false;
 	switch (card) {
 	case 2: return can_play_ionian_revolt();
 	case 3: return can_play_wrath_of_poseidon();
 	case 7: return can_play_oracle_of_delphi();
+	case 8: return can_play_leonidas();
+	case 10: return can_play_evangelion();
 	case 11: return can_play_melas_zomos();
 	case 12: return can_play_molon_labe();
 	case 14: return can_play_support_from_syracuse();
@@ -1711,6 +1802,8 @@ function play_greek_event(card) {
 	case 2: return play_ionian_revolt();
 	case 3: return play_wrath_of_poseidon();
 	case 7: return play_oracle_of_delphi();
+	case 8: return play_leonidas();
+	case 10: return play_evangelion();
 	case 11: return play_melas_zomos();
 	case 12: return play_molon_labe();
 	case 14: return play_support_from_syracuse();
@@ -1775,6 +1868,34 @@ states.support_from_syracuse = {
 		end_greek_operation();
 	},
 	undo: pop_undo,
+}
+
+function can_play_leonidas() {
+	return greek_can_land_move();
+}
+
+function play_leonidas() {
+	game.state = 'leonidas';
+}
+
+states.leonidas = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Leonidas: Select one Greek army and move it.";
+		gen_greek_land_movement(view);
+	},
+	city: function (space) {
+		goto_greek_land_movement_leonidas(space);
+	},
+}
+
+function can_play_evangelion() {
+	return greek_can_land_move();
+}
+
+function play_evangelion() {
+	goto_greek_movement(true, false, EVANGELION);
 }
 
 function can_play_melas_zomos() {
@@ -2111,6 +2232,7 @@ function goto_scoring_phase() {
 }
 
 function end_campaign() {
+	game.trigger.festival = 0;
 	if (game.campaign == 5) {
 		if (game.vp < 0) {
 			game.victory = $("Greece wins with " + (-game.vp) + " points.");
@@ -2183,6 +2305,7 @@ exports.setup = function (scenario, players) {
 			themistocles: 0,
 			leonidas: 0,
 			hellespont: 0,
+			festival: 0,
 		},
 
 		// transient action state

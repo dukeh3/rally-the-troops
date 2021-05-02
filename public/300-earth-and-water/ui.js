@@ -88,7 +88,7 @@ function on_click_army(evt) {
 		}
 		update_ui();
 	}
-	if (game.naval_movement && ui.player) {
+	if (game.naval_transport && ui.player) {
 		let here = (ui.player == PERSIA ? ui.persian_army : ui.greek_army)[game.naval_movement];
 		if (here.includes(evt.target)) {
 			if (ui.selected_armies && ui.selected_armies.includes(evt.target)) {
@@ -226,9 +226,14 @@ function build_ui() {
 }
 
 function greek_info() {
+	let text = "";
 	if (game.g_cards == 1)
-		return "1 card in hand";
-	return game.g_cards + " cards in hand";
+		text += "1 card in hand";
+	else
+		text += game.g_cards + " cards in hand";
+	if (game.trigger.festival)
+		text += "\nCarneia Festival!";
+	return text;
 }
 
 function persian_info() {

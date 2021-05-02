@@ -231,7 +231,9 @@ function greek_info() {
 		text += "1 card in hand";
 	else
 		text += game.g_cards + " cards in hand";
-	if (game.trigger.festival)
+	if (game.trigger.acropolis_on_fire)
+		text += "\nAcropolis on Fire!";
+	if (game.trigger.carneia_festival)
 		text += "\nCarneia Festival!";
 	return text;
 }

@@ -5,7 +5,33 @@
 // Diary: 2021-04-25 - Sunday - Supply, movement and battle.
 // Diary: 2021-04-26 - Monday Evening - Redid piece layout. Transport armies on fleets.
 // Diary: 2021-05-01 - Saturday Evening - Added undo. Tribute, Ostracism, and simple greek events.
-// Diary: 2021-05-02 - Sunday - Movement events.
+// Diary: 2021-05-02 - Sunday - Movement and battle events.
+
+// Event flags:
+// greek: mines of laurion -> turn flag
+// greek: themistocles -> turn flag
+// greek: evangelion -> turn flag
+// greek: triremes -> turn flag
+// greek: leonidas -> turn or battle flag
+// greek: 300 spartans -> battle flag
+// greek: miltiades -> battle flag
+// persian: cavalry -> turn or battle flag flag
+// persian: great king -> turn flag
+
+// conflicts possible between:
+// cavalry and 300/miltiades -- separate greek/persian solves
+// leonidas + miltiades -- forbid combination?
+
+// Reaction event timing:
+// before persian land battle: miltiades -> flag
+// before persian land battle: pausanias *
+// before persian land battle: 300 spartans -> flag
+// after persian naval movement: themistocles
+// in any land battle, after persian annihilation: the immortals
+// in any naval battle, after persian lose 1 fleet: artemisia
+
+// 'immediately in response' -- interrupt play before or after event is completed?
+// pausanias, molon labe
 
 exports.scenarios = [
 	"Default"
@@ -408,11 +434,11 @@ function greek_can_naval_move() {
 }
 
 function persian_can_move() {
-	return persian_can_land_move() || have_persian_naval_move();
+	return persian_can_land_move() || persian_can_naval_move();
 }
 
 function greek_can_move() {
-	return greek_can_land_move() || have_greek_naval_move();
+	return greek_can_land_move() || greek_can_naval_move();
 }
 
 function gen_greek_cities(view) {
@@ -843,11 +869,7 @@ states.greek_operation = {
 }
 
 function end_persian_movement() {
-	switch (game.persian.event) {
-	default:
-		end_persian_operation();
-		break;
-	}
+	end_persian_operation();
 }
 
 function end_greek_movement() {

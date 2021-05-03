@@ -571,7 +571,7 @@ function goto_persian_preparation_draw() {
 function goto_greek_preparation_draw() {
 	game.active = GREECE;
 	game.state = 'greek_preparation_draw';
-	if (game.event == MINES_OF_LAURION)
+	if (game.greek.event == MINES_OF_LAURION)
 		game.talents = 3;
 	else if (game.trigger.acropolis_on_fire)
 		game.talents = 5;
@@ -619,7 +619,7 @@ states.persian_preparation_draw = {
 
 states.greek_preparation_draw = {
 	prompt: function (view, current) {
-		let name = (game.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
+		let name = (game.greek.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
 		if (is_inactive_player(current))
 			return view.prompt = name + ".";
 		view.prompt = name + ": Draw up to 6 cards. " + game.talents + " talents left.";
@@ -709,7 +709,7 @@ function goto_greek_preparation_build() {
 
 states.greek_preparation_build = {
 	prompt: function (view, current) {
-		let name = (game.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
+		let name = (game.greek.event == MINES_OF_LAURION) ? "Mines of Laurion" : "Greek Preparation Phase";
 		if (is_inactive_player(current))
 			return view.prompt = name + ".";
 		view.prompt = name + ": Build fleets and armies. ";
@@ -719,7 +719,7 @@ states.greek_preparation_build = {
 				if (is_greek_control(space))
 					gen_action(view, 'city', space);
 		}
-		let can_build_fleet = (game.event == MINES_OF_LAURION) || (game.built_fleets < 2);
+		let can_build_fleet = (game.greek.event == MINES_OF_LAURION) || (game.built_fleets < 2);
 		if (can_build_fleet && game.talents >= 1 && count_greek_fleets(RESERVE) > 0) {
 			for (let space of PORTS)
 				if (is_greek_control(space) && count_persian_fleets(space) == 0)
@@ -745,7 +745,7 @@ states.greek_preparation_build = {
 		clear_undo();
 		game.talents = 0;
 		game.trigger.acropolis_on_fire = 0;
-		if (game.event == MINES_OF_LAURION)
+		if (game.greek.event == MINES_OF_LAURION)
 			end_greek_operation();
 		else
 			end_preparation_phase();
@@ -843,7 +843,7 @@ states.greek_operation = {
 }
 
 function end_persian_movement() {
-	switch (game.event) {
+	switch (game.persian.event) {
 	default:
 		end_persian_operation();
 		break;
@@ -851,7 +851,7 @@ function end_persian_movement() {
 }
 
 function end_greek_movement() {
-	switch (game.event) {
+	switch (game.greek.event) {
 	case TRIREMES:
 		if (greek_can_naval_move())
 			goto_greek_movement(false, true, TRIREMES_TWO);
@@ -869,7 +869,8 @@ function end_greek_movement() {
 
 function end_persian_operation() {
 	clear_undo();
-	game.event = 0;
+	game.greek.event = 0;
+	game.persian.event = 0;
 	game.land_movement = 0;
 	game.naval_movement = 0;
 	game.move_list = null;
@@ -882,7 +883,8 @@ function end_persian_operation() {
 
 function end_greek_operation() {
 	clear_undo();
-	game.event = 0;
+	game.greek.event = 0;
+	game.persian.event = 0;
 	game.land_movement = 0;
 	game.naval_movement = 0;
 	game.move_list = null;
@@ -930,7 +932,7 @@ function goto_persian_movement(land, naval, event) {
 	game.state = 'persian_movement';
 	game.land_movement = land;
 	game.naval_movement = naval;
-	game.event = event;
+	game.persian.event = event;
 }
 
 function goto_greek_movement(land, naval, event) {
@@ -938,12 +940,12 @@ function goto_greek_movement(land, naval, event) {
 	game.state = 'greek_movement';
 	game.land_movement = land;
 	game.naval_movement = naval;
-	game.event = event;
+	game.greek.event = event;
 }
 
 states.persian_movement = {
 	prompt: function (view, current) {
-		let name = game.event ? PERSIAN_EVENT_NAMES[game.event] : "Persian Movement";
+		let name = game.persian.event ? PERSIAN_EVENT_NAMES[game.persian.event] : "Persian Movement";
 		if (is_inactive_player(current))
 			return view.prompt = name + "."
 		view.prompt = name + ": Choose an origin.";
@@ -965,7 +967,7 @@ states.persian_movement = {
 
 states.greek_movement = {
 	prompt: function (view, current) {
-		let name = game.event ? GREEK_EVENT_NAMES[game.event] : "Greek Movement";
+		let name = game.greek.event ? GREEK_EVENT_NAMES[game.greek.event] : "Greek Movement";
 		if (is_inactive_player(current))
 			return view.prompt = name + "."
 		view.prompt = name + ": Choose an origin.";
@@ -1152,7 +1154,7 @@ states.greek_naval_movement = {
 		view.naval_movement = game.from;
 		if (game.trigger.carneia_festival && game.from == SPARTA)
 			view.naval_transport = 0;
-		else if (game.event == TRIREMES || game.event == TRIREMES_TWO)
+		else if (game.greek.event == TRIREMES || game.greek.event == TRIREMES_TWO)
 			view.naval_transport = 0;
 		else
 			view.naval_transport = 1;
@@ -1567,9 +1569,9 @@ states.persian_land_battle_react = {
 		if (game.greek.hand.includes(MILTIADES) && can_play_miltiades_defense())
 			gen_action(view, 'card_event', MILTIADES);
 		if (!game.trigger.carneia_festival) {
-			if (game.event == CAVALRY_OF_MARDONIUS && game.greek.hand.includes(PAUSANIAS))
+			if (game.persian.event == CAVALRY_OF_MARDONIUS && game.greek.hand.includes(PAUSANIAS))
 				gen_action(view, 'card_event', PAUSANIAS);
-			if (game.event != MILTIADES && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
+			if (game.greek.event != MILTIADES && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
 				gen_action(view, 'card_event', THREE_HUNDRED_SPARTANS);
 		}
 	},
@@ -1607,11 +1609,11 @@ states.greek_land_battle_react = {
 }
 
 function greek_battle_dice() {
-	if (game.event == MILTIADES)
+	if (game.greek.event == MILTIADES)
 		return 3;
-	if (game.event == LEONIDAS)
+	if (game.greek.event == LEONIDAS)
 		return 2;
-	if (game.event == THREE_HUNDRED_SPARTANS)
+	if (game.greek.event == THREE_HUNDRED_SPARTANS)
 		return 3;
 	return count_greek_armies(game.where);
 }
@@ -1619,7 +1621,7 @@ function greek_battle_dice() {
 function persian_land_battle_round() {
 	log("Persia attacks " + game.where + "!");
 	let p_max = (game.where == ABYDOS || game.where == EPHESOS) ? 5 : 4;
-	if (game.event == CAVALRY_OF_MARDONIUS)
+	if (game.persian.event == CAVALRY_OF_MARDONIUS)
 		p_max = 6;
 	let g_max = 6;
 	let p_hit = roll_battle_dice("Persia", count_persian_armies(game.where), p_max);
@@ -1630,9 +1632,9 @@ function persian_land_battle_round() {
 		log("Greece loses one army.");
 		game.flash += " Greece loses one army.";
 		move_greek_army(game.where, RESERVE);
-		if (game.event == THREE_HUNDRED_SPARTANS) {
+		if (game.greek.event == THREE_HUNDRED_SPARTANS) {
 			log("300 Spartans advantage lost.");
-			game.event = 0;
+			game.greek.event = 0;
 		}
 	}
 	if (g_hit >= p_hit) {
@@ -1888,8 +1890,8 @@ function end_battle() {
 	game.naval_battle = 0;
 	game.from = null;
 
-	if (game.event == EVANGELION) {
-		game.event = 0;
+	if (game.greek.event == EVANGELION) {
+		game.greek.event = 0;
 		if (count_persian_armies(game.where) == 0) {
 			log("Greece scores 1 point.");
 			add_greek_vp();
@@ -1900,8 +1902,8 @@ function end_battle() {
 		}
 	}
 
-	if (game.event == THE_GREAT_KING) {
-		game.event = 0;
+	if (game.persian.event == THE_GREAT_KING) {
+		game.persian.event = 0;
 		if (count_greek_armies(game.where) == 0) {
 			log("Persia scores 1 point.");
 			add_persian_vp();
@@ -2333,7 +2335,7 @@ function can_play_mines_of_laurion() {
 }
 
 function play_mines_of_laurion() {
-	game.event = MINES_OF_LAURION;
+	game.greek.event = MINES_OF_LAURION;
 	goto_greek_preparation_draw();
 }
 
@@ -2410,7 +2412,7 @@ function can_play_leonidas() {
 }
 
 function play_leonidas() {
-	game.event = LEONIDAS;
+	game.greek.event = LEONIDAS;
 	if (count_greek_armies(RESERVE) > 0) {
 		game.trigger.leonidas = 1;
 		remove_greek_army(RESERVE);
@@ -2561,7 +2563,7 @@ function can_play_miltiades_attack() {
 
 function play_miltiades_attack() {
 	play_greek_event_card(MILTIADES);
-	game.event = MILTIADES;
+	game.greek.event = MILTIADES;
 	if (count_greek_armies(RESERVE) > 0) {
 		remove_greek_army(RESERVE);
 		game.trigger.miltiades = 1;
@@ -2592,12 +2594,12 @@ states.miltiades_attack_pay = {
 }
 
 function can_play_miltiades_defense() {
-	return !game.trigger.miltiades && game.event != THREE_HUNDRED_SPARTANS;
+	return !game.trigger.miltiades && game.greek.event != THREE_HUNDRED_SPARTANS;
 }
 
 function play_miltiades_defense() {
 	play_greek_event_card(MILTIADES);
-	game.event = MILTIADES;
+	game.greek.event = MILTIADES;
 	if (count_greek_armies(RESERVE) > 0) {
 		remove_greek_army(RESERVE);
 		game.trigger.miltiades = 1;
@@ -2637,7 +2639,7 @@ function can_play_themistocles() {
 }
 
 function play_themistocles() {
-	game.event = THEMISTOCLES;
+	game.greek.event = THEMISTOCLES;
 	if (count_greek_armies(RESERVE) > 0) {
 		game.trigger.themistocles = 1;
 		remove_greek_army(RESERVE);
@@ -2668,12 +2670,12 @@ function goto_themistocles() {
 
 function play_pausanias() {
 	play_greek_event_card(PAUSANIAS);
-	game.event = 0;
+	game.persian.event = 0;
 }
 
 function play_300_spartans() {
 	play_greek_event_card(THREE_HUNDRED_SPARTANS);
-	game.event = THREE_HUNDRED_SPARTANS;
+	game.greek.event = THREE_HUNDRED_SPARTANS;
 }
 
 function play_artemisia() {

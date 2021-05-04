@@ -1315,7 +1315,7 @@ function goto_greek_naval_battle() {
 }
 
 function persian_naval_battle_round() {
-	let can_play_artemisia = 0;
+	let persia_lost_fleet = 0;
 	log("Persia attacks " + game.where + " at sea!");
 	let p_max = (game.where == ABYDOS || game.where == EPHESOS) ? 5 : 4;
 	let g_max = 6;
@@ -1323,15 +1323,14 @@ function persian_naval_battle_round() {
 	let g_hit = roll_battle_dice("Greece", count_greek_fleets(game.where), g_max);
 	if (g_hit >= p_hit) {
 		remove_persian_transport_fleet();
-		if (count_persian_fleets(game.where) > 1)
-			can_play_artemisia = 1;
+		persia_lost_fleet = 1;
 	}
 	if (p_hit >= g_hit) {
 		log("Greece loses one fleet.");
 		move_greek_fleet(game.where, RESERVE);
 	}
 
-	if (!game.trigger.artemisia && can_play_artemisia) {
+	if (can_play_artemisia(persia_lost_fleet)) {
 		game.active = GREECE;
 		game.state = 'persian_naval_battle_artemisia';
 	} else {
@@ -1340,7 +1339,7 @@ function persian_naval_battle_round() {
 }
 
 function greek_naval_battle_round() {
-	let can_play_artemisia = 0;
+	let persia_lost_fleet = 0;
 	log("Greece attacks " + game.where + " at sea!");
 	let p_max = (game.where == ABYDOS || game.where == EPHESOS) ? 5 : 4;
 	let g_max = 6;
@@ -1359,11 +1358,10 @@ function greek_naval_battle_round() {
 	if (g_hit >= p_hit) {
 		log("Persia loses one fleet.");
 		move_persian_fleet(game.where, RESERVE);
-		if (count_persian_fleets(game.where) > 1)
-			can_play_artemisia = 1;
+		persia_lost_fleet = 1;
 	}
 
-	if (!game.trigger.artemisia && can_play_artemisia) {
+	if (can_play_artemisia(persia_lost_fleet)) {
 		game.state = 'greek_naval_battle_artemisia';
 	} else {
 		resume_greek_naval_battle();
@@ -1375,7 +1373,7 @@ states.persian_naval_battle_artemisia = {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Naval Battle: Persian fleet lost - Greece may play Artemisia I.";
 		view.prompt = "Persian Naval Battle: Persian fleet lost - you may play Artemisia I.";
-		if (!game.trigger.artemisia && game.greek.hand.includes(ARTEMISIA))
+		if (game.greek.hand.includes(ARTEMISIA))
 			gen_action(view, 'card_event', ARTEMISIA);
 		if (!is_inactive_player(current))
 			gen_action(view, 'next');
@@ -1392,7 +1390,7 @@ states.greek_naval_battle_artemisia = {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Naval Battle: Persian fleet lost - Greece may play Artemisia I.";
 		view.prompt = "Greek Naval Battle: Persian fleet lost - you may play Artemisia I.";
-		if (!game.trigger.artemisia && game.greek.hand.includes(ARTEMISIA))
+		if (game.greek.hand.includes(ARTEMISIA))
 			gen_action(view, 'card_event', ARTEMISIA);
 		if (!is_inactive_player(current))
 			gen_action(view, 'next');
@@ -2541,7 +2539,11 @@ function play_the_immortals() {
 // GREEK REACTION EVENTS
 
 function can_play_miltiades_attack() {
-	return !game.trigger.miltiades && game.greek.battle_event == 0 && count_persian_armies(game.where) > 0;
+	if (game.trigger.miltiades)
+		return false;
+	if (game.greek.hand.length == 0)
+		return false;
+	return game.greek.battle_event == 0 && count_persian_armies(game.where) > 0;
 }
 
 function play_miltiades_attack() {
@@ -2577,7 +2579,11 @@ states.miltiades_attack_pay = {
 }
 
 function can_play_miltiades_defense() {
-	return !game.trigger.miltiades && game.greek.battle_event == 0;
+	if (game.trigger.miltiades)
+		return false;
+	if (game.greek.hand.length == 0)
+		return false;
+	return game.greek.battle_event == 0;
 }
 
 function play_miltiades_defense() {
@@ -2613,11 +2619,13 @@ states.miltiades_defense_pay = {
 }
 
 function can_play_themistocles() {
-	if (!game.trigger.themistocles) {
-		for (let port of PORTS)
-			if (port != game.where && count_greek_fleets(port) > 0)
-				return true;
-	}
+	if (game.trigger.themistocles)
+		return false;
+	if (game.greek.hand.length == 0)
+		return false;
+	for (let port of PORTS)
+		if (port != game.where && count_greek_fleets(port) > 0)
+			return true;
 	return false;
 }
 
@@ -2660,6 +2668,14 @@ function play_pausanias() {
 function play_300_spartans() {
 	play_greek_event_card(THREE_HUNDRED_SPARTANS);
 	game.greek.battle_event = THREE_HUNDRED_SPARTANS;
+}
+
+function can_play_artemisia(persia_lost_fleet) {
+	if (game.trigger.artemisia)
+		return false;
+	if (game.greek.hand.length == 0)
+		return false;
+	return persia_lost_fleet && count_persian_fleets(game.where) > 1;
 }
 
 function play_artemisia() {

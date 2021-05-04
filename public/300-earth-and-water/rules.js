@@ -474,24 +474,6 @@ function gen_greek_land_movement(view) {
 	}
 }
 
-function gen_persian_land_movement(view) {
-	for (let city of CITIES_WITH_ROADS)
-		if (count_persian_armies(city) > 0)
-			gen_action(view, 'city', city);
-}
-
-function gen_greek_fleets(view) {
-	for (let port of PORTS)
-		if (count_greek_fleets(port) > 0)
-			gen_action(view, 'port', port);
-}
-
-function gen_persian_fleets(view) {
-	for (let port of PORTS)
-		if (count_persian_fleets(port) > 0)
-			gen_action(view, 'port', port);
-}
-
 // DEATH OF A KING
 
 function goto_sudden_death_of_darius(skip_scoring) {
@@ -874,6 +856,15 @@ function end_persian_movement() {
 
 function end_greek_movement() {
 	switch (game.greek.event) {
+	case THEMISTOCLES:
+console.log("end_greek_movement THEMISTOCLES");
+		game.active = PERSIA;
+		game.from = game.themistocles.from;
+		game.where = game.themistocles.where;
+		game.transport = game.themistocles.transport;
+		delete game.themistocles;
+		goto_persian_naval_battle();
+		break;
 	case TRIREMES:
 		if (greek_can_naval_move())
 			goto_greek_movement(false, true, TRIREMES_TWO);
@@ -973,19 +964,20 @@ states.persian_movement = {
 		if (is_inactive_player(current))
 			return view.prompt = name + "."
 		view.prompt = name + ": Choose an origin.";
-		if (game.land_movement)
-			gen_persian_land_movement(view);
-		if (game.naval_movement)
-			gen_persian_fleets(view);
+		if (game.land_movement) {
+			for (let city of CITIES_WITH_ROADS)
+				if (count_persian_armies(city) > 0)
+					gen_action(view, 'city', city);
+		}
+		if (game.naval_movement) {
+			for (let port of PORTS)
+				if (count_persian_fleets(port) > 0)
+					gen_action(view, 'port', port);
+		}
 		gen_action_undo(view);
 	},
-	city: function (space) {
-		goto_persian_land_movement(space);
-	},
-	port: function (space) {
-		game.from = space;
-		game.state = 'persian_naval_movement';
-	},
+	city: goto_persian_land_movement,
+	port: goto_persian_naval_movement,
 	undo: pop_undo,
 }
 
@@ -997,18 +989,33 @@ states.greek_movement = {
 		view.prompt = name + ": Choose an origin.";
 		if (game.land_movement)
 			gen_greek_land_movement(view);
-		if (game.naval_movement)
-			gen_greek_fleets(view);
+		if (game.naval_movement) {
+			for (let port of PORTS) {
+				if (game.greek.event == THEMISTOCLES)
+					if (port == game.themistocles.where)
+						continue;
+				if (count_greek_fleets(port) > 0) {
+					gen_action(view, 'port', port);
+				}
+			}
+		}
 		gen_action_undo(view);
 	},
-	city: function (space) {
-		goto_greek_land_movement(space);
-	},
-	port: function (space) {
-		game.from = space;
-		game.state = 'greek_naval_movement';
-	},
+	city: goto_greek_land_movement,
+	port: goto_greek_naval_movement,
 	undo: pop_undo,
+}
+
+function goto_persian_naval_movement(space) {
+	push_undo();
+	game.from = space;
+	game.state = 'persian_naval_movement';
+}
+
+function goto_greek_naval_movement(space) {
+	push_undo();
+	game.from = space;
+	game.state = 'greek_naval_movement';
 }
 
 function goto_persian_land_movement(space) {
@@ -1041,7 +1048,7 @@ states.persian_land_movement = {
 		for (let to in game.move_list)
 			if (to != game.from)
 				gen_action(view, 'city', to);
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	city: function ([to, armies]) {
 		push_undo();
@@ -1062,7 +1069,7 @@ states.greek_land_movement = {
 		for (let to in game.move_list)
 			if (to != game.from)
 				gen_action(view, 'city', to);
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	city: function ([to, armies]) {
 		push_undo();
@@ -1082,7 +1089,7 @@ states.greek_land_movement_leonidas = {
 		for (let to in game.move_list)
 			if (to != game.from)
 				gen_action(view, 'city', to);
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	city: function (to) {
 		push_undo();
@@ -1101,7 +1108,7 @@ states.persian_land_movement_confirm = {
 		view.prompt = "Persian Land Movement: Confirm destination.";
 		gen_action(view, 'city', game.where);
 		gen_action(view, 'next');
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	city: function () {
 		clear_undo();
@@ -1125,7 +1132,7 @@ states.greek_land_movement_confirm = {
 		}
 		gen_action(view, 'city', game.where);
 		gen_action(view, 'next');
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	card_event: function (card) {
 		push_undo();
@@ -1152,7 +1159,7 @@ states.persian_naval_movement = {
 		for (let port of PORTS)
 			if (port != game.from)
 				gen_action(view, 'port', port);
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	port: function ([to, fleets, armies]) {
 		push_undo();
@@ -1164,10 +1171,7 @@ states.persian_naval_movement = {
 		game.where = to;
 		game.state = 'persian_naval_movement_confirm';
 	},
-	undo: function () {
-		game.from = 0;
-		game.state = 'persian_movement';
-	},
+	undo: pop_undo,
 }
 
 states.greek_naval_movement = {
@@ -1180,27 +1184,28 @@ states.greek_naval_movement = {
 			view.naval_transport = 0;
 		else if (game.greek.event == TRIREMES || game.greek.event == TRIREMES_TWO)
 			view.naval_transport = 0;
+		else if (game.greek.event == THEMISTOCLES)
+			view.naval_transport = 0;
 		else
 			view.naval_transport = 1;
 		for (let port of PORTS)
 			if (port != game.from)
 				gen_action(view, 'port', port);
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	port: function ([to, fleets, armies]) {
 		push_undo();
 		log("Greece moves " + fleets + " fleets and " + armies + " armies from " + game.from + " to " + to + ".");
 		move_greek_fleet(game.from, to, fleets);
-		move_greek_army(game.from, to, armies);
-		game.transport = armies;
-		game.attacker = GREECE;
+		if (game.greek.event != THEMISTOCLES) {
+			move_greek_army(game.from, to, armies);
+			game.transport = armies;
+			game.attacker = GREECE;
+		}
 		game.where = to;
 		game.state = 'greek_naval_movement_confirm';
 	},
-	undo: function () {
-		game.from = 0;
-		game.state = 'greek_movement';
-	},
+	undo: pop_undo,
 }
 
 states.persian_naval_movement_confirm = {
@@ -1210,7 +1215,7 @@ states.persian_naval_movement_confirm = {
 		view.prompt = "Persian Naval Movement: Confirm destination.";
 		gen_action(view, 'port', game.where);
 		gen_action(view, 'next');
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	port: function () {
 		clear_undo();
@@ -1257,7 +1262,7 @@ states.greek_naval_movement_confirm = {
 		view.prompt = "Greek Naval Movement: Confirm destination.";
 		gen_action(view, 'port', game.where);
 		gen_action(view, 'next');
-		gen_action(view, 'undo');
+		gen_action_undo(view);
 	},
 	port: function () {
 		clear_undo();
@@ -1289,12 +1294,16 @@ function roll_battle_dice(who, count, cap) {
 
 function remove_persian_transport_fleet() {
 	move_persian_fleet(game.where, RESERVE);
-	if (count_persian_fleets(game.where) < game.transport) {
-		log("Persia loses one fleet and one army.");
-		move_persian_army(game.where, RESERVE);
-		--game.transport;
+	if (!game.themistocles) {
+		if (count_persian_fleets(game.where) < game.transport) {
+			log("Persia loses one fleet and one army.");
+			move_persian_army(game.where, RESERVE);
+			--game.transport;
+		} else {
+			log("Persia loses one fleet.");
+		}
 	} else {
-		log("Persia loses one fleet.");
+		log("Persia loses one fleet in " + game.where + ".");
 	}
 }
 
@@ -1307,6 +1316,11 @@ function goto_persian_naval_battle() {
 }
 
 function goto_greek_naval_battle() {
+	// If greece reinforced persian initiated battle...
+	if (game.greek.event == THEMISTOCLES && game.where == game.themistocles.where) {
+		return end_greek_movement();
+	}
+
 	game.naval_battle = 1;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0)
 		greek_naval_battle_round();
@@ -1405,7 +1419,10 @@ states.greek_naval_battle_artemisia = {
 function resume_persian_naval_battle() {
 	game.active = PERSIA;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0) {
-		game.state = 'persian_naval_retreat_attacker';
+		if (game.greek.event == THEMISTOCLES)
+			persian_naval_battle_round(); // TODO: pause?
+		else
+			game.state = 'persian_naval_retreat_attacker';
 	} else {
 		goto_persian_land_battle();
 	}
@@ -1414,7 +1431,10 @@ function resume_persian_naval_battle() {
 function resume_greek_naval_battle() {
 	game.active = GREECE;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0) {
-		game.state = 'greek_naval_retreat_attacker';
+		if (game.greek.event == THEMISTOCLES)
+			greek_naval_battle_round(); // TODO: pause?
+		else
+			game.state = 'greek_naval_retreat_attacker';
 	} else {
 		goto_greek_land_battle();
 	}
@@ -1529,6 +1549,7 @@ states.greek_naval_retreat_defender = {
 // LAND BATTLE
 
 function goto_persian_land_battle() {
+console.log("goto_persian_land_battle");
 	game.transport = 0;
 	if (count_greek_armies(game.where) > 0 && count_persian_armies(game.where) > 0) {
 		game.immortals = count_persian_armies(game.where);
@@ -2657,7 +2678,12 @@ states.themistocles_pay = {
 }
 
 function goto_themistocles() {
-	throw Error("TODO: Themistocles not implemented!");
+	game.themistocles = {
+		from: game.from,
+		where: game.where,
+		transport: game.transport,
+	};
+	goto_greek_movement(false, true, THEMISTOCLES);
 }
 
 function play_pausanias() {
@@ -2671,11 +2697,12 @@ function play_300_spartans() {
 }
 
 function can_play_artemisia(persia_lost_fleet) {
+console.log("can_play_artemisia", persia_lost_fleet, count_persian_fleets(game.where));
 	if (game.trigger.artemisia)
 		return false;
 	if (game.greek.hand.length == 0)
 		return false;
-	return persia_lost_fleet && count_persian_fleets(game.where) > 1;
+	return persia_lost_fleet && count_persian_fleets(game.where) > 0;
 }
 
 function play_artemisia() {
@@ -3069,8 +3096,12 @@ exports.view = function(state, current) {
 	states[game.state].prompt(view, current);
 	view.prompt = $(view.prompt);
 
-	if (game.transport)
-		view.transport = { count: game.transport, where: game.where, who: game.attacker };
+	if (game.transport) {
+		if (game.themistocles)
+			view.transport = { count:game.transport, where:game.themistocles.where, who:game.attacker };
+		else
+			view.transport = { count:game.transport, where:game.where, who:game.attacker };
+	}
 
 	if (current == GREECE) {
 		view.hand = game.greek.hand;

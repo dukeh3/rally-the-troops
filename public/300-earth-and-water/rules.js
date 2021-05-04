@@ -1704,7 +1704,7 @@ function resume_greek_land_battle(_, current) {
 		end_battle();
 }
 
-function gen_land_retreat_attacker(view) {
+function gen_land_retreat_attacker(view, is_friendly_control) {
 	// RULES: if land movement started in neighboring city, do they have to
 	// retreat to origin city if it is neighboring, or could they have gone
 	// a circuitous route to attack from another direction?
@@ -1712,7 +1712,7 @@ function gen_land_retreat_attacker(view) {
 		gen_action(view, 'city', game.from);
 	else
 		for (let city of ROADS[game.where])
-			if (city in game.move_list)
+			if (is_friendly_control(city) && city in game.move_list)
 				gen_action(view, 'city', city);
 }
 
@@ -1724,7 +1724,7 @@ states.persian_land_retreat_attacker = {
 		if (game.naval_battle)
 			gen_action(view, 'port', game.from);
 		else
-			gen_land_retreat_attacker(view);
+			gen_land_retreat_attacker(view, is_persian_control);
 		gen_action(view, 'city', game.where); // shortcut for battle
 		gen_action(view, 'battle');
 	},
@@ -1758,7 +1758,7 @@ states.greek_land_retreat_attacker = {
 		if (game.naval_battle)
 			gen_action(view, 'port', game.from);
 		else
-			gen_land_retreat_attacker(view);
+			gen_land_retreat_attacker(view, is_greek_control);
 		gen_action(view, 'city', game.where); // shortcut for battle
 		gen_action(view, 'battle');
 	},

@@ -2350,7 +2350,7 @@ states.ionian_revolt = {
 
 function can_play_wrath_of_poseidon() {
 	for (let port of PORTS)
-		if (count_persian_armies(port) > 0)
+		if (count_persian_fleets(port) > 0)
 			return true;
 	return false;
 }
@@ -2365,7 +2365,7 @@ states.wrath_of_poseidon = {
 			return view.prompt = "Wrath of Poseidon.";
 		view.prompt = "Wrath of Poseidon: Remove one Persian fleet from the map.";
 		for (let port of PORTS)
-			if (count_persian_armies(port) > 0)
+			if (count_persian_fleets(port) > 0)
 				gen_action(view, 'port', port);
 	},
 	port: function (port) {

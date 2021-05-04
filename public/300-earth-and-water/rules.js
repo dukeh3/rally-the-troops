@@ -13,11 +13,11 @@
 // greek: themistocles -> turn flag
 // greek: evangelion -> turn flag
 // greek: triremes -> turn flag
-// greek: leonidas -> turn or battle flag
+// greek: leonidas -> battle flag
 // greek: 300 spartans -> battle flag
 // greek: miltiades -> battle flag
-// persian: cavalry -> turn or battle flag flag
-// persian: great king -> turn flag
+// persian: cavalry -> flag
+// persian: great king -> flag
 
 // conflicts possible between:
 // leonidas + miltiades -- forbid combination?
@@ -891,6 +891,7 @@ function end_greek_movement() {
 
 function end_persian_operation() {
 	clear_undo();
+	game.greek.battle_event = 0;
 	game.greek.event = 0;
 	game.persian.event = 0;
 	game.land_movement = 0;
@@ -905,6 +906,7 @@ function end_persian_operation() {
 
 function end_greek_operation() {
 	clear_undo();
+	game.greek.battle_event = 0;
 	game.greek.event = 0;
 	game.persian.event = 0;
 	game.land_movement = 0;
@@ -1567,7 +1569,7 @@ states.persian_land_battle_react = {
 		if (!game.trigger.carneia_festival) {
 			if (game.persian.event == CAVALRY_OF_MARDONIUS && game.greek.hand.includes(PAUSANIAS))
 				gen_action(view, 'card_event', PAUSANIAS);
-			if (game.greek.event != MILTIADES && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
+			if (game.greek.battle_event == 0 && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
 				gen_action(view, 'card_event', THREE_HUNDRED_SPARTANS);
 		}
 	},
@@ -1591,11 +1593,11 @@ states.persian_land_battle_react = {
 }
 
 function greek_battle_dice() {
-	if (game.greek.event == MILTIADES)
+	if (game.greek.battle_event == MILTIADES)
 		return 3;
-	if (game.greek.event == LEONIDAS)
+	if (game.greek.battle_event == LEONIDAS)
 		return 2;
-	if (game.greek.event == THREE_HUNDRED_SPARTANS)
+	if (game.greek.battle_event == THREE_HUNDRED_SPARTANS)
 		return 3;
 	return count_greek_armies(game.where);
 }
@@ -1615,9 +1617,9 @@ function persian_land_battle_round() {
 	if (p_hit >= g_hit) {
 		log("Greece loses one army.");
 		move_greek_army(game.where, RESERVE);
-		if (game.greek.event == THREE_HUNDRED_SPARTANS) {
+		if (game.greek.battle_event == THREE_HUNDRED_SPARTANS) {
 			log("300 Spartans advantage lost.");
-			game.greek.event = 0;
+			game.greek.battle_event = 0;
 		}
 	}
 	if (g_hit >= p_hit) {
@@ -2394,7 +2396,7 @@ function can_play_leonidas() {
 }
 
 function play_leonidas() {
-	game.greek.event = LEONIDAS;
+	game.greek.battle_event = LEONIDAS;
 	if (count_greek_armies(RESERVE) > 0) {
 		game.trigger.leonidas = 1;
 		remove_greek_army(RESERVE);
@@ -2539,12 +2541,12 @@ function play_the_immortals() {
 // GREEK REACTION EVENTS
 
 function can_play_miltiades_attack() {
-	return !game.trigger.miltiades && game.greek.event == 0 && count_persian_armies(game.where) > 0;
+	return !game.trigger.miltiades && game.greek.battle_event == 0 && count_persian_armies(game.where) > 0;
 }
 
 function play_miltiades_attack() {
 	play_greek_event_card(MILTIADES);
-	game.greek.event = MILTIADES;
+	game.greek.battle_event = MILTIADES;
 	if (count_greek_armies(RESERVE) > 0) {
 		remove_greek_army(RESERVE);
 		game.trigger.miltiades = 1;
@@ -2575,12 +2577,12 @@ states.miltiades_attack_pay = {
 }
 
 function can_play_miltiades_defense() {
-	return !game.trigger.miltiades && game.greek.event == 0;
+	return !game.trigger.miltiades && game.greek.battle_event == 0;
 }
 
 function play_miltiades_defense() {
 	play_greek_event_card(MILTIADES);
-	game.greek.event = MILTIADES;
+	game.greek.battle_event = MILTIADES;
 	if (count_greek_armies(RESERVE) > 0) {
 		remove_greek_army(RESERVE);
 		game.trigger.miltiades = 1;
@@ -2657,7 +2659,7 @@ function play_pausanias() {
 
 function play_300_spartans() {
 	play_greek_event_card(THREE_HUNDRED_SPARTANS);
-	game.greek.event = THREE_HUNDRED_SPARTANS;
+	game.greek.battle_event = THREE_HUNDRED_SPARTANS;
 }
 
 function play_artemisia() {
@@ -2954,11 +2956,14 @@ exports.setup = function (scenario, players) {
 			hand: [],
 			draw: 0,
 			pass: 0,
+			event: 0,
 		},
 		greek: {
 			hand: [],
 			draw: 0,
 			pass: 0,
+			event: 0,
+			battle_event: 0,
 		},
 		units: {
 			Abydos: [0,2,0,0],

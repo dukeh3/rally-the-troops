@@ -1548,8 +1548,14 @@ states.greek_naval_retreat_defender = {
 
 // LAND BATTLE
 
+function can_play_land_battle_reaction() {
+	let m = can_play_miltiades_defense();
+	let p = can_play_pausanias();
+	let s = can_play_300_spartans();
+	return m || p || s;
+}
+
 function goto_persian_land_battle() {
-console.log("goto_persian_land_battle");
 	game.transport = 0;
 	if (count_greek_armies(game.where) > 0 && count_persian_armies(game.where) > 0) {
 		game.immortals = count_persian_armies(game.where);
@@ -1561,8 +1567,12 @@ console.log("goto_persian_land_battle");
 }
 
 function goto_persian_land_battle_react() {
-	game.active = GREECE;
-	game.state = 'persian_land_battle_react';
+	if (can_play_land_battle_reaction()) {
+		game.active = GREECE;
+		game.state = 'persian_land_battle_react';
+	} else {
+		persian_land_battle_round();
+	}
 }
 
 function goto_greek_land_battle() {
@@ -1579,18 +1589,30 @@ function goto_greek_land_battle() {
 
 states.persian_land_battle_react = {
 	prompt: function (view, current) {
+		let m = can_play_miltiades_defense();
+		let p = can_play_pausanias();
+		let s = can_play_300_spartans();
+
+		let msg = is_inactive_player(current) ? "Greece may play " : "You may play ";
+		if (m && p && s) msg += "Miltiades, Pausanias, or 300 Spartans.";
+		if (m && p && !s) msg += "Miltiades or Pausanias.";
+		if (m && !p && s) msg += "Miltiades or 300 Spartans.";
+		if (m && !p && !s) msg += "Miltiades.";
+		if (!m && p && s) msg += "Pausanias or 300 Spartans.";
+		if (!m && p && !s) msg += "Pausanias.";
+		if (!m && !p && s) msg += "300 Spartans.";
+
 		if (is_inactive_player(current))
-			return view.prompt = "Persian Land Battle: Greece may play a reaction event.";
-		view.prompt = "Persian Land Battle: Persia attacks " + game.where + "! You may play a reaction event.";
+			return view.prompt = "Persian Land Battle: " + msg;
+		view.prompt = "Persian Land Battle: Persia attacks " + game.where + "! " + msg;
+
 		gen_action(view, 'next');
-		if (game.greek.hand.includes(MILTIADES) && can_play_miltiades_defense())
+		if (m && game.greek.hand.includes(MILTIADES))
 			gen_action(view, 'card_event', MILTIADES);
-		if (!game.trigger.carneia_festival) {
-			if (game.persian.event == CAVALRY_OF_MARDONIUS && game.greek.hand.includes(PAUSANIAS))
-				gen_action(view, 'card_event', PAUSANIAS);
-			if (game.greek.battle_event == 0 && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
-				gen_action(view, 'card_event', THREE_HUNDRED_SPARTANS);
-		}
+		if (p && game.greek.hand.includes(PAUSANIAS))
+			gen_action(view, 'card_event', PAUSANIAS);
+		if (s && game.greek.hand.includes(THREE_HUNDRED_SPARTANS))
+			gen_action(view, 'card_event', THREE_HUNDRED_SPARTANS);
 	},
 	card_event: function (card) {
 		switch (card) {
@@ -1622,6 +1644,8 @@ function greek_battle_dice() {
 }
 
 function can_play_the_immortals() {
+	if (game.persian.hand.length == 0)
+		return false;
 	return count_persian_armies(game.where) == 0;
 }
 
@@ -2559,44 +2583,20 @@ function play_the_immortals() {
 
 // GREEK REACTION EVENTS
 
-function can_play_miltiades_attack() {
-	if (game.trigger.miltiades)
-		return false;
+function can_play_pausanias() {
 	if (game.greek.hand.length == 0)
 		return false;
-	return game.greek.battle_event == 0 && count_persian_armies(game.where) > 0;
+	if (game.trigger.carneia_festival)
+		return false;
+	return game.persian.event == CAVALRY_OF_MARDONIUS;
 }
 
-function play_miltiades_attack() {
-	play_greek_event_card(MILTIADES);
-	game.greek.battle_event = MILTIADES;
-	if (count_greek_armies(RESERVE) > 0) {
-		remove_greek_army(RESERVE);
-		game.trigger.miltiades = 1;
-	} else {
-		game.state = 'miltiades_attack_pay';
-	}
-}
-
-states.miltiades_attack_pay = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Leonidas.";
-		view.prompt = "Miltiades: Remove one Greek army to pay for the event.";
-		for (let city of CITIES) {
-			let need = (city == game.where) ? 2 : 1;
-			if (count_greek_armies(city) >= need)
-				gen_action(view, 'city', city);
-		}
-		gen_action_undo(view);
-	},
-	city: function (space) {
-		push_undo();
-		remove_greek_army(space);
-		game.trigger.miltiades = 1;
-		game.state = 'greek_land_movement_confirm';
-	},
-	undo: pop_undo,
+function can_play_300_spartans() {
+	if (game.greek.hand.length == 0)
+		return false;
+	if (game.trigger.carneia_festival)
+		return false;
+	return game.greek.battle_event == 0;
 }
 
 function can_play_miltiades_defense() {
@@ -2607,6 +2607,14 @@ function can_play_miltiades_defense() {
 	return game.greek.battle_event == 0;
 }
 
+function can_play_miltiades_attack() {
+	if (game.greek.hand.length == 0)
+		return false;
+	if (game.trigger.miltiades)
+		return false;
+	return game.greek.battle_event == 0 && count_persian_armies(game.where) > 0;
+}
+
 function play_miltiades_defense() {
 	play_greek_event_card(MILTIADES);
 	game.greek.battle_event = MILTIADES;
@@ -2615,6 +2623,17 @@ function play_miltiades_defense() {
 		game.trigger.miltiades = 1;
 	} else {
 		game.state = 'miltiades_defense_pay';
+	}
+}
+
+function play_miltiades_attack() {
+	play_greek_event_card(MILTIADES);
+	game.greek.battle_event = MILTIADES;
+	if (count_greek_armies(RESERVE) > 0) {
+		remove_greek_army(RESERVE);
+		game.trigger.miltiades = 1;
+	} else {
+		game.state = 'miltiades_attack_pay';
 	}
 }
 
@@ -2639,10 +2658,31 @@ states.miltiades_defense_pay = {
 	undo: pop_undo,
 }
 
+states.miltiades_attack_pay = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Leonidas.";
+		view.prompt = "Miltiades: Remove one Greek army to pay for the event.";
+		for (let city of CITIES) {
+			let need = (city == game.where) ? 2 : 1;
+			if (count_greek_armies(city) >= need)
+				gen_action(view, 'city', city);
+		}
+		gen_action_undo(view);
+	},
+	city: function (space) {
+		push_undo();
+		remove_greek_army(space);
+		game.trigger.miltiades = 1;
+		game.state = 'greek_land_movement_confirm';
+	},
+	undo: pop_undo,
+}
+
 function can_play_themistocles() {
-	if (game.trigger.themistocles)
-		return false;
 	if (game.greek.hand.length == 0)
+		return false;
+	if (game.trigger.themistocles)
 		return false;
 	for (let port of PORTS)
 		if (port != game.where && count_greek_fleets(port) > 0)
@@ -2697,10 +2737,9 @@ function play_300_spartans() {
 }
 
 function can_play_artemisia(persia_lost_fleet) {
-console.log("can_play_artemisia", persia_lost_fleet, count_persian_fleets(game.where));
-	if (game.trigger.artemisia)
-		return false;
 	if (game.greek.hand.length == 0)
+		return false;
+	if (game.trigger.artemisia)
 		return false;
 	return persia_lost_fleet && count_persian_fleets(game.where) > 0;
 }

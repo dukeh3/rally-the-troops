@@ -481,14 +481,14 @@ function can_defect(source, target) {
 }
 
 function can_attempt_treason_event() {
-	for (let b in BLOCKS) {
-		if (game.active == game.attacker[game.where]) {
+	if (game.treason == game.attacker[game.where]) {
+		for (let b in BLOCKS)
 			if (is_defender(b) && can_defect(null, b))
 				return true;
-		} else {
+	} else {
+		for (let b in BLOCKS)
 			if (is_attacker(b) && can_defect(null, b))
 				return true;
-		}
 	}
 	return false;
 }

@@ -2353,7 +2353,7 @@ states.edward_wintering = {
 		winter_edward();
 	},
 	disband: function () {
-		disband_endward();
+		disband_edward();
 	},
 	area: function (to) {
 		if (to == ENGLAND)

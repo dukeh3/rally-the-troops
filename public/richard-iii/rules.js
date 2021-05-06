@@ -1548,6 +1548,7 @@ states.muster_event = {
 		}
 	},
 	area: function (where) {
+		push_undo();
 		game.where = where;
 		game.state = 'muster_who';
 	},
@@ -1571,6 +1572,7 @@ states.muster_who = {
 				gen_action(view, 'block', b);
 	},
 	block: function (who) {
+		push_undo();
 		game.who = who;
 		game.state = 'muster_move_1';
 	},
@@ -1596,10 +1598,6 @@ states.muster_move_1 = {
 				gen_action(view, 'area', to);
 		}
 	},
-	block: function () {
-		game.who = null;
-		game.state = 'muster_who';
-	},
 	area: function (to) {
 		let from = game.location[game.who];
 		log_move_start(from);
@@ -1614,6 +1612,7 @@ states.muster_move_1 = {
 			game.state = 'muster_move_2';
 		}
 	},
+	block: pop_undo,
 	undo: pop_undo,
 }
 

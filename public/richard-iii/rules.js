@@ -354,11 +354,11 @@ function is_london_friendly_to(owner) {
 	return is_area_friendly_to("Middlesex", owner);
 }
 
-function count_lancaster_nobles() {
+function count_lancaster_nobles_and_heirs() {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) == LANCASTER &&
-			(block_type(b) == 'nobles' || block_type(b) == 'church'))
+			(block_type(b) == 'nobles' || block_type(b) == 'church' || block_type(b) == 'heir'))
 			if (is_on_map_not_in_exile_or_man(b))
 				++count;
 	if (is_london_friendly_to(LANCASTER))
@@ -366,11 +366,11 @@ function count_lancaster_nobles() {
 	return count;
 }
 
-function count_york_nobles() {
+function count_york_nobles_and_heirs() {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) == YORK &&
-			(block_type(b) == 'nobles' || block_type(b) == 'church'))
+			(block_type(b) == 'nobles' || block_type(b) == 'church' || block_type(b) == 'heir'))
 			if (is_on_map_not_in_exile_or_man(b))
 				++count;
 	if (is_london_friendly_to(YORK))
@@ -391,14 +391,21 @@ function block_home(who) {
 }
 
 function block_owner(who) {
-	if (who == REBEL)
-		return block_owner(game.pretender);
+	if (who == REBEL) {
+		let pretender = game.pretender;
+		if (game.pretender)
+			return block_owner(game.pretender);
+		else if (game.king)
+			return ENEMY[block_owner(game.king)];
+		else
+			return YORK; // whatever... they're both dead
+	}
 	return BLOCKS[who].owner;
 }
 
 function block_initiative(who) {
 	if (block_type(who) == 'bombard')
-		return game.battle_round == 1 ? 'A' : 'D';
+		return game.battle_round <= 1 ? 'A' : 'D';
 	return BLOCKS[who].combat[0];
 }
 
@@ -2972,8 +2979,8 @@ function goto_political_turn() {
 	print_turn_log("Levies disband:");
 
 	// Usurpation
-	let l_count = count_lancaster_nobles();
-	let y_count = count_york_nobles();
+	let l_count = count_lancaster_nobles_and_heirs();
+	let y_count = count_york_nobles_and_heirs();
 	log("");
 	log("Lancaster controls " + l_count + " nobles.");
 	log("York controls " + y_count + " nobles.");

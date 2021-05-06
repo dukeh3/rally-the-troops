@@ -89,6 +89,7 @@ const STEP_TEXT = [ 0, "I", "II", "III", "IIII" ];
 const HEIR_TEXT = [ 0, '\u00b9', '\u00b2', '\u00b3', '\u2074', '\u2075' ];
 
 function block_name(who) {
+	if (!who) return "Nobody";
 	let name = BLOCKS[who].name;
 	let long_name = LONG_NAME[name];
 	return long_name ? long_name : name;

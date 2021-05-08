@@ -339,6 +339,10 @@ function can_draw_card(extra) {
 	return game.deck.length + game.discard.length - extra > 0;
 }
 
+function is_visible_discard(card) {
+	return game.discard.length > 0 && game.discard[game.discard.length-1] == card;
+}
+
 function discard_persian_hand() {
 	for (let c of game.persian.hand)
 		game.discard.push(c);
@@ -828,7 +832,6 @@ function goto_greek_operation() {
 
 function goto_persian_operation() {
 	log("");
-	game.tribute_of_earth_and_water = null;
 	if (game.persian.hand.length > 0) {
 		game.active = PERSIA;
 		game.state = 'persian_operation';
@@ -1496,7 +1499,7 @@ states.persian_naval_retreat_attacker = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Naval Battle: Attacker retreat?";
-		view.prompt = "Persian Naval Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
 		gen_action(view, 'port', game.from);
 		gen_action(view, 'port', game.where); // shortcut for battle
 		gen_action(view, 'battle');
@@ -1522,7 +1525,7 @@ states.greek_naval_retreat_attacker = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Naval Battle: Attacker retreat?";
-		view.prompt = "Greek Naval Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
 		gen_action(view, 'port', game.from);
 		gen_action(view, 'port', game.where); // shortcut for battle
 		gen_action(view, 'battle');
@@ -1548,7 +1551,7 @@ states.persian_naval_retreat_defender = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Naval Battle: Defender retreat?";
-		view.prompt = "Persian Naval Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
 		for (let port of PORTS)
 			if (is_greek_control(port))
 				gen_action(view, 'port', port);
@@ -1575,9 +1578,9 @@ states.greek_naval_retreat_defender = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Naval Battle: Defender retreat?";
-		view.prompt = "Greek Naval Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
 		for (let port of PORTS)
-			if (is_greek_control(port))
+			if (is_persian_control(port))
 				gen_action(view, 'port', port);
 		gen_action(view, 'port', game.where); // shortcut for battle
 		gen_action(view, 'battle');
@@ -1586,7 +1589,7 @@ states.greek_naval_retreat_defender = {
 		game.active = GREECE;
 		if (to != game.where) {
 			log("Persian fleets retreat to " + to + ".");
-			move_greek_fleet(game.where, to, count_greek_fleets(game.where));
+			move_persian_fleet(game.where, to, count_persian_fleets(game.where));
 			goto_greek_land_battle();
 		} else {
 			greek_naval_battle_round();
@@ -1612,7 +1615,7 @@ function goto_persian_land_battle() {
 	if (count_greek_armies(game.where) > 0 && count_persian_armies(game.where) > 0) {
 		log("");
 		log("Persia attacks " + game.where + "!");
-		game.immortals = count_persian_armies(game.where);
+		game.immortals = Math.min(3, count_persian_armies(game.where));
 		goto_persian_land_battle_react();
 	} else {
 		game.from = null;
@@ -1634,7 +1637,7 @@ function goto_greek_land_battle() {
 	if (count_greek_armies(game.where) > 0 && count_persian_armies(game.where) > 0) {
 		log("");
 		log("Greece attacks " + game.where + "!");
-		game.immortals = count_persian_armies(game.where);
+		game.immortals = Math.min(3, count_persian_armies(game.where));
 		game.active = GREECE;
 		greek_land_battle_round();
 	} else {
@@ -1697,12 +1700,6 @@ function greek_battle_dice() {
 	if (game.greek.battle_event == THREE_HUNDRED_SPARTANS)
 		return 3;
 	return count_greek_armies(game.where);
-}
-
-function can_play_the_immortals() {
-	if (game.persian.hand.length == 0)
-		return false;
-	return count_persian_armies(game.where) == 0;
 }
 
 function persian_land_battle_round() {
@@ -1819,7 +1816,7 @@ states.persian_land_retreat_attacker = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Land Battle: Attacker retreat?";
-		view.prompt = "Persian Land Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Persian Land Battle: Continue the battle in " + game.where + " or retreat?";
 		if (game.naval_battle)
 			gen_action(view, 'port', game.from);
 		else
@@ -1853,7 +1850,7 @@ states.greek_land_retreat_attacker = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Land Battle: Attacker retreat?";
-		view.prompt = "Greek Land Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Greek Land Battle: Continue the battle in " + game.where + " or retreat?";
 		if (game.naval_battle)
 			gen_action(view, 'port', game.from);
 		else
@@ -1887,7 +1884,7 @@ states.persian_land_retreat_defender = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Land Battle: Defender retreat?";
-		view.prompt = "Persian Land Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Persian Land Battle: Continue the battle in " + game.where + " or retreat?";
 		// retreat by land
 		for (let city of ROADS[game.where]) {
 			if (is_usable_road(game.where, city) && is_greek_control(city))
@@ -1929,7 +1926,7 @@ states.greek_land_retreat_defender = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Land Battle: Defender retreat?";
-		view.prompt = "Greek Land Battle: Continue the battle in " + game.from + " or retreat?";
+		view.prompt = "Greek Land Battle: Continue the battle in " + game.where + " or retreat?";
 		// retreat by land
 		for (let city of ROADS[game.where]) {
 			if (is_usable_road(game.where, city) && is_persian_control(city))
@@ -2098,10 +2095,28 @@ states.tribute_of_earth_and_water = {
 	},
 	city: function (city) {
 		log("Persia places an army in " + city);
-		game.tribute_of_earth_and_water = city;
 		move_persian_army(RESERVE, city, 1);
-		end_persian_operation();
+		game.where = city;
+		if (can_play_molon_labe()) {
+			game.active = GREECE;
+			game.state = 'tribute_of_earth_and_water_react';
+		} else {
+			end_persian_operation();
+		}
 	},
+}
+
+states.tribute_of_earth_and_water_react = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Tribute of Earth and Water: Greece may play Molon Labe.";
+		view.prompt = "Tribute of Earth and Water: You may play Molon Labe.";
+		if (game.greek.hand.includes(MOLON_LABE))
+			gen_action(view, 'card_event', MOLON_LABE);
+		gen_action(view, 'next');
+	},
+	card_event: play_molon_labe,
+	next: end_persian_operation,
 }
 
 function can_play_cavalry_of_mardonius() {
@@ -2384,7 +2399,7 @@ function can_play_greek_event(card) {
 	case 9: return false; // artemisia
 	case 10: return can_play_evangelion();
 	case 11: return can_play_melas_zomos();
-	case 12: return can_play_molon_labe();
+	case 12: return false; // molon_labe
 	case 13: return can_play_triremes();
 	case 14: return can_play_support_from_syracuse();
 	case 15: return false; // 300 spartans
@@ -2403,7 +2418,6 @@ function play_greek_event(card) {
 	case 8: return play_leonidas();
 	case 10: return play_evangelion();
 	case 11: return play_melas_zomos();
-	case 12: return play_molon_labe();
 	case 13: return play_triremes();
 	case 14: return play_support_from_syracuse();
 	case 16: return play_desertion_of_greek_soldiers();
@@ -2550,17 +2564,6 @@ function play_melas_zomos() {
 	end_greek_operation();
 }
 
-function can_play_molon_labe() {
-	return game.tribute_of_earth_and_water != null;
-}
-
-function play_molon_labe() {
-	log("Greece removes a Persian army in " + game.tribute_of_earth_and_water + ".");
-	move_persian_army(game.tribute_of_earth_and_water, RESERVE, 1);
-	game.tribute_of_earth_and_water = null;
-	goto_greek_land_movement_event(MOLON_LABE);
-}
-
 function can_play_triremes() {
 	return greek_can_naval_move();
 }
@@ -2629,40 +2632,70 @@ states.desertion_of_greek_soldiers = {
 	}
 }
 
-function play_the_immortals() {
-	play_persian_event_card(THE_IMMORTALS);
-	log("The Immortals recover " + game.immortals + " armies!");
-	move_persian_army(RESERVE, game.where, game.immortals);
+// GREEK REACTION EVENTS
+
+function can_play_molon_labe() {
+	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(MOLON_LABE))
+		return false;
+	return true;
 }
 
-// GREEK REACTION EVENTS
+function play_molon_labe() {
+	play_greek_event_card(MOLON_LABE);
+	log("Greece removes a Persian army in " + game.where + ".");
+	move_persian_army(game.where, RESERVE, 1);
+	game.where = null;
+	goto_greek_movement(true, false, MOLON_LABE);
+}
 
 function can_play_pausanias() {
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(PAUSANIAS))
 		return false;
 	if (game.trigger.carneia_festival)
 		return false;
 	return game.persian.event == CAVALRY_OF_MARDONIUS;
 }
 
+function play_pausanias() {
+	play_greek_event_card(PAUSANIAS);
+	game.persian.event = 0;
+	goto_persian_land_battle_react();
+}
+
 function can_play_300_spartans() {
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(THREE_HUNDRED_SPARTANS))
 		return false;
 	if (game.trigger.carneia_festival)
 		return false;
 	return game.greek.battle_event == 0;
 }
 
+function play_300_spartans() {
+	play_greek_event_card(THREE_HUNDRED_SPARTANS);
+	game.greek.battle_event = THREE_HUNDRED_SPARTANS;
+	goto_persian_land_battle_react();
+}
+
 function can_play_miltiades_defense() {
-	if (game.trigger.miltiades)
-		return false;
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(MILTIADES))
+		return false;
+	if (game.trigger.miltiades)
 		return false;
 	return game.greek.battle_event == 0;
 }
 
 function can_play_miltiades_attack() {
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(MILTIADES))
 		return false;
 	if (game.trigger.miltiades)
 		return false;
@@ -2675,6 +2708,7 @@ function play_miltiades_defense() {
 	if (count_greek_armies(RESERVE) > 0) {
 		remove_greek_army(RESERVE);
 		game.trigger.miltiades = 1;
+		goto_persian_land_battle_react();
 	} else {
 		game.state = 'miltiades_defense_pay';
 	}
@@ -2707,7 +2741,7 @@ states.miltiades_defense_pay = {
 		push_undo();
 		remove_greek_army(space);
 		game.trigger.miltiades = 1;
-		game.state = 'persian_land_battle_react';
+		goto_persian_land_battle_react();
 	},
 	undo: pop_undo,
 }
@@ -2735,6 +2769,8 @@ states.miltiades_attack_pay = {
 
 function can_play_themistocles() {
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(THEMISTOCLES))
 		return false;
 	if (game.trigger.themistocles)
 		return false;
@@ -2780,18 +2816,10 @@ function goto_themistocles() {
 	goto_greek_movement(false, true, THEMISTOCLES);
 }
 
-function play_pausanias() {
-	play_greek_event_card(PAUSANIAS);
-	game.persian.event = 0;
-}
-
-function play_300_spartans() {
-	play_greek_event_card(THREE_HUNDRED_SPARTANS);
-	game.greek.battle_event = THREE_HUNDRED_SPARTANS;
-}
-
 function can_play_artemisia(persia_lost_fleet) {
 	if (game.greek.hand.length == 0)
+		return false;
+	if (is_visible_discard(ARTEMISIA))
 		return false;
 	if (game.trigger.artemisia)
 		return false;
@@ -2802,6 +2830,22 @@ function play_artemisia() {
 	play_greek_event_card(ARTEMISIA);
 	game.trigger.artemisia = 1;
 	remove_persian_transport_fleet();
+}
+
+// PERSIAN REACTION EVENTS
+
+function can_play_the_immortals() {
+	if (game.persian.hand.length == 0)
+		return false;
+	if (is_visible_discard(THE_IMMORTALS))
+		return false;
+	return count_persian_armies(game.where) == 0;
+}
+
+function play_the_immortals() {
+	play_persian_event_card(THE_IMMORTALS);
+	log("The Immortals recover " + game.immortals + " armies!");
+	move_persian_army(RESERVE, game.where, game.immortals);
 }
 
 // SUPPLY PHASE

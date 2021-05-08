@@ -33,11 +33,11 @@
 	background-color: gainsboro;
 	white-space: pre-wrap;
 }
-.last_played {
+.role_info.card_info {
 	background-color: silver;
 }
-.last_played .card {
-	margin: 15px auto;
+#deck_info {
+	text-align: center;
 }
 .grid_role {
 	width: 240px;
@@ -70,7 +70,8 @@
 	border-radius: 12px;
 }
 
-.role_info .card {
+.card_info .card {
+	margin: 15px auto;
 	width: 200px;
 	height: 280px;
 	border-radius: 10px;
@@ -268,7 +269,7 @@
 			<div class="role_info" id="persian_info">0 cards in hand</div>
 		</div>
 
-		<div class="role_info last_played"><div id="last_played" class="card show card_back"></div></div>
+		<div class="role_info card_info"><div id="discard" class="card show card_back"></div><div id="deck_info"></div></div>
 	</div>
 
 	<div class="grid_log">

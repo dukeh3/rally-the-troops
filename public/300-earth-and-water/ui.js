@@ -261,9 +261,12 @@ function on_update(state, player) {
 	document.getElementById("persian_info").textContent = persian_info();
 
 	if (!game.discard)
-		document.getElementById("last_played").className = "card show card_back";
+		document.getElementById("discard").className = "card show card_back";
 	else
-		document.getElementById("last_played").className = "card show card_" + game.discard;
+		document.getElementById("discard").className = "card show card_" + game.discard;
+
+	document.getElementById("deck_info").textContent =
+		"Deck: " + game.deck_size + " \u2014 Discard: " + game.discard_size;
 
 	show_action_button("#button_battle", "battle");
 	show_action_button("#button_build", "build");

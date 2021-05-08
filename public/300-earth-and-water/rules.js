@@ -3233,6 +3233,8 @@ exports.view = function(state, current) {
 		active: game.active,
 		campaign: game.campaign,
 		vp: game.vp,
+		deck_size: game.deck.length - game.greek.draw - game.persian.draw,
+		discard_size: game.discard.length,
 		trigger: game.trigger,
 		units: game.units,
 	};

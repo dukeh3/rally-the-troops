@@ -1474,10 +1474,7 @@ states.greek_naval_battle_artemisia = {
 function resume_persian_naval_battle() {
 	game.active = PERSIA;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0) {
-		if (game.greek.event == THEMISTOCLES)
-			persian_naval_battle_round(); // TODO: pause?
-		else
-			game.state = 'persian_naval_retreat_attacker';
+		game.state = 'persian_naval_retreat_attacker';
 	} else {
 		goto_persian_land_battle();
 	}
@@ -1486,10 +1483,7 @@ function resume_persian_naval_battle() {
 function resume_greek_naval_battle() {
 	game.active = GREECE;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0) {
-		if (game.greek.event == THEMISTOCLES)
-			greek_naval_battle_round(); // TODO: pause?
-		else
-			game.state = 'greek_naval_retreat_attacker';
+		game.state = 'greek_naval_retreat_attacker';
 	} else {
 		goto_greek_land_battle();
 	}
@@ -1500,8 +1494,9 @@ states.persian_naval_retreat_attacker = {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Naval Battle: Attacker retreat?";
 		view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		gen_action(view, 'port', game.from);
 		gen_action(view, 'port', game.where); // shortcut for battle
+		if (game.greek.event != THEMISTOCLES)
+			gen_action(view, 'port', game.from);
 		gen_action(view, 'battle');
 	},
 	port: function (to) {
@@ -1526,8 +1521,9 @@ states.greek_naval_retreat_attacker = {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Naval Battle: Attacker retreat?";
 		view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		gen_action(view, 'port', game.from);
 		gen_action(view, 'port', game.where); // shortcut for battle
+		if (game.greek.event != THEMISTOCLES)
+			gen_action(view, 'port', game.from);
 		gen_action(view, 'battle');
 	},
 	port: function (to) {
@@ -1552,10 +1548,11 @@ states.persian_naval_retreat_defender = {
 		if (is_inactive_player(current))
 			return view.prompt = "Persian Naval Battle: Defender retreat?";
 		view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		for (let port of PORTS)
-			if (is_greek_control(port))
-				gen_action(view, 'port', port);
 		gen_action(view, 'port', game.where); // shortcut for battle
+		if (game.greek.event != THEMISTOCLES)
+			for (let port of PORTS)
+				if (is_greek_control(port))
+					gen_action(view, 'port', port);
 		gen_action(view, 'battle');
 	},
 	port: function (to) {
@@ -1579,10 +1576,11 @@ states.greek_naval_retreat_defender = {
 		if (is_inactive_player(current))
 			return view.prompt = "Greek Naval Battle: Defender retreat?";
 		view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		for (let port of PORTS)
-			if (is_persian_control(port))
-				gen_action(view, 'port', port);
 		gen_action(view, 'port', game.where); // shortcut for battle
+		if (game.greek.event != THEMISTOCLES)
+			for (let port of PORTS)
+				if (is_persian_control(port))
+					gen_action(view, 'port', port);
 		gen_action(view, 'battle');
 	},
 	port: function (to) {

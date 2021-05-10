@@ -900,10 +900,19 @@ states.greek_operation = {
 }
 
 function end_persian_movement() {
+	game.where = null;
 	end_persian_operation();
 }
 
 function end_greek_movement() {
+	if (game.where == ABYDOS && is_greek_control(ABYDOS) && game.trigger.hellespont) {
+		game.where = null;
+		game.state = 'destroy_bridge';
+		return;
+	}
+
+	game.where = null;
+
 	switch (game.greek.event) {
 	case THEMISTOCLES:
 		game.active = PERSIA;
@@ -935,6 +944,7 @@ function end_persian_operation() {
 	game.persian.event = 0;
 	game.land_movement = 0;
 	game.naval_movement = 0;
+	game.naval_battle = 0;
 	game.move_list = null;
 	game.transport = 0;
 	game.attacker = 0;
@@ -950,6 +960,7 @@ function end_greek_operation() {
 	game.persian.event = 0;
 	game.land_movement = 0;
 	game.naval_movement = 0;
+	game.naval_battle = 0;
 	game.move_list = null;
 	game.transport = 0;
 	game.attacker = 0;
@@ -1372,7 +1383,8 @@ function goto_persian_naval_battle() {
 function goto_greek_naval_battle() {
 	// If greece reinforced persian initiated battle...
 	if (game.greek.event == THEMISTOCLES && game.where == game.themistocles.where) {
-		return end_greek_movement();
+		if (count_greek_fleets(game.themistocles.where) > 0)
+			return end_greek_movement();
 	}
 
 	game.naval_battle = 1;
@@ -1966,6 +1978,8 @@ function end_battle() {
 	game.naval_battle = 0;
 	game.from = null;
 
+	log("Battle in " + game.where + " ends.");
+
 	if (game.greek.event == EVANGELION) {
 		game.greek.event = 0;
 		if (count_persian_armies(game.where) == 0) {
@@ -1991,16 +2005,9 @@ function end_battle() {
 	}
 
 	if (game.active == PERSIA) {
-		game.where = null;
 		end_persian_movement();
 	} else {
-		if (game.where == ABYDOS && is_greek_control(ABYDOS) && game.trigger.hellespont) {
-			game.where = null;
-			game.state = 'destroy_bridge';
-		} else {
-			game.where = null;
-			end_greek_movement();
-		}
+		end_greek_movement();
 	}
 }
 
@@ -2181,11 +2188,14 @@ states.the_royal_road_select = {
 	},
 	city: function (city) {
 		push_undo();
-		log("Persia removes all Greek armies in " + city + ".");
-		game.where = city;
-		move_greek_army(city, RESERVE, count_greek_armies(city));
-		if (count_persian_armies(city) == 0 && count_persian_armies(RESERVE) > 0)
+		if (count_greek_armies(city) > 0) {
+			log("Persia removes all Greek armies in " + city + ".");
+			move_greek_army(city, RESERVE, count_greek_armies(city));
+			end_persian_operation();
+		} else {
+			game.where = city;
 			game.state = 'the_royal_road_place';
+		}
 	},
 }
 
@@ -2214,7 +2224,7 @@ states.the_royal_road_place = {
 }
 
 function can_play_hippias() {
-	return game.greek.hand.length > 1;
+	return game.greek.hand.length > 0;
 }
 
 function play_hippias() {
@@ -2237,7 +2247,7 @@ states.hippias = {
 }
 
 function can_play_separate_peace() {
-	return game.greek.hand.length > 1;
+	return game.greek.hand.length > 0;
 }
 
 function play_separate_peace() {
@@ -2837,6 +2847,8 @@ function can_play_the_immortals() {
 		return false;
 	if (is_visible_discard(THE_IMMORTALS))
 		return false;
+	if (game.trigger.xerxes)
+		return false;
 	return count_persian_armies(game.where) == 0;
 }
 
@@ -2879,14 +2891,18 @@ states.persian_cards_in_hand = {
 			gen_action(view, 'discard', card);
 		if (game.persian.hand.length <= 1)
 			gen_action(view, 'next');
+		gen_action_undo(view);
 	},
 	discard: function (card) {
+		push_undo();
 		discard_card("Persia", game.persian.hand, card);
 	},
 	next: function (card) {
+		clear_undo();
 		log("Persia keeps " + game.persian.hand.length + " cards.");
 		start_persian_attrition();
 	},
+	undo: pop_undo,
 }
 
 states.greek_cards_in_hand = {
@@ -2898,14 +2914,18 @@ states.greek_cards_in_hand = {
 			gen_action(view, 'discard', card);
 		if (game.greek.hand.length <= 4)
 			gen_action(view, 'next');
+		gen_action_undo(view);
 	},
 	discard: function (card) {
+		push_undo();
 		discard_card("Greece", game.greek.hand, card);
 	},
 	next: function (card) {
+		clear_undo();
 		log("Greece keeps " + game.greek.hand.length + " cards.");
 		start_greek_attrition();
 	},
+	undo: pop_undo,
 }
 
 function start_persian_attrition() {
@@ -3019,7 +3039,7 @@ function persian_loc() {
 	if (is_persian_control(EPHESOS))
 		persian_loc_rec(EPHESOS);
 	if ((is_persian_control(ABYDOS) && count_greek_fleets(ABYDOS) == 0) ||
-		(is_persian_control(EPHESOS) && count_greek_fleets(EPHESOS)))
+		(is_persian_control(EPHESOS) && count_greek_fleets(EPHESOS) == 0))
 		for (let port of PORTS)
 			if (count_persian_fleets(port) > 0)
 				loc[port] = 1;
@@ -3050,7 +3070,7 @@ function greek_loc() {
 	if (is_greek_control(SPARTA))
 		greek_loc_rec(SPARTA);
 	if ((is_greek_control(ATHENAI) && count_persian_fleets(ATHENAI) == 0) ||
-		(is_greek_control(SPARTA) && count_persian_fleets(SPARTA)))
+		(is_greek_control(SPARTA) && count_persian_fleets(SPARTA) == 0))
 		for (let port of PORTS)
 			if (count_greek_fleets(port) > 0)
 				loc[port] = 1;

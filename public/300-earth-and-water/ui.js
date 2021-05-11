@@ -68,6 +68,17 @@ function remove_from_array(array, item) {
 		array.splice(i, 1);
 }
 
+function on_focus_discard(evt) {
+	if (game.discard)
+		document.getElementById("tooltip").className = "card show card_" + game.discard;
+	else
+		document.getElementById("tooltip").className = "card show card_back";
+}
+
+function on_blur_discard(evt) {
+	document.getElementById("tooltip").classList = "card";
+}
+
 function on_focus_bridge(evt) { document.getElementById("status").textContent = "Hellespont"; }
 function on_focus_city(evt) { document.getElementById("status").textContent = evt.target.city; }
 function on_focus_port(evt) { document.getElementById("status").textContent = evt.target.port + " (port)"; }
@@ -223,6 +234,9 @@ function build_ui() {
 	document.getElementById("bridge").addEventListener("click", on_click_bridge);
 	document.getElementById("bridge").addEventListener("mouseenter", on_focus_bridge);
 	document.getElementById("bridge").addEventListener("mouseleave", on_blur);
+
+	document.getElementById("discard").addEventListener("mouseenter", on_focus_discard);
+	document.getElementById("discard").addEventListener("mouseleave", on_blur_discard);
 }
 
 function greek_info() {

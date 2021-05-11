@@ -77,6 +77,16 @@
 	border-radius: 10px;
 }
 
+#tooltip.card {
+	position: absolute;
+	z-index: 100;
+	left: 50%;
+	top: 60px;
+	margin-left: -250px;
+	width: 500px;
+	height: 700px;
+}
+
 /* CARD ACTION POPUP MENU */
 
 #popup {
@@ -211,7 +221,8 @@
 </head>
 <body>
 
-<div class="status" id="status"></div>
+<div id="status" class="status"></div>
+<div id="tooltip" class="card"></div>
 
 <div class="chat_window">
 <div class="chat_header">Chat</div>

@@ -2187,7 +2187,6 @@ states.the_royal_road_select = {
 			gen_action(view, 'city', EPHESOS);
 	},
 	city: function (city) {
-		push_undo();
 		if (count_greek_armies(city) > 0) {
 			log("Persia removes all Greek armies in " + city + ".");
 			move_greek_army(city, RESERVE, count_greek_armies(city));
@@ -2212,10 +2211,10 @@ states.the_royal_road_place = {
 	},
 	city: function (city) {
 		push_undo();
-		log("Persia places 1 army in " + city + ".");
 		move_persian_army(RESERVE, city, 1);
 	},
 	next: function () {
+		log("Persia places " + count_persian_armies(game.where) + " armies in " + game.where + ".");
 		clear_undo();
 		game.where = null;
 		end_persian_operation();

@@ -3251,8 +3251,6 @@ exports.view = function(state, current) {
 		active: game.active,
 		campaign: game.campaign,
 		vp: game.vp,
-		deck_size: game.deck.length - game.greek.draw - game.persian.draw,
-		discard_size: game.discard.length,
 		trigger: game.trigger,
 		units: game.units,
 	};
@@ -3260,6 +3258,15 @@ exports.view = function(state, current) {
 	view.g_cards = game.greek.hand.length + game.greek.draw;
 	view.p_cards = game.persian.hand.length + game.persian.draw;
 	view.discard = game.discard.length > 0 ? game.discard[game.discard.length-1] : 0;
+
+	let draw = game.greek.draw + game.persian.draw;
+	if (draw > game.deck.length) {
+		view.deck_size = game.deck.length + game.discard.length - draw;
+		view.discard_size = 0;
+	} else {
+		view.deck_size = game.deck.length - draw;
+		view.discard_size = game.discard.length;
+	}
 
 	states[game.state].prompt(view, current);
 	view.prompt = $(view.prompt);

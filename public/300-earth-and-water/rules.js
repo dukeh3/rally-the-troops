@@ -35,8 +35,11 @@
 // 'immediately in response' -- interrupt play before or after event is completed?
 // pausanias, molon labe
 
+const CHEAP_PERSIAN_FLEETS = "Cheap Fleets";
+
 exports.scenarios = [
-	"Default"
+	"Default",
+	CHEAP_PERSIAN_FLEETS,
 ];
 
 const OBSERVER = "Observer";
@@ -716,7 +719,7 @@ states.persian_preparation_build = {
 				if (is_persian_control(space))
 					gen_action(view, 'city', space);
 		}
-		if (game.built_fleets < 2 && game.talents >= 2 && count_persian_fleets(RESERVE) > 0) {
+		if (game.built_fleets < 2 && game.talents >= game.persian.fleet_cost && count_persian_fleets(RESERVE) > 0) {
 			for (let space of PORTS)
 				if (is_persian_control(space) && count_greek_fleets(space) == 0)
 					gen_action(view, 'port', space);
@@ -737,7 +740,7 @@ states.persian_preparation_build = {
 		push_undo();
 		push_log("fleets", space);
 		game.built_fleets += 1;
-		game.talents -= 2;
+		game.talents -= game.persian.fleet_cost;
 		move_persian_fleet(RESERVE, space);
 	},
 	build: function () {
@@ -3165,6 +3168,7 @@ exports.setup = function (scenario, players) {
 			draw: 0,
 			pass: 0,
 			event: 0,
+			fleet_cost: (scenario == CHEAP_PERSIAN_FLEETS ? 1 : 2),
 		},
 		greek: {
 			hand: [],

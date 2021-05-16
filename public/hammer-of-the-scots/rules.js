@@ -2370,8 +2370,9 @@ function goto_english_disbanding() {
 	for (let b in BLOCKS) {
 		let where = game.location[b];
 
-		// All blocks in England must disband.
-		if (where == ENGLAND) {
+		// All (English) blocks in England must disband.
+		// Scottish blocks disband later during the castle limit check.
+		if (where == ENGLAND && block_owner(b) == ENGLAND) {
 			game.turn_log.push([ENGLAND]);
 			disband(b);
 		}

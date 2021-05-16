@@ -1970,11 +1970,11 @@ states.regroup_to = {
 
 // BORDER RAIDS
 
-function count_non_noble_english_blocks() {
+function count_non_noble_english_blocks_on_map() {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) == ENGLAND && block_type(b) != 'nobles')
-			if (game.location[b])
+			if (is_on_map(b))
 				++count;
 	return count;
 }
@@ -1983,7 +1983,7 @@ function goto_border_raids() {
 	game.active = ENGLAND;
 	if (is_enemy_area(ENGLAND)) {
 		log("Scotland border raids.");
-		if (count_non_noble_english_blocks() > 0) {
+		if (count_non_noble_english_blocks_on_map() > 0) {
 			game.state = 'border_raids';
 		} else {
 			log("England has no non-noble blocks in play.");
@@ -2000,7 +2000,7 @@ states.border_raids = {
 		view.prompt = "Border Raids: Eliminate a non-Noble block.";
 		for (let b in BLOCKS)
 			if (block_owner(b) == ENGLAND && block_type(b) != 'nobles')
-				if (game.location[b])
+				if (is_on_map(b))
 					gen_action(view, 'block', b);
 	},
 	block: function (who) {

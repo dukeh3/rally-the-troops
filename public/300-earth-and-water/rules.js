@@ -1732,6 +1732,7 @@ function persian_land_battle_round() {
 	}
 
 	if (can_play_the_immortals()) {
+		end_battle_event();
 		game.active = PERSIA;
 		game.state = 'persian_land_battle_immortals';
 	} else {
@@ -1754,6 +1755,7 @@ function greek_land_battle_round() {
 	}
 
 	if (can_play_the_immortals()) {
+		end_battle_event();
 		game.active = PERSIA;
 		game.state = 'greek_land_battle_immortals';
 	} else {
@@ -1772,9 +1774,12 @@ states.persian_land_battle_immortals = {
 	},
 	card_event: function (card) {
 		play_the_immortals();
-		resume_persian_land_battle();
+		restart_persian_land_battle();
+		game.immortals = 0;
 	},
-	next: resume_persian_land_battle,
+	next: function () {
+		end_battle(true);
+	}
 }
 
 states.greek_land_battle_immortals = {
@@ -1788,9 +1793,12 @@ states.greek_land_battle_immortals = {
 	},
 	card_event: function (card) {
 		play_the_immortals();
-		resume_greek_land_battle();
+		restart_greek_land_battle();
+		game.immortals = 0;
 	},
-	next: resume_greek_land_battle,
+	next: function () {
+		end_battle(true);
+	}
 }
 
 function resume_persian_land_battle(_, current) {
@@ -1807,6 +1815,16 @@ function resume_greek_land_battle(_, current) {
 		game.state = 'greek_land_retreat_attacker';
 	else
 		end_battle();
+}
+
+function restart_persian_land_battle(_, current) {
+	game.active = PERSIA;
+	goto_persian_land_battle();
+}
+
+function restart_greek_land_battle(_, current) {
+	game.active = GREECE;
+	goto_greek_land_battle();
 }
 
 function gen_land_retreat_attacker(view, is_friendly_control) {
@@ -1973,20 +1991,17 @@ states.greek_land_retreat_defender = {
 	},
 }
 
-function end_battle() {
-	game.naval_battle = 0;
-	game.from = null;
-
+function end_battle_event() {
 	log("Battle in " + game.where + " ends.");
 
 	if (game.greek.event == EVANGELION) {
 		game.greek.event = 0;
 		if (count_persian_armies(game.where) == 0) {
-			log("Greece scores 1 point.");
+			log("Evangelion: Greece scores 1 point.");
 			add_greek_vp();
 		}
 		if (!is_greek_control(game.where)) {
-			log("Greece loses 1 point.");
+			log("Evangelion: Greece loses 1 point.");
 			add_persian_vp();
 		}
 	}
@@ -1994,14 +2009,24 @@ function end_battle() {
 	if (game.persian.event == THE_GREAT_KING) {
 		game.persian.event = 0;
 		if (count_greek_armies(game.where) == 0) {
-			log("Persia scores 1 point.");
+			log("The Great King: Persia scores 1 point.");
 			add_persian_vp();
 		}
 		if (!is_persian_control(game.where)) {
-			log("Persia loses 1 point.");
+			log("The Great King: Persia loses 1 point.");
 			add_greek_vp();
 		}
 	}
+
+	game.greek.battle_event = 0;
+}
+
+function end_battle(already_ended=0) {
+	if (!already_ended)
+		end_battle_event();
+
+	game.naval_battle = 0;
+	game.from = null;
 
 	if (game.active == PERSIA) {
 		end_persian_movement();
@@ -2847,10 +2872,13 @@ function can_play_the_immortals() {
 		return false;
 	if (game.trigger.xerxes)
 		return false;
+	if (game.immortals == 0)
+		return false;
 	return count_persian_armies(game.where) == 0;
 }
 
 function play_the_immortals() {
+	log("");
 	play_persian_event_card(THE_IMMORTALS);
 	log("The Immortals recover " + game.immortals + " armies!");
 	move_persian_army(RESERVE, game.where, game.immortals);

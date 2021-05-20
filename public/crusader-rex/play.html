@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+<meta charset="UTF-8">
+<title>CRUSADER REX</title>
+<link rel="icon" href="Cross_of_the_Knights_Templar.png">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/common/grid.css">
+<link rel="stylesheet" href="/common/battle_abc.css">
+<script defer src="/socket.io/socket.io.min.js"></script>
+<script defer src="/common/client.js"></script>
+<script defer src="data.js"></script>
+<script defer src="ui.js"></script>
+<style>
+
+.grid_center { background-color: slategray; }
+.grid_role { background-color: gainsboro; }
+.grid_log { background-color: ghostwhite; }
+.grid_top { background-color: gainsboro; }
+.grid_top.your_turn { background-color: orange; }
+.grid_top.Frank.your_turn { background-color: khaki; }
+.grid_top.Saracen.your_turn { background-color: lightgreen; }
+.grid_top.disconnected { background-color: red; }
+.role_info { background-color: silver; }
+.one .role_name { background-color: khaki; }
+.two .role_name { background-color: lightgreen; }
+
+#turn {
+	padding: 8px 0px 8px 8px;
+	border-bottom: 1px solid black;
+	white-space: pre-wrap;
+	font-style: italic;
+	font-size: 12px;
+	line-height: 18px;
+	font-family: "Source Serif SmText";
+}
+
+.card {
+	width: 225px;
+	height: 350px;
+	border-radius: 15px;
+}
+
+.card.enabled:hover {
+	transform: scale(1.1);
+}
+
+.small_card {
+	width: 90px;
+	height: 140px;
+	border-radius: 6px;
+}
+
+.role_info {
+	display: flex;
+	justify-content: center;
+}
+
+/* MAP */
+
+.mapwrap {
+	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
+	width: 1275px;
+	height: 2475px;
+}
+
+.map {
+	position: relative;
+	background-repeat: no-repeat;
+}
+
+.map.tall {
+	width: 1275px;
+	height: 2475px;
+	background-image: url("map-v.jpg");
+}
+
+.map.wide {
+	width: 2475px;
+	height: 1275px;
+	background-image: url("map-h.jpg");
+}
+
+.map.crop.tall {
+	width: 1215px;
+	height: 2378px;
+	background-position: -30px -30px;
+}
+
+.map.crop.wide {
+	width: 2378px;
+	height: 1215px;
+	background-position: -30px -30px;
+}
+
+.map.hide_blocks div.blocks {
+	visibility: hidden;
+}
+
+.town {
+	position: absolute;
+	opacity: 0.0;
+	z-index: 1;
+	border: 5px solid white;
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+}
+.town.highlight {
+	cursor: pointer;
+	opacity: 0.8;
+	z-index: 9;
+}
+
+/* BLOCKS */
+
+body.shift .block.known:hover {
+	transform: scale(2) !important;
+	transition: 100ms;
+	z-index: 100;
+}
+
+.battle .block { position: relative; }
+.map .block { position: absolute; z-index: 2; }
+.map .block.highlight { z-index: 3; }
+.map .block.selected { z-index: 4; }
+.map .block:hover { z-index: 5; }
+
+.block.highlight { cursor: pointer; box-shadow: 0px 0px 4px 1px white; }
+
+.block {
+	background-size: cover;
+	background-repeat: no-repeat;
+	border-radius: 6px;
+	width: 60px;
+	height: 60px;
+	box-shadow: 0px 0px 4px 0px black;
+}
+
+.block.Frank { border: 3px solid orange; background-color: orange; }
+.block.Saracen { border: 3px solid green; background-color: green; }
+.block.Assassins { border: 3px solid purple; background-color: purple; }
+
+.block.Frank.highlight { border-color: white; }
+.block.Saracen.highlight { border-color: white; }
+.block.Assassins.highlight { border-color: white; }
+
+.block.Frank.selected { border-color: yellow; }
+.block.Saracen.selected { border-color: yellow; }
+.block.Assassins.selected { border-color: yellow; }
+
+.block.selected { box-shadow: 0 0 4px 1px yellow; }
+.block.moved { filter: brightness(85%) grayscale(50%); }
+.block.highlight.moved { filter: brightness(95%) grayscale(60%); }
+
+.block.r1 { transform: rotate(-90deg); }
+.block.r2 { transform: rotate(-180deg); }
+.block.r3 { transform: rotate(-270deg); }
+
+.block {
+	transition-property: top, left, transform;
+	transition-duration: 700ms, 700ms, 200ms;
+	transition-timing-function: ease;
+}
+
+/* BATTLE BOARD */
+
+.battle { background-color: darkgray; }
+.battle .battle_message { background-color: gainsboro; }
+.battle .battle_header { background-color: #224467; color: white; font-weight: bold; }
+.battle .battle_separator { background-color: #224467; }
+
+.battle_line.enemy .battle_menu_list { min-height: 0; }
+.battle_reserves > td > div { height: 75px; padding: 5px; }
+.battle_a_cell > div { min-width: 270px; padding: 5px 5px; }
+.battle_b_cell > div { min-width: 270px; padding: 5px 5px; }
+.battle_c_cell > div { min-width: 270px; padding: 5px 5px; }
+
+/* CARD AND BLOCK IMAGES */
+
+.card_back{background-image:url('cards/card_back.jpg')}
+.card_assassins{background-image:url('cards/card_assassins.jpg')}
+.card_guide{background-image:url('cards/card_guide.jpg')}
+.card_intrigue{background-image:url('cards/card_intrigue.jpg')}
+.card_jihad{background-image:url('cards/card_jihad.jpg')}
+.card_manna{background-image:url('cards/card_manna.jpg')}
+.card_winter_campaign{background-image:url('cards/card_winter_campaign.jpg')}
+.card_1{background-image:url('cards/card_1.jpg')}
+.card_2{background-image:url('cards/card_2.jpg')}
+.card_3{background-image:url('cards/card_3.jpg')}
+
+.known.block_11{background-image:url(blocks/block_11.png)}
+.known.block_12{background-image:url(blocks/block_12.png)}
+.known.block_13{background-image:url(blocks/block_13.png)}
+.known.block_14{background-image:url(blocks/block_14.png)}
+.known.block_15{background-image:url(blocks/block_15.png)}
+.known.block_16{background-image:url(blocks/block_16.png)}
+.known.block_17{background-image:url(blocks/block_17.png)}
+.known.block_21{background-image:url(blocks/block_21.png)}
+.known.block_22{background-image:url(blocks/block_22.png)}
+.known.block_23{background-image:url(blocks/block_23.png)}
+.known.block_24{background-image:url(blocks/block_24.png)}
+.known.block_25{background-image:url(blocks/block_25.png)}
+.known.block_26{background-image:url(blocks/block_26.png)}
+.known.block_27{background-image:url(blocks/block_27.png)}
+.known.block_31{background-image:url(blocks/block_31.png)}
+.known.block_32{background-image:url(blocks/block_32.png)}
+.known.block_33{background-image:url(blocks/block_33.png)}
+.known.block_34{background-image:url(blocks/block_34.png)}
+.known.block_35{background-image:url(blocks/block_35.png)}
+.known.block_36{background-image:url(blocks/block_36.png)}
+.known.block_37{background-image:url(blocks/block_37.png)}
+.known.block_41{background-image:url(blocks/block_41.png)}
+.known.block_42{background-image:url(blocks/block_42.png)}
+.known.block_43{background-image:url(blocks/block_43.png)}
+.known.block_44{background-image:url(blocks/block_44.png)}
+.known.block_45{background-image:url(blocks/block_45.png)}
+.known.block_46{background-image:url(blocks/block_46.png)}
+.known.block_47{background-image:url(blocks/block_47.png)}
+.known.block_51{background-image:url(blocks/block_51.png)}
+.known.block_52{background-image:url(blocks/block_52.png)}
+.known.block_53{background-image:url(blocks/block_53.png)}
+.known.block_54{background-image:url(blocks/block_54.png)}
+.known.block_55{background-image:url(blocks/block_55.png)}
+.known.block_56{background-image:url(blocks/block_56.png)}
+.known.block_57{background-image:url(blocks/block_57.png)}
+.known.block_61{background-image:url(blocks/block_61.png)}
+.known.block_62{background-image:url(blocks/block_62.png)}
+.known.block_63{background-image:url(blocks/block_63.png)}
+.known.block_64{background-image:url(blocks/block_64.png)}
+.known.block_65{background-image:url(blocks/block_65.png)}
+.known.block_66{background-image:url(blocks/block_66.png)}
+.known.block_67{background-image:url(blocks/block_67.png)}
+.known.block_71{background-image:url(blocks/block_71.png)}
+.known.block_72{background-image:url(blocks/block_72.png)}
+.known.block_73{background-image:url(blocks/block_73.png)}
+.known.block_74{background-image:url(blocks/block_74.png)}
+.known.block_75{background-image:url(blocks/block_75.png)}
+.known.block_76{background-image:url(blocks/block_76.png)}
+.known.block_77{background-image:url(blocks/block_77.png)}
+.known.block_81{background-image:url(blocks/block_81.png)}
+.known.block_82{background-image:url(blocks/block_82.png)}
+.known.block_83{background-image:url(blocks/block_83.png)}
+.known.block_84{background-image:url(blocks/block_84.png)}
+.known.block_85{background-image:url(blocks/block_85.png)}
+.known.block_86{background-image:url(blocks/block_86.png)}
+.known.block_87{background-image:url(blocks/block_87.png)}
+.known.block_91{background-image:url(blocks/block_91.png)}
+.known.block_92{background-image:url(blocks/block_92.png)}
+.known.block_93{background-image:url(blocks/block_93.png)}
+.known.block_94{background-image:url(blocks/block_94.png)}
+.known.block_95{background-image:url(blocks/block_95.png)}
+.known.block_96{background-image:url(blocks/block_96.png)}
+.known.block_97{background-image:url(blocks/block_97.png)}
+
+</style>
+</head>
+<body>
+
+<div class="status" id="status"></div>
+
+<div class="chat_window">
+<div class="chat_header">Chat</div>
+<div class="chat_text"></div>
+<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+</div>
+
+<table class="battle">
+<tr>
+<th class="battle_header" colspan=4></th>
+<tr class="battle_reserves enemy">
+<td colspan=4><div id="ER"></div></td>
+<tr class="battle_line enemy">
+<td class="battle_a_cell"><div id="EA"></div></td>
+<td class="battle_b_cell"><div id="EB"></div></td>
+<td class="battle_c_cell"><div id="EC"></div></td>
+<tr class="battle_separator">
+<td colspan=4>
+<tr class="battle_line friendly">
+<td class="battle_a_cell"><div id="FA"></div></td>
+<td class="battle_b_cell"><div id="FB"></div></td>
+<td class="battle_c_cell"><div id="FC"></div></td>
+<tr class="battle_reserves friendly">
+<td colspan=4><div id="FR"></div></td>
+<tr>
+<th class="battle_message" colspan=4></th>
+</table>
+
+<div class="grid_window">
+
+	<div class="grid_top">
+
+		<div class="menu">
+			<div class="menu_title"><img src="/images/cog.svg"></div>
+			<div class="menu_popup">
+				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+				<div class="menu_item" onclick="wide_map()">Wide Map</div>
+				<div class="menu_item" onclick="tall_map()">Tall Map</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+				<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="send_save()">&#x1F41E; Save</div>
+				<div class="menu_item" onclick="send_restore()">&#x1F41E; Restore</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="send_restart('Historical')">&#x26a0; Restart</div>
+			</div>
+		</div>
+
+		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+
+		<div id="prompt" class="prompt">$PROMPT</div>
+
+		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
+		<button id="sea_move_button" class="hide" onclick="on_button_sea_move()">Sea Move</button>
+		<button id="group_move_button" class="hide" onclick="on_button_group_move()">Group Move</button>
+		<button id="muster_button" class="hide" onclick="on_button_muster()">Muster</button>
+		<button id="end_muster_button" class="hide" onclick="on_button_end_muster()">End muster</button>
+		<button id="end_retreat_button" class="hide" onclick="on_button_end_retreat()">End retreat</button>
+		<button id="end_regroup_button" class="hide" onclick="on_button_end_regroup()">End regroup</button>
+		<button id="end_move_phase_button" class="hide" onclick="on_button_end_move_phase()">End move phase</button>
+		<button id="pass_button" class="hide" onclick="on_button_pass()">Pass</button>
+		<button id="undo_button" class="hide" onclick="on_button_undo()">Undo</button>
+
+	</div>
+
+	<div class="grid_role">
+
+		<div class="role one">
+			<div class="role_vp" id="frank_vp"></div>
+			<div class="role_name">Frank (<span class="role_user">$USER</span>)</div>
+			<div class="role_info"><div class="small_card card_back" id="frank_card"></div></div>
+		</div>
+
+		<div class="role two">
+			<div class="role_vp" id="saracen_vp"></div>
+			<div class="role_name">Saracen (<span class="role_user">$USER</span>)</div>
+			<div class="role_info"><div class="small_card card_back" id="saracen_card"></div></div>
+		</div>
+
+		<div id="turn">$TURN</div>
+
+	</div>
+
+	<div class="grid_log">
+		<div class="log" id="log"></div>
+	</div>
+
+	<div class="grid_center">
+
+<div class="mapwrap" id="mapwrap">
+<div class="map" id="map">
+<div id="blocks" class="blocks"></div>
+<div id="offmap" class="offmap" style="visibility:hidden"></div>
+<div id="towns" class="towns"></div>
+</div>
+</div>
+
+<div class="hand">
+<div id="card+1" class="card card_assassins"></div>
+<div id="card+2" class="card card_guide"></div>
+<div id="card+3" class="card card_intrigue"></div>
+<div id="card+4" class="card card_jihad"></div>
+<div id="card+5" class="card card_manna"></div>
+<div id="card+6" class="card card_winter_campaign"></div>
+<div id="card+7" class="card card_3"></div>
+<div id="card+8" class="card card_3"></div>
+<div id="card+9" class="card card_3"></div>
+<div id="card+10" class="card card_3"></div>
+<div id="card+11" class="card card_3"></div>
+<div id="card+12" class="card card_3"></div>
+<div id="card+13" class="card card_2"></div>
+<div id="card+14" class="card card_2"></div>
+<div id="card+15" class="card card_2"></div>
+<div id="card+16" class="card card_2"></div>
+<div id="card+17" class="card card_2"></div>
+<div id="card+18" class="card card_2"></div>
+<div id="card+19" class="card card_2"></div>
+<div id="card+20" class="card card_2"></div>
+<div id="card+21" class="card card_2"></div>
+<div id="card+22" class="card card_1"></div>
+<div id="card+23" class="card card_1"></div>
+<div id="card+24" class="card card_1"></div>
+<div id="card+25" class="card card_1"></div>
+<div id="card+26" class="card card_1"></div>
+<div id="card+27" class="card card_1"></div>
+</div>
+
+	</div>
+
+</div>
+</body>

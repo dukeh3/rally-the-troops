@@ -1,0 +1,291 @@
+<html>
+<svg id="map" width="1215" height="2379">
+<image href="m25.jpg" x="0" y="0" width="1215" height="2379" />
+<g id="nodes"/>
+<g id="major" stroke="gold" stroke-width="2"/>
+<g id="minor" stroke="brown" stroke-width="2" stroke-dasharray="4,4"/>
+<g id="river" stroke="skyblue" stroke-width="2"/>
+<g id="sea" stroke="blue" stroke-width="2" stroke-dasharray="4,4"/>
+</svg>
+<p><button onclick="save()">Save</button>
+<p>
+<textarea rows="30" cols="60" id="data"></textarea>
+<script>
+
+let print = console.log;
+
+let edges = {}
+let nodes =  {
+	"Acre":{"x":422,"y":1536},
+	"Ajlun":{"x":957,"y":1512},
+	"Albara":{"x":780,"y":358},
+	"Aleppo":{"x":1021,"y":78},
+	"Amman":{"x":1058,"y":1808},
+	"Anjar":{"x":723,"y":1099},
+	"Antioch":{"x":441,"y":159},
+	"Artah":{"x":835,"y":119},
+	"Ascalon":{"x":337,"y":2051},
+	"Ashtera":{"x":1008,"y":1389},
+	"Baalbek":{"x":812,"y":978},
+	"Baisan":{"x":677,"y":1655},
+	"Banyas":{"x":734,"y":1332},
+	"Beaufort":{"x":575,"y":1324},
+	"Beersheba":{"x":414,"y":2253},
+	"Beirut":{"x":497,"y":1107},
+	"Botron":{"x":510,"y":961},
+	"Caesarea":{"x":372,"y":1724},
+	"Damascus":{"x":1029,"y":1155},
+	"Damiya":{"x":817,"y":1778},
+	"Dimona":{"x":600,"y":2264},
+	"Egypt":{"x":172,"y":2288},
+	"Gaza":{"x":270,"y":2153},
+	"Hama":{"x":1005,"y":447},
+	"Harim":{"x":669,"y":94},
+	"Hebron":{"x":650,"y":2079},
+	"Homs":{"x":1023,"y":653},
+	"Jaffa":{"x":369,"y":1893},
+	"Jericho":{"x":806,"y":1901},
+	"Jerusalem":{"x":650,"y":1950},
+	"Kassab":{"x":396,"y":309},
+	"Kerak":{"x":978,"y":2046},
+	"Krak":{"x":744,"y":696},
+	"Lachish":{"x":465,"y":2118},
+	"Lacum":{"x":889,"y":855},
+	"Latakia":{"x":371,"y":415},
+	"Legio":{"x":557,"y":1628},
+	"Margat":{"x":510,"y":537},
+	"Masyaf":{"x":721,"y":568},
+	"Monterrand":{"x":890,"y":573},
+	"Nablus":{"x":613,"y":1757},
+	"Qaddas":{"x":1115,"y":886},
+	"Ramallah":{"x":484,"y":1922},
+	"Saone":{"x":623,"y":398},
+	"Shughur":{"x":626,"y":266},
+	"Sidon":{"x":463,"y":1246},
+	"St. Simeon":{"x":334,"y":181},
+	"Tartus":{"x":575,"y":688},
+	"Tiberias":{"x":669,"y":1530},
+	"Tripoli":{"x":591,"y":852},
+	"Tyre":{"x":435,"y":1367},
+	"Zerdana":{"x":991,"y":270},
+	"Zoar":{"x":925,"y":2248},
+	"Germania1":{"x":109,"y":243},
+	"Germania2":{"x":109,"y":329},
+	"Germania3":{"x":108,"y":417},
+	"France1":{"x":110,"y":543},
+	"France2":{"x":110,"y":630},
+	"France3":{"x":109,"y":717},
+	"England1":{"x":109,"y":843},
+	"England2":{"x":110,"y":931},
+	"England3":{"x":108,"y":1017},
+	"S. Pool":{"x":494,"y":2347},
+	"F. Pool":{"x":391,"y":30}
+}
+
+function initMap() {
+	edges = {}
+
+	function addEdge(A,B,T) {
+		if (A > B) {
+			let C = B; B = A; A = C;
+		}
+		let id = A + "/" + B;
+		edges[id] = { A: A, B: B, type: T }
+	}
+
+	function major(A,B) { addEdge(A,B,"major"); }
+	function minor(A,B) { addEdge(A,B,"minor"); }
+
+	major("Antioch", "Harim");
+	major("Harim", "Artah");
+	major("Artah", "Aleppo");
+	major("Aleppo", "Zerdana");
+	major("Zerdana", "Hama");
+	major("Hama", "Albara");
+	major("Hama", "Monterrand");
+	major("Hama", "Homs");
+	major("Albara", "Shughur");
+	major("Shughur", "Harim");
+	major("Monterrand", "Krak");
+	major("Krak", "Homs");
+	major("Krak", "Tripoli");
+	major("Tripoli", "Tartus");
+	major("Tripoli", "Botron");
+	major("Tartus", "Margat");
+	major("Margat", "Latakia");
+	major("Botron", "Beirut");
+	major("Beirut", "Sidon");
+	major("Sidon", "Tyre");
+	major("Tyre", "Beaufort");
+	major("Beaufort", "Banyas");
+	major("Banyas", "Damascus");
+	major("Damascus", "Qaddas");
+	major("Qaddas", "Homs");
+	major("Homs", "Lacum");
+	major("Lacum", "Baalbek");
+	major("Baalbek", "Anjar");
+	major("Anjar", "Beaufort");
+	major("Damascus", "Ashtera");
+	major("Ashtera", "Ajlun");
+	major("Ajlun", "Amman");
+	major("Amman", "Kerak");
+	major("Kerak", "Zoar");
+	major("Zoar", "Hebron");
+	major("Hebron", "Jerusalem");
+	major("Jerusalem", "Ramallah");
+	major("Ramallah", "Jaffa");
+	major("Jaffa", "Ascalon");
+	major("Ascalon", "Gaza");
+	major("Gaza", "Egypt");
+	major("Ajlun", "Tiberias");
+	major("Tiberias", "Acre");
+	major("Acre", "Legio");
+	major("Legio", "Baisan");
+	major("Baisan", "Tiberias");
+	major("Baisan", "Nablus");
+	major("Nablus", "Legio");
+	major("Nablus", "Jerusalem");
+	major("Acre", "Caesarea");
+	major("Caesarea", "Jaffa");
+
+	minor("St. Simeon", "Antioch");
+	minor("Antioch", "Kassab");
+	minor("Kassab", "Latakia");
+	minor("Latakia", "Saone");
+	minor("Saone", "Shughur");
+	minor("Saone", "Albara");
+	minor("Albara", "Zerdana");
+	minor("Zerdana", "Artah");
+
+	minor("Monterrand", "Homs");
+
+	minor("Tartus", "Krak");
+	minor("Krak", "Lacum");
+	minor("Lacum", "Qaddas");
+	minor("Tripoli", "Baalbek");
+	minor("Beirut", "Anjar");
+	minor("Anjar", "Damascus");
+	minor("Sidon", "Beaufort");
+	minor("Tiberias", "Banyas");
+	minor("Banyas", "Ashtera");
+	minor("Tyre", "Acre");
+	minor("Caesarea", "Nablus");
+	minor("Nablus", "Damiya");
+	minor("Damiya", "Baisan");
+	minor("Damiya", "Amman");
+	minor("Amman", "Jericho");
+	minor("Jericho", "Damiya");
+	minor("Jericho", "Kerak");
+	minor("Jericho", "Jerusalem");
+
+	minor("Ramallah", "Ascalon");
+	minor("Ascalon", "Lachish");
+	minor("Lachish", "Gaza");
+	minor("Gaza", "Beersheba");
+	minor("Beersheba", "Egypt");
+	minor("Beersheba", "Dimona");
+	minor("Dimona", "Zoar");
+	minor("Dimona", "Hebron");
+	minor("Hebron", "Lachish");
+}
+
+//if (window.localStorage.nodes) {
+	//nodes = JSON.parse(window.localStorage.nodes);
+	//edges = JSON.parse(window.localStorage.edges);
+//} else {
+	//initMap();
+//}
+initMap();
+
+function save() {
+	let data = JSON.stringify(nodes).replace(/},/g,"},\n");
+	window.localStorage.nodes = data;
+	document.getElementById("data").value = data;
+	document.getElementById("data").select();
+	console.log(data);
+}
+
+const svgNS = "http://www.w3.org/2000/svg";
+
+let selection = null;
+let downX = 0, startX = 0;
+let downY = 0, startY = 0;
+function startdrag(evt) {
+	selection = evt.target;
+	downX = evt.clientX;
+	downY = evt.clientY;
+	startX = parseInt(selection.getAttribute("cx"));
+	startY = parseInt(selection.getAttribute("cy"));
+}
+function movedrag(evt) {
+	if (selection) {
+		evt.preventDefault();
+		let deltaX = (evt.clientX - downX);
+		let deltaY = (evt.clientY - downY);
+		selection.setAttribute("cx", startX + deltaX);
+		selection.setAttribute("cy", startY + deltaY);
+		let g = selection.parentElement;
+		let text = g.querySelector("text");
+		text.setAttribute("x", startX + deltaX);
+		text.setAttribute("y", startY + deltaY);
+		nodes[g.id].x = startX + deltaX;
+		nodes[g.id].y = startY + deltaY;
+	}
+}
+function enddrag(evt) {
+	selection = null;
+	buildMap()
+}
+
+function clearGroup(name) {
+	let container = document.getElementById("map").getElementById(name);
+	while (container.firstChild)
+		container.removeChild(container.firstChild);
+}
+
+function buildMap() {
+	clearGroup("nodes");
+	clearGroup("major");
+	clearGroup("minor");
+	clearGroup("river");
+	clearGroup("sea");
+
+	for (let name in nodes) {
+		let node = nodes[name];
+		let svg_g = document.createElementNS(svgNS, "g");
+		svg_g.setAttribute("id", name);
+		let svg_circle = document.createElementNS(svgNS, "circle");
+		svg_circle.setAttribute("cx", node.x || 100);
+		svg_circle.setAttribute("cy", node.y || 100);
+		svg_circle.setAttribute("r", 20);
+		svg_circle.setAttribute("fill", "white");
+		svg_circle.setAttribute("fill-opacity", "0.5");
+		svg_circle.setAttribute("stroke", "red");
+		svg_circle.addEventListener("mousedown", startdrag);
+		svg_circle.addEventListener("mouseup", enddrag);
+		svg_g.appendChild(svg_circle);
+		let svg_text = document.createElementNS(svgNS, "text");
+		svg_text.setAttribute("pointer-events", "none");
+		svg_text.setAttribute("x", (node.x || 100));
+		svg_text.setAttribute("y", (node.y || 100));
+		svg_text.setAttribute("text-anchor", "middle");
+		svg_text.textContent = name;
+		svg_g.appendChild(svg_text);
+		document.getElementById("map").getElementById("nodes").appendChild(svg_g);
+	}
+	document.getElementById("map").addEventListener("mousemove", movedrag);
+
+	for (let id in edges) {
+		let edge = edges[id];
+		let A = nodes[edge.A];
+		let B = nodes[edge.B];
+		let line = document.createElementNS(svgNS, "line");
+		line.setAttribute("x1", A.x); line.setAttribute("y1", A.y);
+		line.setAttribute("x2", B.x); line.setAttribute("y2", B.y);
+		document.getElementById("map").getElementById(edge.type).appendChild(line);
+	}
+}
+
+buildMap()
+
+</script>

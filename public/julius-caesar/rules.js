@@ -28,7 +28,7 @@ const LEVY = "Levy";
 const DIE_HIT = [ 0, '\u2776', '\u2777', '\u2778', '\u2779', '\u277A', '\u277B' ];
 const DIE_MISS = [ 0, '\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u2465' ];
 
-const ATTACK_MARK = " *";
+const ATTACK_MARK = "*";
 const RESERVE_MARK = "";
 
 let game = null;

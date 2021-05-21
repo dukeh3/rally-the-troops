@@ -38,6 +38,11 @@ function log(...args) {
 	game.log.push(s);
 }
 
+function log_battle(...args) {
+	let s = Array.from(args).join("");
+	game.log.push(game.active[0] + ": " + s);
+}
+
 function logp(...args) {
 	let s = game.active + " " + Array.from(args).join("");
 	game.log.push(s);
@@ -2027,7 +2032,7 @@ function bring_on_reserves(owner, moved) {
 
 function start_battle_round() {
 	if (++game.battle_round <= 4) {
-		log("~ Battle round " + game.battle_round + " ~");
+		log("~ Battle Round " + game.battle_round + " ~");
 
 		reset_border_limits();
 		game.moved = {};
@@ -2104,7 +2109,7 @@ function pump_battle_round() {
 
 function pass_with_block(b) {
 	game.flash = block_name(b) + " passes.";
-	log(game.flash);
+	log_battle(game.flash);
 	game.moved[b] = true;
 	resume_battle();
 }
@@ -2141,12 +2146,15 @@ function retreat_with_block(who) {
 	}
 }
 
-function roll_attack(b, verb) {
+function roll_attack(active, b, verb) {
 	game.hits = 0;
 	let fire = block_fire_power(b, game.where);
 	let printed_fire = block_printed_fire_power(b);
 	let rolls = [];
 	let steps = game.steps[b];
+	let name = block_name(b) + " " + BLOCKS[b].combat;
+	if (fire > printed_fire)
+		name += "+" + (fire - printed_fire);
 	for (let i = 0; i < steps; ++i) {
 		let die = roll_d6();
 		if (die <= fire) {
@@ -2157,23 +2165,20 @@ function roll_attack(b, verb) {
 		}
 	}
 
-	game.flash += block_name(b) + " " + BLOCKS[b].combat;
-	if (fire > printed_fire)
-		game.flash += "+" + (fire - printed_fire);
-	game.flash += "\n" + verb + " " + rolls.join(" ") + "\n";
+	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
 	if (game.hits == 0)
 		game.flash += "and misses.";
 	else if (game.hits == 1)
 		game.flash += "and scores 1 hit.";
 	else
 		game.flash += "and scores " + game.hits + " hits.";
+
+	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
 }
 
 function fire_with_block(b) {
 	game.moved[b] = true;
-	game.flash = "";
-	roll_attack(b, "fires");
-	log(game.flash);
+	roll_attack(game.active, b, "fires");
 	if (game.hits > 0) {
 		game.active = ENEMY[game.active];
 		goto_battle_hits();
@@ -2212,15 +2217,13 @@ function attempt_treachery(source, target) {
 	} else {
 		game.flash += " fails to convert " + block_name(target) + ".";
 	}
-	log(game.flash);
+	log_battle(game.flash);
 }
 
 function charge_with_block(heir, target) {
 	let n;
 	game.moved[heir] = true;
-	game.flash = "";
-	roll_attack(heir, "charges " + block_name(target));
-	log(game.flash);
+	roll_attack(game.active, heir, "charges " + block_name(target));
 	n = Math.min(game.hits, game.steps[target]);
 	if (n == game.steps[target]) {
 		eliminate_block(target);
@@ -2228,13 +2231,11 @@ function charge_with_block(heir, target) {
 		while (n-- > 0)
 			reduce_block(target);
 		let charge_flash = game.flash;
-		game.flash = "";
-		roll_attack(target, "counter-attacks");
-		log(game.flash);
+		roll_attack(ENEMY[game.active], target, "counter-attacks");
 		n = Math.min(game.hits, game.steps[heir]);
 		while (n-- > 0)
 			reduce_block(heir);
-		game.flash = charge_flash + "\n" + game.flash;
+		game.flash = charge_flash + " " + game.flash;
 	}
 	resume_battle();
 }
@@ -2532,7 +2533,7 @@ states.retreat_in_battle = {
 			game.location[game.who] = to;
 			game.state = 'sea_retreat_to';
 		} else {
-			game.flash = block_name(game.who) + " retreats.";
+			game.flash = block_name(game.who) + " retreats to " + to + ".";
 			logp("retreats to " + to + ".");
 			use_border(game.where, to);
 			game.location[game.who] = to;
@@ -2585,7 +2586,7 @@ function goto_regroup() {
 	game.active = game.attacker[game.where];
 	if (is_enemy_area(game.where))
 		game.active = ENEMY[game.active];
-	log("~ " + game.active + " wins the battle ~");
+	log(game.active + " wins the battle in " + game.where + "!");
 	game.state = 'regroup';
 	game.turn_log = [];
 	clear_undo();

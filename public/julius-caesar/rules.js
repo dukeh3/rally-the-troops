@@ -38,6 +38,11 @@ function log(...args) {
 	game.log.push(s);
 }
 
+function log_battle(...args) {
+	let s = Array.from(args).join("");
+	game.log.push(game.active[0] + ": " + s);
+}
+
 function logp(...args) {
 	let s = Array.from(args).join("");
 	game.log.push(game.active + " " + s);
@@ -1591,23 +1596,26 @@ function bring_on_reserves() {
 
 function start_battle_round() {
 	if (++game.battle_round <= 4) {
-		log("~ Battle round " + game.battle_round + " ~");
-
 		reset_road_limits();
 		game.moved = {};
 
 		if (game.battle_round == 2) {
 			game.surprise = false;
 			if (count_defenders() == 0) {
-				log("Defending main force was eliminated. The attacker is now the defender.");
+				log("Defending main force was eliminated.");
+				log("Defending reserves are disrupted.");
 				game.attacker[game.where] = enemy(game.attacker[game.where]);
 				disrupt_attacking_reserves();
+				log("The attacker is now the defender.");
 			} else if (count_attackers() == 0) {
 				log("Attacking main force was eliminated.");
+				log("Attacking reserves are disrupted.");
 				disrupt_attacking_reserves();
 			}
 			bring_on_reserves();
 		}
+
+		log("~ Battle Round " + game.battle_round + " ~");
 
 		pump_battle_round();
 	} else {
@@ -1691,7 +1699,8 @@ function fire_with_block(b) {
 	game.moved[b] = true;
 	game.hits = 0;
 	let strength = block_strength(b);
-	let fire = block_fire_power(b, game.where);
+	let fire = block_fire_power(b);
+	let name = block_name(b) + " " + block_initiative(b) + fire;
 	let rolls = [];
 	for (let i = 0; i < strength; ++i) {
 		let die = roll_d6();
@@ -1702,15 +1711,16 @@ function fire_with_block(b) {
 			rolls.push(DIE_MISS[die]);
 		}
 	}
-	game.flash = block_name(b) + " " + BLOCKS[b].initiative + BLOCKS[b].firepower;
-	game.flash += "\nfires " + rolls.join(" ") + "\n";
+	game.flash = name + " fires " + rolls.join(" ") + " ";
 	if (game.hits == 0)
 		game.flash += "and misses.";
 	else if (game.hits == 1)
 		game.flash += "and scores 1 hit.";
 	else
 		game.flash += "and scores " + game.hits + " hits.";
-	log(game.flash);
+
+	log_battle(name + " fires " + rolls.join("") + ".");
+
 	if (game.hits > 0) {
 		game.active = enemy(game.active);
 		goto_battle_hits();
@@ -1750,7 +1760,7 @@ function retreat_with_block(who) {
 
 function pass_with_block(who) {
 	game.flash = block_name(who) + " passes.";
-	log(block_name(who) + " passes.");
+	log_battle(block_name(who) + " passes.");
 	game.moved[who] = true;
 	resume_battle();
 }
@@ -1890,7 +1900,7 @@ states.retreat = {
 			game.sea_retreated = true;
 			game.state = 'sea_retreat';
 		} else {
-			log(block_name(game.who), " retreats to ", to + ".");
+			logp("retreats to " + to + ".");
 			move_to(game.who, from, to);
 			game.flash = block_name(game.who) + " retreats to " + to + ".";
 			game.moved[game.who] = true;
@@ -1925,7 +1935,7 @@ states.sea_retreat = {
 	},
 	space: function (to) {
 		let from = game.location[game.who];
-		log(block_name(game.who), " sea retreats to ", to + ".");
+		logp("sea retreats to " + to + ".");
 		game.flash = block_name(game.who) + " sea retreats to " + to + ".";
 		move_to(game.who, from, to);
 		game.moved[game.who] = true;
@@ -1941,7 +1951,7 @@ function goto_regroup() {
 	game.active = game.attacker[game.where];
 	if (is_enemy_space(game.where))
 		game.active = enemy(game.active);
-	log("~ " + game.active + " wins the battle ~");
+	log(game.active + " wins the battle in " + game.where + "!");
 	game.state = 'regroup';
 	game.turn_log = [];
 	clear_undo();

@@ -158,6 +158,9 @@
 .columbia-labels .block.Caesar { background-color: #c22; border: 3px solid #822; }
 .columbia-labels .block.Pompeius { background-color: #c91; border: 3px solid #862; }
 .columbia-labels .block.Cleopatra { background-color: #09a; border: 3px solid #067; }
+.columbia-labels .block.known.Caesar { background-color: #822; }
+.columbia-labels .block.known.Pompeius { background-color: #862; }
+.columbia-labels .block.known.Cleopatra { background-color: #067; }
 .columbia-labels .block.highlight { border: 3px solid white; }
 .columbia-labels .block.selected { border: 3px solid yellow; }
 .columbia-labels .block.moved { filter: grayscale(70%); }
@@ -166,6 +169,7 @@
 .columbia-labels .block.r1 { transform: rotate(-90deg); }
 .columbia-labels .block.r2 { transform: rotate(-180deg); }
 .columbia-labels .block.r3 { transform: rotate(-270deg); }
+
 
 .block { box-shadow: 0px 0px 4px 0px black; }
 
@@ -234,6 +238,7 @@
 		</div>
 
 		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
@@ -267,6 +272,7 @@
 
 	<div class="grid_center">
 
+		<div id="mapwrap" class="mapwrap">
 		<div id="map" class="map">
 			<div id="blocks" class="blocks">
 				<div id="secret_blocks"></div>
@@ -274,6 +280,7 @@
 			</div>
 			<div id="spaces"></div>
 			<div id="turn" class="year_705"></div>
+		</div>
 		</div>
 
 		<div class="hand">

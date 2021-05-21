@@ -301,6 +301,7 @@ div.block {
 		</div>
 
 		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
@@ -369,6 +370,7 @@ div.block {
 
 	<div class="grid_center">
 
+<div class="mapwrap" id="mapwrap">
 <div class="map" id="map">
 
 <svg id="svgmap" viewBox="0 0 1688 1950">
@@ -1534,6 +1536,7 @@ c20 -20 41 -80 41 -116 0 -27 -18 -45 -46 -45 -40 0 -54 25 -54 99 0 37 3 71
 <div id="blocks" class="blocks"></div>
 <div id="offmap" class="offmap" style="visibility:hidden"></div>
 
+</div>
 </div>
 
 <div class="hand">

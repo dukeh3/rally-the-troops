@@ -79,6 +79,9 @@ const STEPS = [ 0, "I", "II", "III", "IIII" ];
 function block_description(b) {
 	let s = ui.map_steps[b] || ui.battle_steps[b];
 	let c = BLOCKS[b].initiative + BLOCKS[b].firepower;
+	let levy = BLOCKS[b].levy;
+	if (levy)
+		return BLOCKS[b].name + " (" + levy + ") " + STEPS[s] + "-" + c;
 	return BLOCKS[b].name + " " + STEPS[s] + "-" + c;
 }
 

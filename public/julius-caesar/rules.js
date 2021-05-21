@@ -2086,14 +2086,20 @@ states.navis_to_port = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move navis to port...";
-		view.prompt = "Move all Navis to a friendly port on the same sea.";
+		view.prompt = "Move all Navis to a friendly port.";
+		let count = 0;
 		for (let b in BLOCKS) {
-			if (block_owner(b) == game.active && BLOCKS[b].type == 'navis')
-				if (SPACES[game.location[b]].type == 'sea')
-
-					if (can_navis_move_to_port(b))
+			if (block_owner(b) == game.active && BLOCKS[b].type == 'navis') {
+				if (SPACES[game.location[b]].type == 'sea') {
+					if (can_navis_move_to_port(b)) {
 						gen_action(view, 'block', b);
+						++count;
+					}
+				}
+			}
 		}
+		if (count > 0)
+			view.prompt += " " + count + " left.";
 		gen_action_pass(view, "End navis to port");
 		gen_action_undo(view);
 	},

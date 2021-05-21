@@ -1856,6 +1856,7 @@ states.retreat_in_battle = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
+		gen_action(view, 'block', game.who);
 		if (game.who == NORSE) {
 			view.prompt = "Retreat: Move the army to a friendly coastal area.";
 			for (let to in AREAS)
@@ -1878,6 +1879,10 @@ states.retreat_in_battle = {
 			log(game.active + " retreats to " + to + ".");
 			move_block(game.who, game.where, to);
 		}
+		game.who = null;
+		resume_battle();
+	},
+	block: function () {
 		game.who = null;
 		resume_battle();
 	},

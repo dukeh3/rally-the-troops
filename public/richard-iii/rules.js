@@ -2514,6 +2514,7 @@ states.retreat_in_battle = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
+		gen_action(view, 'block', game.who);
 		if (game.active == game.piracy && game.is_pirate[game.who]) {
 			view.prompt = "Retreat: Move the army to a friendly or vacant areas in the same sea zone.";
 			for (let to of AREAS[game.where].exits)
@@ -2541,6 +2542,9 @@ states.retreat_in_battle = {
 	eliminate: function () {
 		game.flash = "";
 		eliminate_block(game.who);
+		resume_battle();
+	},
+	block: function () {
 		resume_battle();
 	},
 	undo: function () {

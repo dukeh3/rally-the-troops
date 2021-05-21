@@ -1881,6 +1881,7 @@ states.retreat = {
 			}
 		}
 		gen_action(view, 'undo');
+		gen_action(view, 'block', game.who);
 	},
 	space: function (to) {
 		let from = game.location[game.who];
@@ -1898,6 +1899,9 @@ states.retreat = {
 	},
 	pass: function () {
 		eliminate_block(game.who);
+		resume_battle();
+	},
+	block: function () {
 		resume_battle();
 	},
 	undo: function () {

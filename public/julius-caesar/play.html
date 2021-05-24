@@ -140,8 +140,10 @@
 body.shift .block.known:hover {
 	transform: scale(2) !important;
 	transition: 100ms;
+	z-index: 100;
 }
 
+.battle .block { position: relative; }
 .map .block { position: absolute; z-index: 2; }
 .map .block.highlight { z-index: 3; }
 .map .block.selected { z-index: 4; }

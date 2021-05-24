@@ -117,6 +117,7 @@ div.turn.year_1314 { left: 1511px; top: 1677px; }
 body.shift .block.known:hover {
 	transform: scale(2) !important;
 	transition: 100ms;
+	z-index: 100;
 }
 
 .oldblocks div.block { border-radius: 8px; }
@@ -124,6 +125,10 @@ body.shift .block.known:hover {
 
 .map div.block {
 	position: absolute;
+}
+
+.battle div.block {
+	position: relative;
 }
 
 div.block {

@@ -2118,7 +2118,8 @@ states.navis_to_port = {
 		}
 		if (count > 0)
 			view.prompt += " " + count + " left.";
-		gen_action_pass(view, "End navis to port");
+		if (count == 0)
+			gen_action_pass(view, "End navis to port");
 		gen_action_undo(view);
 	},
 	block: function (who) {

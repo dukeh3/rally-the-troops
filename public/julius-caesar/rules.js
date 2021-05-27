@@ -1400,13 +1400,17 @@ states.levy = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to levy...";
 		view.prompt = "Choose an army to levy. "+game.levies+"LP left.";
+		let is_levy_possible = false;
 		if (game.levies > 0) {
 			for (let b in BLOCKS) {
-				if (can_levy(b))
+				if (can_levy(b)) {
 					gen_action(view, 'block', b);
+					is_levy_possible = true;
+				}
 			}
 		}
-		gen_action_pass(view, "End levy phase");
+		if (!is_levy_possible)
+			gen_action_pass(view, "End levy phase");
 		gen_action_undo(view);
 	},
 	block: function (who) {

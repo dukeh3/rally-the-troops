@@ -1725,10 +1725,6 @@ function persian_land_battle_round() {
 	if (p_hit >= g_hit) {
 		log("Greece loses one army.");
 		move_greek_army(game.where, RESERVE);
-		if (game.greek.battle_event == THREE_HUNDRED_SPARTANS) {
-			log("300 Spartans advantage lost.");
-			game.greek.battle_event = 0;
-		}
 	}
 	if (g_hit >= p_hit) {
 		log("Persia loses one army.");

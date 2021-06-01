@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+<meta charset="UTF-8">
+<title>300: E&amp;W</title>
+<link rel="icon" href="Achaemenid_Falcon.png">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/common/grid.css">
+<script defer src="/socket.io/socket.io.min.js"></script>
+<script defer src="/common/client.js"></script>
+<script defer src="ui.js"></script>
+<style>
+
+.grid_center { background-color: slategray; }
+.grid_role { background-color: gainsboro; }
+.grid_log { background-color: gainsboro; }
+.grid_top { background-color: silver; }
+.grid_top.Persia.your_turn { background-color: skyblue; }
+.grid_top.Greece.your_turn { background-color: salmon; }
+.grid_top.disconnected { background-color: red; }
+.role_info { background-color: silver; }
+.one .role_name { background-color: salmon; }
+.two .role_name { background-color: skyblue; }
+
+.role_info {
+	padding: 10px 20px;
+	background-color: gainsboro;
+}
+.last_played {
+	background-color: silver;
+}
+.last_played .card {
+	margin: 15px auto;
+}
+.grid_role {
+	width: 240px;
+}
+
+/* CARDS */
+
+.card_back { background-image: url('cards/card_back.jpg'); }
+.card_1 { background-image: url('cards/card_en_01.jpg'); }
+.card_2 { background-image: url('cards/card_en_02.jpg'); }
+.card_3 { background-image: url('cards/card_en_03.jpg'); }
+.card_4 { background-image: url('cards/card_en_04.jpg'); }
+.card_5 { background-image: url('cards/card_en_05.jpg'); }
+.card_6 { background-image: url('cards/card_en_06.jpg'); }
+.card_7 { background-image: url('cards/card_en_07.jpg'); }
+.card_8 { background-image: url('cards/card_en_08.jpg'); }
+.card_9 { background-image: url('cards/card_en_09.jpg'); }
+.card_10 { background-image: url('cards/card_en_10.jpg'); }
+.card_11 { background-image: url('cards/card_en_11.jpg'); }
+.card_12 { background-image: url('cards/card_en_12.jpg'); }
+.card_13 { background-image: url('cards/card_en_13.jpg'); }
+.card_14 { background-image: url('cards/card_en_14.jpg'); }
+.card_15 { background-image: url('cards/card_en_15.jpg'); }
+.card_16 { background-image: url('cards/card_en_16.jpg'); }
+
+.card {
+	background-repeat: no-repeat;
+	width: 250px;
+	height: 350px;
+	border-radius: 12px;
+}
+
+.role_info .card {
+	width: 200px;
+	height: 280px;
+	border-radius: 10px;
+}
+
+/* CARD ACTION POPUP MENU */
+
+#popup {
+	position: absolute;
+	user-select: none;
+	background-color: #ddd;
+	left: 10px;
+	top: 100px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
+	z-index: 200;
+	min-width: 20ex;
+	white-space: nowrap;
+}
+#popup div { padding: 3pt 8pt; display: none; }
+#popup div.enabled { padding: 3pt 8pt; display: block; }
+#popup div:hover { background-color: teal; color: white; }
+
+/* MAP WITH ARMIES, FLEETS, AND MARKERS */
+
+.map.greek, .map.greek > div {
+	transform: rotate(180deg);
+}
+
+.map {
+	position: relative;
+	width: 1240px;
+	height: 878px;
+	background-image: url("map.jpg");
+	background-size: cover;
+}
+
+.map.hide_markers > div {
+	visibility: hidden;
+}
+
+.port {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 1;
+}
+.port.enabled {
+	box-shadow: 0 0 20px 2px white, inset 0 0 5px 2px white;
+	z-index: 3;
+}
+
+.persian_city {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 4;
+}
+.persian_city.enabled {
+	box-shadow: 0 0 10px 2px white, inset 0 0 5px 2px white;
+	z-index: 100;
+}
+
+.greek_city {
+	position: absolute;
+	border-radius: 5px;
+	z-index: 4;
+}
+.greek_city.enabled {
+	box-shadow: 0 0 10px 4px white, inset 0 0 5px 4px white;
+	z-index: 100;
+}
+
+.greek_army, .greek_fleet, .persian_army, .persian_fleet, .marker {
+	transition-property: top, left, transform;
+	transition-duration: 700ms;
+	transition-timing-function: ease;
+	z-index: 2;
+}
+
+.greek_army, .greek_fleet, .persian_army, .persian_fleet, .marker, #bridge {
+	position: absolute;
+	display: none;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.marker { background-image: url("icons/black_cube.png"); }
+.greek_army { background-image: url("icons/red_cube.png"); }
+.greek_fleet { background-image: url("icons/red_disk.png"); }
+.persian_army { background-image: url("icons/blue_cube.png"); }
+.persian_fleet { background-image: url("icons/blue_disk.png"); }
+.greek_army, .persian_army, .marker { width: 22px; height: 26px; }
+.greek_fleet, .persian_fleet { width: 26px; height: 20px; }
+
+.campaign_1 { left: 1074px; top: 368px; }
+.campaign_2 { left: 1077px; top: 402px; }
+.campaign_3 { left: 1078px; top: 435px; }
+.campaign_4 { left: 1077px; top: 467px; }
+.campaign_5 { left: 1072px; top: 501px; }
+.vp_g6 { left: 181px; top: 228px; }
+.vp_g5 { left: 168px; top: 259px; }
+.vp_g4 { left: 157px; top: 291px; }
+.vp_g3 { left: 148px; top: 323px; }
+.vp_g2 { left: 142px; top: 357px; }
+.vp_g1 { left: 138px; top: 389px; }
+.vp_0 { left: 138px; top: 425px; }
+.vp_p1 { left: 138px; top: 460px; }
+.vp_p2 { left: 142px; top: 493px; }
+.vp_p3 { left: 148px; top: 526px; }
+.vp_p4 { left: 157px; top: 559px; }
+.vp_p5 { left: 168px; top: 590px; }
+.vp_p6 { left: 181px; top: 622px; }
+
+.greek_fleet.show, .persian_fleet.show, .greek_army.show, .persian_army.show, .marker.show, #bridge.show {
+	display: block;
+	filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.5));
+}
+
+.greek_fleet.selected, .persian_fleet.selected, .greek_army.selected, .persian_army.selected {
+	filter: brightness(150%) drop-shadow(0 0 3px white);
+}
+#bridge.enabled {
+	filter: brightness(150%) drop-shadow(0 0 10px skyblue);
+}
+
+#darius { left: 77px; top: 562px; }
+#xerxes { left: 61px; top: 717px; }
+#artemisia { left: 167px; top: 799px; }
+#miltiades { left: 1179px; top: 305px; }
+#themistocles { left: 1156px; top: 153px; }
+#leonidas { left: 1068px; top: 41px; }
+#bridge {
+	background-image: url("icons/bridge.png");
+	width: 48px; height: 36px;
+	left: 932px; top: 655px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="status" id="status"></div>
+
+<div class="chat_window">
+<div class="chat_header">Chat</div>
+<div class="chat_text"></div>
+<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+</div>
+
+<div class="grid_window">
+
+	<div class="grid_top">
+
+		<div class="menu">
+			<div class="menu_title"><img src="/images/cog.svg"></div>
+			<div class="menu_popup">
+				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="confirm_resign()">Resign</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="send_save()">&#x1F41E; Save</div>
+				<div class="menu_item" onclick="send_restore()">&#x1F41E; Restore</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="send_restart('Historical')">&#x26a0; Restart</div>
+			</div>
+		</div>
+
+		<div class="image_button" onclick="toggle_markers()"><img src="/images/earth-africa-europe.svg"></div>
+		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+
+		<div id="prompt" class="prompt">Connecting...</div>
+
+		<button id="button_build" onclick="on_build()" class="hide">Build bridge</button>
+		<button id="button_destroy" onclick="on_destroy()" class="hide">Destroy bridge</button>
+		<button id="button_draw" onclick="on_draw()" class="hide">Draw</button>
+		<button id="button_battle" onclick="on_battle()" class="hide">Battle</button>
+		<button id="button_pass" onclick="on_pass()" class="hide">Pass</button>
+		<button id="button_undo" onclick="on_undo()" class="hide">Undo</button>
+		<button id="button_next" onclick="on_next()" class="hide">Next</button>
+
+	</div>
+
+	<div class="grid_role">
+
+		<div class="role one">
+			<div class="role_name">Greece (<span class="role_user">$USER</span>)</div>
+			<div class="role_info" id="greek_info">0 cards in hand</div>
+		</div>
+
+		<div class="role two">
+			<div class="role_name">Persia (<span class="role_user">$USER</span>)</div>
+			<div class="role_info" id="persian_info">0 cards in hand</div>
+		</div>
+
+		<div class="role_info last_played"><div id="last_played" class="card show card_back"></div></div>
+	</div>
+
+	<div class="grid_log">
+		<div class="log" id="log"></div>
+	</div>
+
+	<div class="grid_center">
+
+		<div id="map" class="map">
+
+			<div id="campaign" class="marker campaign_1"></div>
+			<div id="bridge" class="bridge"></div>
+			<div id="vp" class="marker vp_0"></div>
+			<div id="darius" class="persian_army"></div>
+			<div id="xerxes" class="persian_army"></div>
+			<div id="artemisia" class="persian_fleet"></div>
+			<div id="miltiades" class="greek_army"></div>
+			<div id="themistocles" class="greek_army"></div>
+			<div id="leonidas" class="greek_army"></div>
+
+			<div id="port_Abydos" class="port"></div>
+			<div id="port_Ephesos" class="port"></div>
+			<div id="port_Athenai" class="port"></div>
+			<div id="port_Eretria" class="port"></div>
+			<div id="port_Naxos" class="port"></div>
+			<div id="port_Pella" class="port"></div>
+			<div id="port_Sparta" class="port"></div>
+			<div id="port_Thebai" class="port"></div>
+
+			<div id="gf1" class="greek_fleet"></div>
+			<div id="gf2" class="greek_fleet"></div>
+			<div id="gf3" class="greek_fleet"></div>
+			<div id="gf4" class="greek_fleet"></div>
+			<div id="gf5" class="greek_fleet"></div>
+
+			<div id="pf1" class="persian_fleet"></div>
+			<div id="pf2" class="persian_fleet"></div>
+			<div id="pf3" class="persian_fleet"></div>
+			<div id="pf4" class="persian_fleet"></div>
+			<div id="pf5" class="persian_fleet"></div>
+			<div id="pf6" class="persian_fleet"></div>
+
+			<div id="city_Abydos" class="persian_city"></div>
+			<div id="city_Ephesos" class="persian_city"></div>
+			<div id="city_Athenai" class="greek_city"></div>
+			<div id="city_Delphi" class="greek_city"></div>
+			<div id="city_Eretria" class="greek_city"></div>
+			<div id="city_Korinthos" class="greek_city"></div>
+			<div id="city_Larissa" class="greek_city"></div>
+			<div id="city_Naxos" class="greek_city"></div>
+			<div id="city_Pella" class="greek_city"></div>
+			<div id="city_Sparta" class="greek_city"></div>
+			<div id="city_Thebai" class="greek_city"></div>
+
+			<div id="ga1" class="greek_army"></div>
+			<div id="ga2" class="greek_army"></div>
+			<div id="ga3" class="greek_army"></div>
+			<div id="ga4" class="greek_army"></div>
+			<div id="ga5" class="greek_army"></div>
+			<div id="ga6" class="greek_army"></div>
+			<div id="ga7" class="greek_army"></div>
+			<div id="ga8" class="greek_army"></div>
+			<div id="ga9" class="greek_army"></div>
+
+			<div id="pa1" class="persian_army"></div>
+			<div id="pa2" class="persian_army"></div>
+			<div id="pa3" class="persian_army"></div>
+			<div id="pa4" class="persian_army"></div>
+			<div id="pa5" class="persian_army"></div>
+			<div id="pa6" class="persian_army"></div>
+			<div id="pa7" class="persian_army"></div>
+			<div id="pa8" class="persian_army"></div>
+			<div id="pa9" class="persian_army"></div>
+			<div id="pa10" class="persian_army"></div>
+			<div id="pa11" class="persian_army"></div>
+			<div id="pa12" class="persian_army"></div>
+			<div id="pa13" class="persian_army"></div>
+			<div id="pa14" class="persian_army"></div>
+			<div id="pa15" class="persian_army"></div>
+			<div id="pa16" class="persian_army"></div>
+			<div id="pa17" class="persian_army"></div>
+			<div id="pa18" class="persian_army"></div>
+			<div id="pa19" class="persian_army"></div>
+			<div id="pa20" class="persian_army"></div>
+			<div id="pa21" class="persian_army"></div>
+			<div id="pa22" class="persian_army"></div>
+			<div id="pa23" class="persian_army"></div>
+			<div id="pa24" class="persian_army"></div>
+
+		</div>
+
+		<div class="hand">
+			<div id="card_1" class="card card_1"></div>
+			<div id="card_2" class="card card_2"></div>
+			<div id="card_3" class="card card_3"></div>
+			<div id="card_4" class="card card_4"></div>
+			<div id="card_5" class="card card_5"></div>
+			<div id="card_6" class="card card_6"></div>
+			<div id="card_7" class="card card_7"></div>
+			<div id="card_8" class="card card_8"></div>
+			<div id="card_9" class="card card_9"></div>
+			<div id="card_10" class="card card_10"></div>
+			<div id="card_11" class="card card_11"></div>
+			<div id="card_12" class="card card_12"></div>
+			<div id="card_13" class="card card_13"></div>
+			<div id="card_14" class="card card_14"></div>
+			<div id="card_15" class="card card_15"></div>
+			<div id="card_16" class="card card_16"></div>
+			<div id="back_1" class="card card_back"></div>
+			<div id="back_2" class="card card_back"></div>
+			<div id="back_3" class="card card_back"></div>
+			<div id="back_4" class="card card_back"></div>
+			<div id="back_5" class="card card_back"></div>
+			<div id="back_6" class="card card_back"></div>
+			<div id="back_7" class="card card_back"></div>
+			<div id="back_8" class="card card_back"></div>
+			<div id="back_9" class="card card_back"></div>
+			<div id="back_10" class="card card_back"></div>
+			<div id="back_11" class="card card_back"></div>
+			<div id="back_12" class="card card_back"></div>
+			<div id="back_13" class="card card_back"></div>
+			<div id="back_14" class="card card_back"></div>
+			<div id="back_15" class="card card_back"></div>
+			<div id="back_16" class="card card_back"></div>
+		</div>
+
+		<div id="popup" onmouseleave="hide_popup_menu()">
+			<div id="menu_card_event" onclick="on_card_event()">
+				Play for Event
+			</div>
+			<div id="menu_card_move" onclick="on_card_move()">
+				Play for Movement
+			</div>
+		</div>
+
+	</div>
+
+</div>
+</body>

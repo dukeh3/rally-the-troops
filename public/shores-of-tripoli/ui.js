@@ -57,6 +57,9 @@ function on_blur(evt) {
 	document.getElementById("status").textContent = "";
 }
 
+function on_pass() { if (game.actions) { send_action('pass', null); } }
+function on_undo() { if (game.actions) { send_action('undo', null); } }
+
 function build_map() {
 	let i = 0;
 	for (let space of SPACES) {
@@ -80,15 +83,13 @@ function build_map() {
 		}
 	}
 	for (i = 1; i <= 27; ++i) {
-		let e = ui.cards['us'+i] = document.getElementById("us_card_"+i);
+		let e = ui.cards[i] = document.getElementById("us_card_"+i);
 		e.addEventListener("click", on_card);
-		e.deck = 'us';
 		e.card = i;
 	}
-	for (i = 1; i <= 27; ++i) {
-		let e = ui.cards['tr'+i] = document.getElementById("tr_card_"+i);
+	for (i = 28; i <= 54; ++i) {
+		let e = ui.cards[i] = document.getElementById("tr_card_"+(i-27));
 		e.addEventListener("click", on_card);
-		e.deck = 'tr';
 		e.card = i;
 	}
 }
@@ -104,18 +105,19 @@ function update_cards() {
 	document.getElementById("us_card_deck").textContent = game.us.deck;
 	document.getElementById("tr_card_deck").textContent = game.tr.deck;
 	for (let i = 1; i <= 3; ++i) {
-		update_card('us'+i, game.us.core.includes('us'+i));
-		update_card('tr'+i, game.tr.core.includes('tr'+i));
+		update_card(i, game.us.core.includes(i));
+		update_card(i+27, game.tr.core.includes(i+27));
 	}
 	for (let i = 4; i <= 27; ++i) {
-		update_card('us'+i, game.hand.includes('us'+i));
-		update_card('tr'+i, game.hand.includes('tr'+i));
+		update_card(i, game.hand.includes(i));
+		update_card(i+27, game.hand.includes(i+27));
 	}
 }
 
 /* MAP AND PIECE LAYOUT */
 
 function on_update() {
+	show_action_button("#button_pass", "pass");
 	update_year_marker(game.year);
 	update_season_marker(game.season);
 	update_pieces(game.location);

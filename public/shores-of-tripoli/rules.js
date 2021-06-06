@@ -1,5 +1,22 @@
 "use strict";
 
+// Battle Card timing:
+
+// us: before interception roll
+// tr: after interception roll
+// tr: before pirate raid
+// tr: after pirate raid
+
+// us: before naval battle
+// tr: before naval battle
+// us: before land battle
+// tr: before land battle
+
+// us: own reaction: burn the philadelphia
+// us: own reaction: launch the intrepid
+// us: own reaction: assault on tripoli
+// tr: own reaction: philadelphia runs aground
+
 const US = "United States";
 const TR = "Tripolitania";
 
@@ -83,6 +100,16 @@ const FRIGATE_SPACES = [
 	TUNIS_PATROL_ZONE,
 ];
 
+const BATTLE_SPACES = [
+	ALEXANDRIA_HARBOR,
+	ALGIERS_HARBOR,
+	BENGHAZI_HARBOR,
+	DERNE_HARBOR,
+	TANGIER_HARBOR,
+	TRIPOLI_HARBOR,
+	TUNIS_HARBOR,
+];
+
 const THOMAS_JEFFERSON = 1;
 const SWEDISH_FRIGATES_ARRIVE = 2;
 const HAMETS_ARMY_CREATED = 3;
@@ -104,6 +131,7 @@ const BURN_THE_PHILADELPHIA = 18;
 const LAUNCH_THE_INTREPID = 19;
 const GENERAL_EATON_ATTACKS_DERNE = 20;
 const GENERAL_EATON_ATTACKS_BENGHAZI = 21;
+
 const LIEUTENANT_STERETT_IN_PURSUIT = 22;
 const PREBLES_BOYS_TAKE_AIM = 23;
 const THE_DARING_STEPHEN_DECATUR = 24;
@@ -132,6 +160,7 @@ const THE_PHILADELPHIA_RUNS_AGROUND = 45;
 const ALGIERS_DECLARES_WAR = 46;
 const MOROCCO_DECLARES_WAR = 47;
 const TUNIS_DECLARES_WAR = 48;
+
 const US_SIGNAL_BOOKS_OVERBOARD = 49;
 const UNCHARTED_WATERS = 50;
 const MERCHANT_SHIP_CONVERTED = 51;
@@ -388,12 +417,24 @@ function count_american_frigates(where) {
 	return count_pieces(US_FRIGATES, where);
 }
 
+function count_american_gunboats(where) {
+	return count_pieces(US_GUNBOATS, where);
+}
+
 function count_tripolitan_corsairs(where) {
 	return count_pieces(TR_CORSAIRS, where);
 }
 
+function count_tripolitan_frigates(where) {
+	return count_pieces(TR_FRIGATES, where);
+}
+
 function count_allied_corsairs(where) {
 	return count_pieces(AL_CORSAIRS, where);
+}
+
+function count_tripolitan_infantry(where) {
+	return count_pieces(TR_INFANTRY, where);
 }
 
 function can_play_thomas_jefferson() {
@@ -441,6 +482,8 @@ function start_of_year() {
 	log("");
 	log("Start of " + game.year + ".");
 
+	game.season = SPRING;
+
 	move_all_pieces(US_FRIGATES, TRACK_YEAR[game.year], GIBRALTAR_HARBOR);
 	move_all_pieces(TR_FRIGATES, TRACK_YEAR[game.year], TRIPOLI_HARBOR);
 
@@ -466,11 +509,13 @@ function start_of_year() {
 }
 
 function end_american_play() {
+	clear_undo();
 	game.active = TR;
 	game.state = 'tripolitan_play';
 }
 
 function end_tripolitan_play() {
+	clear_undo();
 	end_of_season();
 }
 
@@ -559,7 +604,6 @@ states.tripolitan_play = {
 			gen_action(view, 'card_event', CONSTANTINOPLE_SENDS_AID);
 		let build = can_build_corsair_in_tripoli();
 		let raid = can_pirate_raid_from_tripoli();
-		console.log("tripolitan_play", build, raid);
 		for (let c of game.tr.hand) {
 			if (build)
 				gen_action(view, 'card_build_corsair', c);
@@ -594,6 +638,35 @@ function goto_move_up_to_n_american_frigates(n) {
 	push_undo();
 }
 
+function is_naval_battle_location(space) {
+	let n_us = count_american_frigates(space);
+	let n_tr = count_tripolitan_corsairs(space) + count_allied_corsairs(space);
+	return (n_us > 0 && n_tr > 0);
+}
+
+function is_naval_bombardment_location(space) {
+	let n_us = count_american_frigates(space);
+	let n_tr = count_tripolitan_infantry(space);
+	return (n_us > 0 && n_tr > 0);
+}
+
+function is_naval_battle_or_bombardment_location(space) {
+	let n_us = count_american_frigates(space);
+	let n_tr_ships = count_tripolitan_corsairs(space) + count_allied_corsairs(space);
+	let n_tr_infantry = count_tripolitan_infantry(space);
+	return (n_us > 0 && (n_tr_ships > 0 || n_tr_infantry > 0));
+}
+
+function count_naval_battle_or_bombardment_locations() {
+	let n = 0;
+	for (let space of BATTLE_SPACES)
+		if (is_naval_battle_or_bombardment_location(space))
+			++n;
+	return n;
+}
+
+// TODO: click 'from' location to go back to selecting source?
+
 states.move_us_frigate_from = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
@@ -601,9 +674,9 @@ states.move_us_frigate_from = {
 		view.prompt = "United States: Move up to " + game.moves + " frigates."
 		if (game.moves > 0) {
 			view.prompt += " Select a frigate to move.";
-			for (let s of FRIGATE_SPACES) {
-				if (count_american_frigates(s) > 0)
-					gen_action(view, 'space', s);
+			for (let space of FRIGATE_SPACES) {
+				if (count_american_frigates(space) > 0)
+					gen_action(view, 'space', space);
 			}
 		}
 		gen_action(view, 'next');
@@ -611,13 +684,14 @@ states.move_us_frigate_from = {
 	},
 	space: function (space) {
 		push_undo();
-		game.from = space;
+		game.where = space;
 		game.state = 'move_us_frigate_to'
 	},
 	next: function () {
-		// resolve naval battles
-		// resolve bombardment
-		end_american_play();
+		if (count_naval_battle_or_bombardment_locations() > 0)
+			goto_allocate_gunboats();
+		else
+			end_american_play();
 	},
 	undo: pop_undo
 }
@@ -627,18 +701,310 @@ states.move_us_frigate_to = {
 		if (is_inactive_player(current))
 			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
 		view.prompt = "United States: Move up to " + game.moves + " frigates. Select a destation.";
-		for (let s of FRIGATE_SPACES)
-			if (s != game.from)
-				gen_action(view, 'space', s);
+		for (let space of FRIGATE_SPACES)
+			if (space != game.where)
+				gen_action(view, 'space', space);
 		gen_action_undo(view);
 	},
 	space: function (space) {
-		move_one_piece(US_FRIGATES, game.from, space);
+		log(game.active + " moves a frigate from " + SPACES[game.where] + " to " + SPACES[space] + ".");
+		move_one_piece(US_FRIGATES, game.where, space);
 		--game.moves;
-		game.from = null;
+		game.where = null;
 		game.state = 'move_us_frigate_from'
 	},
 	undo: pop_undo
+}
+
+function goto_allocate_gunboats() {
+	if (count_american_gunboats(MALTA_HARBOR) == 0)
+		return goto_select_combat();
+	game.where = MALTA_HARBOR;
+	game.state = 'allocate_gunboats';
+}
+
+states.allocate_gunboats = {
+	prompt: function (view, current) {
+		view.prompt = "United States: Allocate gunboats to battle locations.";
+		if (is_inactive_player(current))
+			return view.prompt;
+		if (count_american_gunboats(MALTA_HARBOR) > 0) {
+			for (let space of BATTLE_SPACES)
+				if (is_naval_battle_or_bombardment_location(space))
+					gen_action(view, 'space', space);
+		}
+		gen_action(view, 'next');
+		gen_action_undo(view);
+	},
+	space: function (space) {
+		push_undo();
+		log(game.active + " moves a gunboat to " + SPACES[space] + ".");
+		move_one_piece(US_GUNBOATS, MALTA_HARBOR, space);
+	},
+	next: function () {
+		game.where = null;
+		goto_select_combat();
+	},
+	undo: pop_undo
+}
+
+function goto_select_combat() {
+	clear_undo();
+	// TODO: auto-select if only one location?
+	if (count_naval_battle_or_bombardment_locations() > 0)
+		game.state = 'select_combat';
+	else
+		end_american_play();
+}
+
+states.select_combat = {
+	prompt: function (view, current) {
+		view.prompt = "United States: Pick the next naval combat or bombardment."
+		if (is_inactive_player(current))
+			return view.prompt;
+		for (let space of BATTLE_SPACES)
+			if (is_naval_battle_or_bombardment_location(space))
+				gen_action(view, 'space', space);
+	},
+	space: function (space) {
+		game.where = space;
+		if (is_naval_battle_location(space))
+			goto_naval_battle();
+		else
+			goto_naval_bombardment();
+	},
+}
+
+function fire(space, what, n_dice) {
+	let hits = 0;
+	for (let i = 0; i < n_dice; ++i) {
+		let roll = roll_d6();
+		if (roll == 6)
+			++hits;
+		log(what + " fires " + roll + ".");
+	}
+	return hits;
+}
+
+function goto_naval_battle() {
+	log("Naval battle in " + SPACES[game.where] + ".");
+	// TODO: battle cards
+	naval_battle_round();
+}
+
+function naval_battle_round() {
+	let n_us_frigates = count_american_frigates(game.where);
+	let n_us_gunboats = count_american_gunboats(game.where);
+	let us_hitpoints = n_us_frigates * 2 + n_us_gunboats;
+	let n_tr_frigates = count_tripolitan_frigates(game.where);
+	let n_tr_corsairs = count_tripolitan_corsairs(game.where);
+	let n_al_corsairs = count_allied_corsairs(game.where);
+	let tr_hitpoints = n_tr_frigates * 2 + n_tr_corsairs + n_al_corsairs;
+
+	game.n_tr_hits = 0;
+	game.n_tr_hits += fire(game.where, "US frigate", 2 * n_us_frigates);
+	game.n_tr_hits += fire(game.where, "US gunboat", 1 * n_us_gunboats);
+	if (game.n_tr_hits > tr_hitpoints)
+		game.n_tr_hits = tr_hitpoints;
+
+	game.n_us_hits = 0;
+	game.n_us_hits += fire(game.where, "Tripolitan frigate", 2 * n_tr_frigates);
+	game.n_us_hits += fire(game.where, "Tripolitan corsair", 1 * n_tr_corsairs);
+	game.n_us_hits += fire(game.where, "Allied corsair", 1 * n_al_corsairs);
+	if (game.n_us_hits > us_hitpoints)
+		game.n_us_hits = us_hitpoints;
+
+	if (game.active == US)
+		goto_allocate_american_hits();
+	else
+		goto_allocate_tripolitan_hits();
+}
+
+function goto_allocate_american_hits() {
+	if (game.n_us_hits > 0) {
+		game.active = US;
+		game.state = 'allocate_us_hits';
+	} else if (game.n_tr_hits > 0) {
+		game.active = TR;
+		game.state = 'allocate_tr_hits';
+	} else {
+		end_naval_battle();
+	}
+}
+
+function goto_allocate_tripolitan_hits() {
+	if (game.n_tr_hits > 0) {
+		game.active = TR;
+		game.state = 'allocate_tr_hits';
+	} else if (game.n_us_hits > 0) {
+		game.active = US;
+		game.state = 'allocate_us_hits';
+	} else {
+		end_naval_battle();
+	}
+}
+
+states.allocate_us_hits = {
+	prompt: function (view, current) {
+		view.prompt = "United States: Allocate " + game.n_us_hits + " hits in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return view.prompt;
+		gen_action_undo(view);
+		if (game.n_us_hits > 0) {
+			for (let p of US_FRIGATES)
+				if (game.location[p] == game.where)
+					gen_action(view, 'piece', p);
+			for (let p of US_GUNBOATS)
+				if (game.location[p] == game.where)
+					gen_action(view, 'piece', p);
+		} else {
+			gen_action(view, 'next');
+		}
+	},
+	piece: function (p) {
+		push_undo();
+		--game.n_us_hits;
+		if (US_FRIGATES.includes(p)) {
+			if (game.damaged.includes(p)) {
+				log("US frigate sinks!");
+				game.location[p] = TRIPOLITAN_SUPPLY;
+				remove_from_array(game.damaged, p);
+				// TODO: check victory
+			} else {
+				log("US frigate is damaged.");
+				game.damaged.push(p);
+			}
+		}
+		if (US_GUNBOATS.includes(p)) {
+			log("US gunboat sinks.");
+			move_one_piece(US_GUNBOATS, game.where, UNITED_STATES_SUPPLY);
+		}
+	},
+	next: function () {
+		clear_undo();
+		if (game.n_tr_hits > 0) {
+			game.active = TR;
+			game.state = 'allocate_tr_hits';
+		} else {
+			end_naval_battle();
+		}
+	},
+	undo: pop_undo
+}
+
+states.allocate_tr_hits = {
+	prompt: function (view, current) {
+		view.prompt = "Tripolitania: Allocate " + game.n_tr_hits + " hits in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return view.prompt;
+		gen_action_undo(view);
+		if (game.n_tr_hits > 0) {
+			for (let p of TR_FRIGATES)
+				if (game.location[p] == game.where)
+					gen_action(view, 'piece', p);
+			for (let p of TR_CORSAIRS)
+				if (game.location[p] == game.where)
+					gen_action(view, 'piece', p);
+			for (let p of AL_CORSAIRS)
+				if (game.location[p] == game.where)
+					gen_action(view, 'piece', p);
+		} else {
+			gen_action(view, 'next');
+		}
+	},
+	piece: function (p) {
+		push_undo();
+		--game.n_tr_hits;
+		if (TR_FRIGATES.includes(p)) {
+			if (game.damaged.includes(p)) {
+				log("Tripolitan frigate sinks!");
+				game.location[p] = TRIPOLITAN_SUPPLY;
+				remove_from_array(game.damaged, p);
+			} else {
+				log("Tripolitan frigate is damaged.");
+				game.damaged.push(p);
+			}
+		}
+		if (TR_CORSAIRS.includes(p)) {
+			log("Tripolitan corsair sinks.");
+			move_one_piece(TR_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
+		}
+		if (AL_CORSAIRS.includes(p)) {
+			log("Allied corsair sinks.");
+			move_one_piece(TR_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
+		}
+	},
+	next: function () {
+		clear_undo();
+		if (game.n_us_hits > 0) {
+			game.active = US;
+			game.state = 'allocate_us_hits';
+		} else {
+			end_naval_battle();
+		}
+	},
+	undo: pop_undo
+}
+
+function move_damaged_frigate_to_year_track(p, supply) {
+	if (game.year == 1806)
+		game.location[p] = supply;
+	else
+		game.location[p] = TRACK_YEAR[game.year + 1];
+	remove_from_array(game.damaged, p);
+}
+
+function remove_damaged_frigates() {
+	for (let p of US_FRIGATES)
+		if (game.damaged.includes(p))
+			move_damaged_frigate_to_year_track(p, UNITED_STATES_SUPPLY);
+	for (let p of TR_FRIGATES)
+		if (game.damaged.includes(p))
+			move_damaged_frigate_to_year_track(p, TRIPOLITAN_SUPPLY);
+}
+
+function end_naval_battle() {
+	remove_damaged_frigates()
+
+	move_all_pieces(US_FRIGATES, game.where, MALTA_HARBOR);
+	move_all_pieces(US_GUNBOATS, game.where, MALTA_HARBOR);
+
+	if (game.where == TRIPOLI_PATROL_ZONE) {
+		move_all_pieces(TR_FRIGATES, game.where, TRIPOLI_HARBOR);
+		move_all_pieces(TR_CORSAIRS, game.where, TRIPOLI_HARBOR);
+	}
+
+	game.where = null;
+	goto_select_combat();
+}
+
+function goto_naval_bombardment() {
+	log("Naval bombardment in " + SPACES[game.where] + ".");
+	naval_bombardment_round();
+	end_naval_bombardment();
+}
+
+function naval_bombardment_round() {
+	let n_frigates = count_american_frigates(game.where);
+	let n_gunboats = count_american_gunboats(game.where);
+	let n_infantry = count_tripolitan_infantry(game.where);
+
+	let n_hits = 0;
+	n_hits += fire(game.where, "US frigate", 2 * n_frigates);
+	n_hits += fire(game.where, "US gunboat", 1 * n_gunboats);
+	if (n_hits > n_infantry)
+		n_hits = n_infantry;
+
+	log(n_hits + " Tripolitan infantry eliminated.");
+	for (let i = 0; i < n_hits; ++i)
+		move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
+}
+
+function end_naval_bombardment() {
+	move_all_pieces(US_FRIGATES, game.where, MALTA_HARBOR);
+	move_all_pieces(US_GUNBOATS, game.where, MALTA_HARBOR);
+	game.where = null;
+	goto_select_combat();
 }
 
 states.game_over = {
@@ -656,6 +1022,7 @@ exports.setup = function (scenario, players) {
 		season: 0,
 		log: [],
 		location: [],
+		damaged: [],
 		us: {
 			core: [],
 			hand: [],
@@ -670,6 +1037,7 @@ exports.setup = function (scenario, players) {
 			coins: 0,
 		},
 		derne_captured: 0,
+		where: null,
 		undo: [],
 	};
 
@@ -776,6 +1144,7 @@ exports.view = function(state, current) {
 		year: game.year,
 		season: game.season,
 		location: game.location,
+		damaged: game.damaged,
 		active: game.active,
 		prompt: null,
 		actions: null,
@@ -792,6 +1161,7 @@ exports.view = function(state, current) {
 			discard: game.us.discard.length,
 			hand: game.us.hand.length,
 		},
+		where: game.where,
 	};
 
 	states[game.state].prompt(view, current);

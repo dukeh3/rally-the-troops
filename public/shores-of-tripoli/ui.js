@@ -12,6 +12,17 @@ function get_space_id(name) {
 	return SPACES.indexOf(name);
 }
 
+function create_piece_list(n, name) {
+	let list = [];
+	for (let i = 1; i <= n; ++i)
+		list.push(get_piece_id(name + i));
+	return list;
+}
+
+const US_FRIGATES = create_piece_list(8, 'us_frigate_');
+const TR_FRIGATES = create_piece_list(2, 'tr_frigate_');
+const FRIGATES = US_FRIGATES.concat(TR_FRIGATES);
+
 const ALEXANDRIA_HARBOR = get_space_id("Alexandria Harbor");
 const ALGIERS_HARBOR = get_space_id("Algiers Harbor");
 const ALGIERS_PATROL_ZONE = get_space_id("Algiers Patrol Zone");
@@ -44,12 +55,12 @@ let ui = {
 }
 
 function on_focus_space(evt) {
-	let where = evt.target.space;
+	let where = SPACES[evt.target.space];
 	document.getElementById("status").textContent = where;
 }
 
 function on_focus_piece(evt) {
-	let who = evt.target.piece;
+	let who = PIECES[evt.target.piece];
 	document.getElementById("status").textContent = who;
 }
 
@@ -199,15 +210,27 @@ function update_pieces() {
 	layout_space(game.location, TANGIER_PATROL_ZONE, 125, 410, 3);
 	layout_space(game.location, TRIPOLI_PATROL_ZONE, 1575, 390, 6);
 	layout_space(game.location, TUNIS_PATROL_ZONE, 1300, 130, 3);
+
+	for (let p of FRIGATES) {
+		if (game.damaged.includes(p))
+			ui.pieces[p].classList.add("damaged");
+		else
+			ui.pieces[p].classList.remove("damaged");
+	}
 }
 
 function update_spaces() {
-	for (let space in ui.spaces)
-		ui.spaces[space].classList.remove('enabled');
+	for (let space in ui.spaces) {
+		ui.spaces[space].classList.remove('highlight');
+		ui.spaces[space].classList.remove('where');
+	}
+	if (game.where != null) {
+		ui.spaces[game.where].classList.add('where');
+	}
 	if (game.actions && game.actions.space) {
 		for (let space of game.actions.space) {
 			console.log("enable space " + space);
-			ui.spaces[space].classList.add('enabled');
+			ui.spaces[space].classList.add('highlight');
 		}
 	}
 }

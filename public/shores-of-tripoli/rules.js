@@ -57,6 +57,32 @@ const TRACK_1804 = get_space_id("1804");
 const TRACK_1805 = get_space_id("1805");
 const TRACK_1806 = get_space_id("1806");
 
+const TRACK_YEAR = {
+	1801: TRACK_1801,
+	1802: TRACK_1802,
+	1803: TRACK_1803,
+	1804: TRACK_1804,
+	1805: TRACK_1805,
+	1806: TRACK_1806,
+};
+
+const FRIGATE_SPACES = [
+	ALEXANDRIA_HARBOR,
+	ALGIERS_HARBOR,
+	ALGIERS_PATROL_ZONE,
+	BENGHAZI_HARBOR,
+	DERNE_HARBOR,
+	GIBRALTAR_HARBOR,
+	GIBRALTAR_PATROL_ZONE,
+	MALTA_HARBOR,
+	TANGIER_HARBOR,
+	TANGIER_PATROL_ZONE,
+	TRIPOLI_HARBOR,
+	TRIPOLI_PATROL_ZONE,
+	TUNIS_HARBOR,
+	TUNIS_PATROL_ZONE,
+];
+
 const THOMAS_JEFFERSON = 1;
 const SWEDISH_FRIGATES_ARRIVE = 2;
 const HAMETS_ARMY_CREATED = 3;
@@ -176,6 +202,43 @@ const CARD_NAMES = [
 	"Mercenaries Desert",
 ];
 
+function should_remove_after_play(card) {
+	switch (card) {
+	case THOMAS_JEFFERSON:
+	case SWEDISH_FRIGATES_ARRIVE:
+	case HAMETS_ARMY_CREATED:
+	case CONGRESS_AUTHORIZES_ACTION:
+	case CORSAIRS_CONFISCATED:
+	case BURN_THE_PHILADELPHIA:
+	case LAUNCH_THE_INTREPID:
+	case GENERAL_EATON_ATTACKS_DERNE:
+	case GENERAL_EATON_ATTACKS_BENGHAZI:
+	case LIEUTENANT_STERETT_IN_PURSUIT:
+	case PREBLES_BOYS_TAKE_AIM:
+	case THE_DARING_STEPHEN_DECATUR:
+	case SEND_IN_THE_MARINES:
+	case LIEUTENANT_OBANNON_LEADS_THE_CHARGE:
+	case MARINE_SHARPSHOOTERS:
+	case YUSUF_QARAMANLI:
+	case MURAD_REIS_BREAKS_OUT:
+	case CONSTANTINOPLE_SENDS_AID:
+	case SWEDEN_PAYS_TRIBUTE:
+	case TRIPOLI_ACQUIRES_CORSAIRS:
+	case THE_PHILADELPHIA_RUNS_AGROUND:
+	case ALGIERS_DECLARES_WAR:
+	case MOROCCO_DECLARES_WAR:
+	case TUNIS_DECLARES_WAR:
+	case US_SIGNAL_BOOKS_OVERBOARD:
+	case UNCHARTED_WATERS:
+	case MERCHANT_SHIP_CONVERTED:
+	case HAPPY_HUNTING:
+	case THE_GUNS_OF_TRIPOLI:
+	case MERCENARIES_DESERT:
+		return true;
+	}
+	return false;
+}
+
 const states = {};
 
 let game = null;
@@ -263,14 +326,17 @@ function reset_deck() {
 	return deck;
 }
 
-function deal_cards(deck, n) {
-	let hand = [];
+function reshuffle_discard(deck, discard) {
+	while (discard.length > 0)
+		deck.push(discard.pop());
+}
+
+function draw_cards(hand, deck, n) {
 	for (let i = 0; i < n; ++i) {
 		let c = Math.floor(Math.random() * deck.length);
 		hand.push(deck[c]);
 		deck.splice(c, 1);
 	}
-	return hand;
 }
 
 function count_pieces(list, where) {
@@ -292,7 +358,8 @@ function play_card(player, card) {
 	log("");
 	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
 	remove_from_array(player.hand, card);
-	player.discard.push(card);
+	if (!should_remove_after_play(card))
+		player.discard.push(card);
 }
 
 function deploy(piece_name, space) {
@@ -330,15 +397,15 @@ function count_allied_corsairs(where) {
 }
 
 function can_play_thomas_jefferson() {
-	return game.us.core.includes(1);
+	return game.us.core.includes(THOMAS_JEFFERSON);
 }
 
 function can_play_swedish_frigates_arrive() {
-	return game.us.core.includes(2);
+	return game.us.core.includes(SWEDISH_FRIGATES_ARRIVE);
 }
 
 function can_play_hamets_army_created() {
-	return game.us.core.includes(3) &&
+	return game.us.core.includes(HAMETS_ARMY_CREATED) &&
 		count_american_frigates(ALEXANDRIA_HARBOR) > 0 &&
 		game.year >= 1804;
 }
@@ -347,25 +414,19 @@ function can_play_yusuf_qaramanli() {
 	let n = count_allied_corsairs(ALGIERS_HARBOR) +
 		count_allied_corsairs(TRIPOLI_HARBOR) +
 		count_allied_corsairs(TUNIS_HARBOR);
-	return game.tr.core.includes(1) && n > 0;
+	return game.tr.core.includes(YUSUF_QARAMANLI) && n > 0;
 }
 
 function can_play_murad_reis_breaks_out() {
-	return game.tr.core.includes(2);
+	return game.tr.core.includes(MURAD_REIS_BREAKS_OUT);
 }
 
 function can_play_constantinople_sends_aid() {
-	return game.tr.core.includes(3) && game.derne_captured;
+	return game.tr.core.includes(CONSTANTINOPLE_SENDS_AID) && game.derne_captured;
 }
 
 function can_build_gunboat_in_malta() {
-console.log("count_pieces(US_GUNBOATS, UNITED_STATES_SUPPLY) = ", count_pieces(US_GUNBOATS, UNITED_STATES_SUPPLY));
-console.log(game.location);
 	return count_pieces(US_GUNBOATS, UNITED_STATES_SUPPLY) > 0;
-}
-
-function can_move_up_to_two_frigates() {
-	return true;
 }
 
 function can_build_corsair_in_tripoli() {
@@ -376,7 +437,30 @@ function can_pirate_raid_from_tripoli() {
 	return count_pieces(TR_CORSAIRS, TRIPOLI_HARBOR) > 0;
 }
 
-function start_year() {
+function start_of_year() {
+	log("");
+	log("Start of " + game.year + ".");
+
+	move_all_pieces(US_FRIGATES, TRACK_YEAR[game.year], GIBRALTAR_HARBOR);
+	move_all_pieces(TR_FRIGATES, TRACK_YEAR[game.year], TRIPOLI_HARBOR);
+
+	if (game.year <= 1804) {
+		draw_cards(game.us.hand, game.us.deck, 6);
+		draw_cards(game.tr.hand, game.tr.deck, 6);
+	}
+	if (game.year == 1805) {
+		reshuffle_discard(game.us.deck, game.us.discard);
+		draw_cards(game.us.hand, game.us.deck, 6);
+		reshuffle_discard(game.tr.deck, game.tr.discard);
+		draw_cards(game.tr.hand, game.tr.deck, 6);
+	}
+	if (game.year == 1806) {
+		draw_cards(game.us.hand, game.us.deck, game.us.deck.length);
+		draw_cards(game.tr.hand, game.tr.deck, game.tr.deck.length);
+	}
+
+	// TODO: hand limit
+
 	game.active = US;
 	game.state = 'american_play';
 }
@@ -387,8 +471,33 @@ function end_american_play() {
 }
 
 function end_tripolitan_play() {
-	game.active = US;
-	game.state = 'american_play';
+	end_of_season();
+}
+
+const SPRING = 0;
+const SUMMER = 1;
+const FALL = 2;
+const WINTER = 3;
+
+function end_of_season() {
+	if (game.season == WINTER) {
+		end_of_year();
+	} else {
+		++game.season;
+		game.active = US;
+		game.state = 'american_play';
+	}
+}
+
+function end_of_year() {
+	if (game.year == 1806) {
+		game.result = 'Draw';
+		game.victory = "The game ends in a draw.";
+		game.state = 'game_over';
+		return;
+	}
+	++game.year;
+	start_of_year();
 }
 
 function can_play_american_event(c) {
@@ -410,11 +519,11 @@ states.american_play = {
 			gen_action(view, 'card_event', SWEDISH_FRIGATES_ARRIVE);
 		if (can_play_hamets_army_created())
 			gen_action(view, 'card_event', HAMETS_ARMY_CREATED);
+		let build = can_build_gunboat_in_malta();
 		for (let c of game.us.hand) {
-			if (can_build_gunboat_in_malta())
+			gen_action(view, 'card_move_frigates', c);
+			if (build)
 				gen_action(view, 'card_build_gunboat', c);
-			if (can_move_up_to_two_frigates())
-				gen_action(view, 'card_move_frigates', c);
 			if (can_play_american_event(c))
 				gen_action(view, 'card_event', c);
 		}
@@ -428,7 +537,7 @@ states.american_play = {
 	},
 	card_move_frigates: function (c) {
 		discard_card(game.us, c, " to move up to two frigates");
-		end_american_play();
+		goto_move_up_to_n_american_frigates(2);
 	},
 	pass: function () {
 		log("");
@@ -448,10 +557,13 @@ states.tripolitan_play = {
 			gen_action(view, 'card_event', MURAD_REIS_BREAKS_OUT);
 		if (can_play_constantinople_sends_aid())
 			gen_action(view, 'card_event', CONSTANTINOPLE_SENDS_AID);
+		let build = can_build_corsair_in_tripoli();
+		let raid = can_pirate_raid_from_tripoli();
+		console.log("tripolitan_play", build, raid);
 		for (let c of game.tr.hand) {
-			if (can_build_corsair_in_tripoli())
+			if (build)
 				gen_action(view, 'card_build_corsair', c);
-			if (can_pirate_raid_from_tripoli())
+			if (raid)
 				gen_action(view, 'card_pirate_raid', c);
 			if (can_play_tripolitan_event(c))
 				gen_action(view, 'card_event', c);
@@ -473,6 +585,60 @@ states.tripolitan_play = {
 		log(game.active + " passes.");
 		end_tripolitan_play();
 	}
+}
+
+function goto_move_up_to_n_american_frigates(n) {
+	game.moves = n;
+	game.active = US;
+	game.state = 'move_us_frigate_from';
+	push_undo();
+}
+
+states.move_us_frigate_from = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
+		view.prompt = "United States: Move up to " + game.moves + " frigates."
+		if (game.moves > 0) {
+			view.prompt += " Select a frigate to move.";
+			for (let s of FRIGATE_SPACES) {
+				if (count_american_frigates(s) > 0)
+					gen_action(view, 'space', s);
+			}
+		}
+		gen_action(view, 'next');
+		gen_action_undo(view);
+	},
+	space: function (space) {
+		push_undo();
+		game.from = space;
+		game.state = 'move_us_frigate_to'
+	},
+	next: function () {
+		// resolve naval battles
+		// resolve bombardment
+		end_american_play();
+	},
+	undo: pop_undo
+}
+
+states.move_us_frigate_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
+		view.prompt = "United States: Move up to " + game.moves + " frigates. Select a destation.";
+		for (let s of FRIGATE_SPACES)
+			if (s != game.from)
+				gen_action(view, 'space', s);
+		gen_action_undo(view);
+	},
+	space: function (space) {
+		move_one_piece(US_FRIGATES, game.from, space);
+		--game.moves;
+		game.from = null;
+		game.state = 'move_us_frigate_from'
+	},
+	undo: pop_undo
 }
 
 states.game_over = {
@@ -504,6 +670,7 @@ exports.setup = function (scenario, players) {
 			coins: 0,
 		},
 		derne_captured: 0,
+		undo: [],
 	};
 
 	game.tr.core.push(YUSUF_QARAMANLI);
@@ -518,9 +685,6 @@ exports.setup = function (scenario, players) {
 		game.us.deck.push(i);
 		game.tr.deck.push(i+27);
 	}
-
-	game.us.hand = deal_cards(game.us.deck, 6);
-	game.tr.hand = deal_cards(game.tr.deck, 6);
 
 	deploy("us_frigate_1", GIBRALTAR_HARBOR);
 	deploy("us_frigate_2", GIBRALTAR_HARBOR);
@@ -573,7 +737,7 @@ exports.setup = function (scenario, players) {
 	for (let i = 9; i <= 20; ++i)
 		deploy("tr_infantry_" + i, TRIPOLITAN_SUPPLY);
 
-	start_year();
+	start_of_year();
 	return game;
 }
 

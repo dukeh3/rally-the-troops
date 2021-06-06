@@ -59,37 +59,43 @@ function on_blur(evt) {
 
 function on_pass() { if (game.actions) { send_action('pass', null); } }
 function on_undo() { if (game.actions) { send_action('undo', null); } }
+function on_next() { if (game.actions) { send_action('next', null); } }
+
+function on_click_space(evt) { send_action('space', evt.target.space); }
+function on_click_piece(evt) { send_action('piece', evt.target.piece); }
 
 function build_map() {
-	let i = 0;
-	for (let space of SPACES) {
+	for (let i = 0; i < SPACES.length; ++i) {
+		let space = SPACES[i];
 		let id = space.replace(/ /g, "_").toLowerCase();
 		let e = map.getElementById(id);
 		if (e) {
 			e.addEventListener("mouseenter", on_focus_space);
 			e.addEventListener("mouseleave", on_blur);
-			e.space = space;
-			ui.spaces[i++] = e;
+			e.addEventListener("click", on_click_space);
+			e.space = i;
+			ui.spaces[i] = e;
 		}
 	}
-	i = 0;
-	for (let piece of PIECES) {
+	for (let i = 0; i < PIECES.length; ++i) {
+		let piece = PIECES[i];
 		let e = map.getElementById(piece);
 		if (e) {
 			e.addEventListener("mouseenter", on_focus_piece);
 			e.addEventListener("mouseleave", on_blur);
-			e.piece = piece;
-			ui.pieces[i++] = e;
+			e.addEventListener("click", on_click_piece);
+			e.piece = i;
+			ui.pieces[i] = e;
 		}
 	}
-	for (i = 1; i <= 27; ++i) {
+	for (let i = 1; i <= 27; ++i) {
 		let e = ui.cards[i] = document.getElementById("us_card_"+i);
-		e.addEventListener("click", on_card);
+		e.addEventListener("click", on_click_card);
 		e.card = i;
 	}
-	for (i = 28; i <= 54; ++i) {
+	for (let i = 28; i <= 54; ++i) {
 		let e = ui.cards[i] = document.getElementById("tr_card_"+(i-27));
-		e.addEventListener("click", on_card);
+		e.addEventListener("click", on_click_card);
 		e.card = i;
 	}
 }
@@ -118,10 +124,14 @@ function update_cards() {
 
 function on_update() {
 	show_action_button("#button_pass", "pass");
+	show_action_button("#button_next", "next");
+	show_action_button("#button_undo", "undo");
 	update_year_marker(game.year);
 	update_season_marker(game.season);
 	update_pieces(game.location);
+	update_pieces();
 	update_cards();
+	update_spaces();
 }
 
 function update_year_marker(year) {
@@ -163,32 +173,43 @@ function layout_space(location, s, x0, y0, wrap, dx=45, dy=30) {
 	}
 }
 
-function update_pieces(location) {
-	layout_space(location, UNITED_STATES_SUPPLY, 1933, 180, 6, 38, 26);
-	layout_space(location, TRIPOLITAN_SUPPLY, 2195, 180, 6, 38, 26);
+function update_pieces() {
+	layout_space(game.location, UNITED_STATES_SUPPLY, 1933, 180, 6, 38, 26);
+	layout_space(game.location, TRIPOLITAN_SUPPLY, 2195, 180, 6, 38, 26);
 
-	layout_space(location, TRACK_1801, YEAR_X[1801], 625, 1);
-	layout_space(location, TRACK_1802, YEAR_X[1802], 625, 1);
-	layout_space(location, TRACK_1803, YEAR_X[1803], 625, 1);
-	layout_space(location, TRACK_1804, YEAR_X[1804], 625, 1);
-	layout_space(location, TRACK_1805, YEAR_X[1805], 625, 1);
-	layout_space(location, TRACK_1806, YEAR_X[1806], 625, 1);
+	layout_space(game.location, TRACK_1801, YEAR_X[1801], 625, 1);
+	layout_space(game.location, TRACK_1802, YEAR_X[1802], 625, 1);
+	layout_space(game.location, TRACK_1803, YEAR_X[1803], 625, 1);
+	layout_space(game.location, TRACK_1804, YEAR_X[1804], 625, 1);
+	layout_space(game.location, TRACK_1805, YEAR_X[1805], 625, 1);
+	layout_space(game.location, TRACK_1806, YEAR_X[1806], 625, 1);
 
-	layout_space(location, ALEXANDRIA_HARBOR, 2335, 454, 3);
-	layout_space(location, ALGIERS_HARBOR, 883, 318, 3);
-	layout_space(location, BENGHAZI_HARBOR, 1877, 583, 3);
-	layout_space(location, DERNE_HARBOR, 2030, 437, 3);
-	layout_space(location, GIBRALTAR_HARBOR, 374, 216, 3);
-	layout_space(location, MALTA_HARBOR, 1592, 189, 3);
-	layout_space(location, TANGIER_HARBOR, 296, 426, 3);
-	layout_space(location, TRIPOLI_HARBOR, 1416, 604, 4);
-	layout_space(location, TUNIS_HARBOR, 1232, 278, 3);
+	layout_space(game.location, ALEXANDRIA_HARBOR, 2335, 454, 3);
+	layout_space(game.location, ALGIERS_HARBOR, 883, 318, 3);
+	layout_space(game.location, BENGHAZI_HARBOR, 1877, 583, 3);
+	layout_space(game.location, DERNE_HARBOR, 2030, 437, 3);
+	layout_space(game.location, GIBRALTAR_HARBOR, 374, 216, 3);
+	layout_space(game.location, MALTA_HARBOR, 1592, 189, 3);
+	layout_space(game.location, TANGIER_HARBOR, 296, 426, 3);
+	layout_space(game.location, TRIPOLI_HARBOR, 1416, 604, 4);
+	layout_space(game.location, TUNIS_HARBOR, 1232, 278, 3);
 
-	layout_space(location, ALGIERS_PATROL_ZONE, 875, 170, 3);
-	layout_space(location, GIBRALTAR_PATROL_ZONE, 560, 245, 3);
-	layout_space(location, TANGIER_PATROL_ZONE, 125, 410, 3);
-	layout_space(location, TRIPOLI_PATROL_ZONE, 1575, 390, 6);
-	layout_space(location, TUNIS_PATROL_ZONE, 1300, 130, 3);
+	layout_space(game.location, ALGIERS_PATROL_ZONE, 875, 170, 3);
+	layout_space(game.location, GIBRALTAR_PATROL_ZONE, 560, 245, 3);
+	layout_space(game.location, TANGIER_PATROL_ZONE, 125, 410, 3);
+	layout_space(game.location, TRIPOLI_PATROL_ZONE, 1575, 390, 6);
+	layout_space(game.location, TUNIS_PATROL_ZONE, 1300, 130, 3);
+}
+
+function update_spaces() {
+	for (let space in ui.spaces)
+		ui.spaces[space].classList.remove('enabled');
+	if (game.actions && game.actions.space) {
+		for (let space of game.actions.space) {
+			console.log("enable space " + space);
+			ui.spaces[space].classList.add('enabled');
+		}
+	}
 }
 
 /* CARD ACTION MENU */
@@ -246,7 +267,7 @@ function is_card_action(action, card) {
 	return game.actions && game.actions[action] && game.actions[action].includes(card);
 }
 
-function on_card(evt) {
+function on_click_card(evt) {
 	if (game.actions) {
 		let card = evt.target.card;
 		if (is_card_action('discard', card)) {

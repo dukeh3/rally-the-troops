@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<!-- vim:set nowrap: -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
+<meta charset="UTF-8">
+<title>TRIPOLI</title>
+<link rel="icon" href="Flag_of_Tripoli_18th_century.png">
+<link rel="stylesheet" href="/fonts/fonts.css">
+<link rel="stylesheet" href="/common/grid.css">
+<script defer src="/socket.io/socket.io.min.js"></script>
+<script defer src="/common/client.js"></script>
+<script defer src="data.js"></script>
+<script defer src="ui.js"></script>
+<style>
+
+.grid_center { background-color: slategray; }
+.grid_role { background-color: ghostwhite; }
+.grid_log { background-color: ghostwhite; }
+.grid_top { background-color: silver; }
+.grid_top.your_turn { background-color: orange; }
+.grid_top.disconnected { background-color: red; }
+.role_info { background-color: gainsboro; }
+.one .role_name { background-color: skyblue; }
+.two .role_name { background-color: salmon; }
+
+#turn {
+	padding: 8px 0px 8px 8px;
+	border-bottom: 1px solid black;
+	white-space: pre-wrap;
+	font-style: italic;
+	font-size: 12px;
+	line-height: 18px;
+	font-family: "Source Serif SmText";
+}
+
+.hand {
+	min-height: 300px;
+	justify-content: left;
+}
+
+.card {
+	width: 250px;
+	height: 350px;
+	border-radius: 12px;
+}
+
+.role_info {
+	display: flex;
+	justify-content: center;
+}
+
+/* MAP */
+
+#map {
+	display: block;
+	width: 2476px;
+	height: 801px;
+	background-color: black;
+	box-shadow: 0 0 15px rgba(0,0,0,0.8);
+}
+
+#map.fit {
+	width: 100%;
+	height: auto;
+}
+
+#map image {
+	pointer-events: none;
+}
+
+#map use, #map circle {
+	transition-property: x, y, cx, cy;
+	transition-duration: 700ms;
+	transition-timing-function: ease;
+}
+
+#map .harbor {
+	fill: white;
+	fill-opacity: 0.3;
+	stroke: white;
+	stroke-width: 2;
+	opacity: 0;
+}
+
+#map .harbor.highlight {
+	opacity: 1
+}
+
+#map .patrol_zone {
+	fill: white;
+	fill-opacity: 0.3;
+	stroke: white;
+	stroke-width: 2;
+	opacity: 0;
+}
+
+#map .patrol_zone.highlight {
+	opacity: 1
+}
+
+/* CARD ACTION POPUP MENU */
+
+#popup {
+	position: absolute;
+	user-select: none;
+	background-color: #ddd;
+	left: 10px;
+	top: 100px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
+	z-index: 200;
+	min-width: 20ex;
+	white-space: nowrap;
+}
+#popup div { padding: 3pt 8pt; display: none; }
+#popup div.enabled { padding: 3pt 8pt; display: block; }
+#popup div:hover { background-color: teal; color: white; }
+
+/* CARD IMAGES */
+
+.card {
+	text-align: center;
+	color: white;
+	font-weight: bold;
+	font-size: 25px;
+	line-height: 40px;
+}
+
+.tr_card_1{background-image:url('cards/tr_card_1.jpg')}
+.tr_card_2{background-image:url('cards/tr_card_2.jpg')}
+.tr_card_3{background-image:url('cards/tr_card_3.jpg')}
+.tr_card_4{background-image:url('cards/tr_card_4.jpg')}
+.tr_card_5{background-image:url('cards/tr_card_5.jpg')}
+.tr_card_6{background-image:url('cards/tr_card_5.jpg')}
+.tr_card_7{background-image:url('cards/tr_card_7.jpg')}
+.tr_card_8{background-image:url('cards/tr_card_7.jpg')}
+.tr_card_9{background-image:url('cards/tr_card_9.jpg')}
+.tr_card_10{background-image:url('cards/tr_card_9.jpg')}
+.tr_card_11{background-image:url('cards/tr_card_11.jpg')}
+.tr_card_12{background-image:url('cards/tr_card_12.jpg')}
+.tr_card_13{background-image:url('cards/tr_card_13.jpg')}
+.tr_card_14{background-image:url('cards/tr_card_14.jpg')}
+.tr_card_15{background-image:url('cards/tr_card_15.jpg')}
+.tr_card_16{background-image:url('cards/tr_card_16.jpg')}
+.tr_card_17{background-image:url('cards/tr_card_17.jpg')}
+.tr_card_18{background-image:url('cards/tr_card_18.jpg')}
+.tr_card_19{background-image:url('cards/tr_card_19.jpg')}
+.tr_card_20{background-image:url('cards/tr_card_20.jpg')}
+.tr_card_21{background-image:url('cards/tr_card_21.jpg')}
+.tr_card_22{background-image:url('cards/tr_card_22.jpg')}
+.tr_card_23{background-image:url('cards/tr_card_23.jpg')}
+.tr_card_24{background-image:url('cards/tr_card_24.jpg')}
+.tr_card_25{background-image:url('cards/tr_card_25.jpg')}
+.tr_card_26{background-image:url('cards/tr_card_26.jpg')}
+.tr_card_27{background-image:url('cards/tr_card_27.jpg')}
+.tr_card_28{background-image:url('cards/tr_card_28.jpg')}
+.tr_card_29{background-image:url('cards/tr_card_29.jpg')}
+.tr_card_30{background-image:url('cards/tr_card_30.jpg')}
+.tr_card_back{background-image:url('cards/tr_card_31.jpg')}
+
+.us_card_1{background-image:url('cards/us_card_1.jpg')}
+.us_card_2{background-image:url('cards/us_card_2.jpg')}
+.us_card_3{background-image:url('cards/us_card_3.jpg')}
+.us_card_4{background-image:url('cards/us_card_4.jpg')}
+.us_card_5{background-image:url('cards/us_card_5.jpg')}
+.us_card_6{background-image:url('cards/us_card_6.jpg')}
+.us_card_7{background-image:url('cards/us_card_6.jpg')}
+.us_card_8{background-image:url('cards/us_card_6.jpg')}
+.us_card_9{background-image:url('cards/us_card_6.jpg')}
+.us_card_10{background-image:url('cards/us_card_10.jpg')}
+.us_card_11{background-image:url('cards/us_card_11.jpg')}
+.us_card_12{background-image:url('cards/us_card_12.jpg')}
+.us_card_13{background-image:url('cards/us_card_13.jpg')}
+.us_card_14{background-image:url('cards/us_card_14.jpg')}
+.us_card_15{background-image:url('cards/us_card_15.jpg')}
+.us_card_16{background-image:url('cards/us_card_16.jpg')}
+.us_card_17{background-image:url('cards/us_card_17.jpg')}
+.us_card_18{background-image:url('cards/us_card_18.jpg')}
+.us_card_19{background-image:url('cards/us_card_19.jpg')}
+.us_card_20{background-image:url('cards/us_card_20.jpg')}
+.us_card_21{background-image:url('cards/us_card_21.jpg')}
+.us_card_22{background-image:url('cards/us_card_22.jpg')}
+.us_card_23{background-image:url('cards/us_card_23.jpg')}
+.us_card_24{background-image:url('cards/us_card_24.jpg')}
+.us_card_25{background-image:url('cards/us_card_25.jpg')}
+.us_card_26{background-image:url('cards/us_card_26.jpg')}
+.us_card_27{background-image:url('cards/us_card_27.jpg')}
+.us_card_back{background-image:url('cards/us_card_28.jpg')}
+
+</style>
+</head>
+<body>
+
+<div class="status" id="status"></div>
+
+<div class="chat_window">
+<div class="chat_header">Chat</div>
+<div class="chat_text"></div>
+<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+</div>
+
+<div class="grid_window">
+
+	<div class="grid_top">
+
+		<div class="menu">
+			<div class="menu_title"><img src="/images/cog.svg"></div>
+			<div class="menu_popup">
+				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+				<div class="menu_item" onclick="window.open('info/history.html', '_blank')">History</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="window.open('info/tr_cards.html', '_blank')">Tripolitan Cards</div>
+				<div class="menu_item" onclick="window.open('info/us_cards.html', '_blank')">United States Cards</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="confirm_resign()">Resign</div>
+			</div>
+		</div>
+
+		<div class="image_button" onclick="toggle_fit()"><img src="/images/earth-africa-europe.svg"></div>
+		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+
+		<div id="prompt" class="prompt">$PROMPT</div>
+
+		<button id="button_pass" onclick="on_pass()" class="hide">Pass</button>
+		<button id="button_next" onclick="on_next()" class="hide">Next</button>
+		<button id="button_undo" onclick="on_undo()" class="hide">Undo</button>
+
+		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
+	</div>
+
+	<div class="grid_role">
+		<div class="role one">
+			<div class="role_name">Tripolitania (<span class="role_user">$USER</span>)</div>
+			<div class="role_info" id="tr_info">0 cards in hand</div>
+		</div>
+		<div class="role two">
+			<div class="role_name">United States (<span class="role_user">$USER</span>)</div>
+			<div class="role_info" id="us_info">0 cards in hand</div>
+		</div>
+	</div>
+
+	<div class="grid_log">
+		<div class="log" id="log"></div>
+	</div>
+
+	<div class="grid_center">
+
+<svg id="map" class="fit" viewBox="0 0 2476 801">
+<defs>
+<symbol id="corsair" x="-15" y="-13" width="33.2" height="27" viewBox="0 0 332 270">
+<path d="M113.3 16.2c-.4.7-1 38.5-1.1 84-.2 45.6-.5 82.9-.5 83-.1.1-20.1.5-44.4.8-55.9.6-50.8-2.4-50.8 30.3 0 23.2 0 23.2 2.7 27.7 3.4 5.8 6.3 8.4 11.8 10.9 4.4 1.9 7.6 2 114.5 2.3 110 .3 110 .3 114.9-2 8.5-3.9 12.4-8 22.1-22.7 10.4-15.7 16.4-22.4 23.4-25.9 7.6-3.9 9.6-6.8 9.6-13.6 0-4.8-.4-6.3-2.3-8.3-4-4.2-7.4-5.1-14.5-3.8-18.5 3.5-96.7 6.9-96.7 4.3 0-.7 1.5-3.6 3.4-6.5 6.2-9.6 8.1-17.3 8.1-32.2-.1-10.5-.5-14.6-2.4-21.5-2.8-10.3-10-25.6-17.2-36.5C178 62.1 148.6 34.9 120 18c-5.9-3.5-5.6-3.4-6.7-1.8z" stroke-width="10"/>
+</symbol>
+<symbol id="frigate" x="-20" y="-15" width="42.9" height="29.6" viewBox="0 0 428 296">
+<path d="M153.5 17.2c-.3.7-.6 42.7-.8 93.3l-.2 92-16.2.3c-9.3.1-16.3-.1-16.3-.7 0-.5 1.1-3.7 2.4-7.2 4-10.6 5.1-23.4 3.3-36.4-5.2-36.2-28-73.7-63.4-104.4-11.9-10.4-10.8-17.6-11.1 71.7L51 203h-9.6c-7.9 0-10.1.3-12.4 2-4.9 3.5-5.1 5.5-4.8 35.1.3 26.9.3 27.5 2.7 31.6 1.4 2.4 4.3 5.5 6.5 7 4 2.6 4.7 2.7 22.1 3.4 9.9.4 61.2.8 114 .8 101 .1 104 0 117-4.4 14-4.8 26.4-13.8 37-27.1 11.3-14 15.9-17.5 36.1-27.8 9.8-5.1 23.3-12 30-15.4 12.6-6.5 14.4-8.2 14.4-14.2 0-6.3-4.5-11-10.5-11-2.2 0-33.6 10.1-48.5 15.6-10.6 3.9-24 5.6-24 3.1 0-.7.4-1.7.9-2.3 1.9-1.9 5-13.7 6.2-23.3 1.3-10.6.3-24.7-2.7-37.6-4.9-21.7-19.8-50.7-37.4-72.7-6.8-8.6-29.4-30.8-31.3-30.8-.8 0-1.8.7-2.1 1.6-.3.9-.6 38.7-.6 84V203h-18c-9.9 0-18-.2-18-.5 0-.2 1.4-3.9 3-8.1 1.7-4.2 3.7-11.1 4.5-15.3 2.9-15.2 1.3-42.1-3.4-56.9-1.2-3.5-2.6-8.2-3.2-10.5-.6-2.3-3.1-8.9-5.5-14.6-11.7-27.2-26.7-49.6-48.1-71.9-8.7-9-10.9-10.5-11.8-8z" stroke-width="10"/>
+<symbol id="infantry" x="-10" y="-10" width="21" height="21" viewBox="0 0 105 105">
+<path d="M8 53v44h89V9H8v44z" stroke-width="5"/>
+</symbol>
+</defs>
+<image href="map.jpg" x="0" y="0" width="2476" height="801" />
+<circle class="harbor" id="tangier_harbor" r="92" cy="426" cx="296.5"/>
+<circle class="harbor" id="gibraltar_harbor" r="92" cy="216" cx="374.25"/>
+<circle class="harbor" id="algiers_harbor" r="92" cy="318" cx="883.5"/>
+<circle class="harbor" id="tunis_harbor" r="92" cy="278.25" cx="1232.25"/>
+<circle class="harbor" id="malta_harbor" r="92" cy="189.5" cx="1592.5"/>
+<circle class="harbor" id="derne_harbor" r="92" cy="437.25" cx="2030.5"/>
+<circle class="harbor" id="benghazi_harbor" r="92" cy="583" cx="1877"/>
+<circle class="harbor" id="alexandria_harbor" r="92" cy="454.5" cx="2335.5"/>
+<circle class="harbor" id="tripoli_harbor" r="128" cy="604.5" cx="1416"/>
+<path class="patrol_zone" d="M184.82 276.533a136 136 0 00-136 136 136 136 0 0073.566 120.69c1.096.19 2.461.65 4.215 1.378 3.6 1.5 4.499 1.5 10.399.1 3.6-.9 10.3-2.1 15-2.7 4.7-.7 12.3-2.601 16.9-4.301 7.3-2.8 9.3-4.1 15.5-10.2 3.9-3.9 10-8.7 13.6-10.7 4.5-2.5 8.9-6.3 14-12 3.316-3.722 7.856-8.463 11.225-11.737a92.27 92.27 0 01-19.04-55.945 92.27 92.27 0 0192.075-92.26 136 136 0 00-111.44-58.325z" id="tangier_patrol_zone"/>
+<path class="patrol_zone" d="M615.705 21.148c-2.433.155-2.407.483-1.205 1.352 3.9 2.8 4.2 3.4 4.1 7.7-.2 4.9-1.2 7.1-2.8 6.2-.6-.4-2-.7-3.2-.8-1.7-.1-2.1-.7-1.9-2.9.2-2.4 0-2.7-1.3-1.6-1.7 1.4-.9 7.5 1.3 9.7 1.6 1.7 1.6 1.7-.2 5.1-.8 1.7-1.2 4.2-.9 6.3.5 2.9.3 3.5-2 4.6-2.8 1.3-5.4 5.7-4.1 7 .4.4 1 .1 1.2-.6.3-.6 1.1-1.2 1.9-1.2 1.9 0 1.9 6.4-.1 8-1.9 1.6-1.9 3 .1 4.5 1.4.9 1.4 1.6.5 3.3-1.4 2.7-.6 4.3 1.6 3.5 1.4-.5 1.5-.1.9 2.8-.5 1.9-.8 3.8-.8 4.4 0 1.8 2 12.9 2.7 15.1.5 1.8.1 2.3-2.6 3.3-1.7.6-4.2 1.1-5.5 1.1-1.2 0-3.5 1.3-5.1 3-3.2 3.4-4.8 3.8-5.7 1.3-.6-1.4-.8-1.4-2.2.5-.8 1.2-2.4 2.2-3.4 2.2-1.6 0-1.8.5-1.4 2.9.3 1.6.1 3.8-.5 5-1 1.8-1.5 1.9-3.2 1-2.4-1.2-2.5-1.1-4.7 3.3-1.6 3.1-2 3.3-6.3 3.1l-4.7-.1-.7 8.1c-.4 4.5-1.1 8.8-1.7 9.4-.6.7-1.9 4.5-2.9 8.5-1 3.9-2.5 7.8-3.3 8.7-1.1 1.3-1.2 3.2-.6 9.1.6 5.6.4 8.2-.6 10.4-.8 1.6-1.4 3.7-1.4 4.8 0 1-1.1 2.4-2.5 3-2.7 1.2-2.7 1-2.9 13.7-.1 9.3-1.4 11.3-4.1 6.2-.8-1.7-2.2-3.1-3.1-3.1-.8 0-1.9-1-2.4-2.3-1.2-2.8-4.5-6.7-5.8-6.7-.5 0-1.5.7-2.2 1.6-.8.8-2.5 1.4-4.1 1.2-1.6-.1-3.6.5-4.8 1.6-1.1 1-2.5 1.5-3.1 1.1-.6-.4-1.7-.2-2.4.4-.7.6-2.1.9-3 .5-1-.4-1.8 0-2.2 1-.8 2-4 2.1-4.8.1-.3-.8-1.6-1.5-3-1.5s-2.8-.5-3.2-1.1c-.4-.7-1.6-.1-3.4 1.6-2.1 2-3.3 2.5-5.4 1.9-2.3-.5-2.7-1-2.1-3.1.4-1.6.2-2.2-.5-1.8-.5.3-1 1.6-1 2.9 0 2.4-3.4 4.6-6.9 4.6-1 0-2.4.7-3.1 1.5-.7.8-2.1 1.5-3.2 1.5s-2.6.7-3.4 1.5c-1.522 1.439-2.921 1.203-5.975-1.378.038.626.07 1.252.094 1.878 0 50.96-41.31 92.27-92.269 92.27-50.96 0-92.27-41.31-92.27-92.27a92.27 92.27 0 015.942-32.45c-4.284-.742-6.922-1.72-6.922-2.75 0-.5-1.2-.7-2.8-.3-3.5.7-4.1 0-8.7-9.4-1.9-3.9-4-7.1-4.6-7.1-.6 0-.9.3-.7.7 2.1 4.1 3.6 8.5 4.2 12 .5 3.5.2 4.6-1.7 6.9-2.4 2.8-11.9 6-13.9 4.7-.6-.3-2.7-.6-4.6-.5-1.823.076-3.414-.312-4.951-1.246C260.979 286.86 348.139 359.979 450 360c115.98 0 210-94.02 210-210a210 210 0 00-44.295-128.852z" id="gibraltar_patrol_zone"/>
+<path class="patrol_zone" d="M879 113.5a136 136 0 00-136 136 136 136 0 009.45 49.746c.019.017.033.036.05.054 2.1 2 3.6 2.5 7.6 2.5 6.3.1 10.3.8 15 2.8 3.2 1.4 4 1.4 6.5.1 1.6-.8 4.199-2.7 5.699-4.2 2.228-2.228 3.107-2.635 6.176-2.204A92.27 92.27 0 01883.5 225.73a92.27 92.27 0 0183.928 54.151c.461-.22.86-.38 1.073-.38 1 0 1.799-1.6 5.499-9.7 1.2-2.7 2.6-5.1 3.2-5.4 2.6-1.6 19.8-2.4 22-1 1.3.8 2.3.8 3.6-.1 1.1-.6 3.8-.9 6.4-.6 2.986.365 4.169.353 5.17-.606a136 136 0 00.63-12.594 136 136 0 00-136-136z" id="algiers_patrol_zone"/>
+<path class="patrol_zone" d="M1275.5 86a136 136 0 00-136 136 136 136 0 003.915 31.739 92.27 92.27 0 0188.835-67.76 92.27 92.27 0 0192.27 92.271 92.27 92.27 0 01-45.858 79.638A136 136 0 001411.5 222a136 136 0 00-136-136z" id="tunis_patrol_zone"/>
+<path class="patrol_zone" d="M1514.121 309.44a243 243 0 00-232.214 171.452c.44.816.461 1.972.293 4.108-.1 2.4.5 7.7 1.4 11.7 1.4 5.9 1.5 7.7.5 9.9-1.3 3-.7 4.4 1.1 2.6 1.9-1.9 2.5-1.5 6.3 4.3 2.1 3 4.1 5.5 4.7 5.5.5 0 2.2 1.4 3.8 3.2 2.3 2.5 3.2 2.9 4.3 2 1.1-1 2-.8 4 .8 1.4 1.1 3.3 2 4.2 2 .376 0 .983.2 1.68.517a127.92 127.92 0 01101.91-50.79 127.92 127.92 0 01119.673 83.173c.745-.355 1.238-.383 1.238 0 0 .6.599 1.1 1.299 1.1.6 0 2.3.9 3.7 2 1.5 1.2 4.1 2 6.4 2 4.2 0 7.6 2.2 7.6 5 0 1-1.1 3.4-2.5 5.5l-2.6 3.7 2.1 4.4c1.2 2.4 3.1 4.6 4.3 5 3.5 1 5.7 3.5 5.7 6.3.1 1.4.7 3.7 1.5 5.1 2 3.5 1.8 6.4-.5 8.5-1.1 1-2 2.9-2 4.2 0 2.8 3.2 9.4 5.5 11.3 3 2.5 4.5 6.8 5.1 15.4.5 5.8 1.2 9 2.2 9.8 1.3 1.1 1.4.8.7-3.2-.4-2.5-.8-7.4-1-11-.3-7.6-1.7-13.2-4.4-17.7-1.7-2.7-1.8-3.4-.6-5 1.3-1.7 1.4-1.7 3.9.6 1.4 1.3 3.1 4.5 3.9 6.9.9 3.3 2.1 5 4.2 6.2 2.8 1.6 3 2.1 3.1 8.1.1 8.5.1 8.7 2.4 9.9 1.5.8 4.9.7 12.7-.4 11.4-1.6 12.9-1.3 16.9 2.9 1.8 1.9 3.1 2.3 9 2.3 3.9 0 8.1-.6 9.6-1.4 2.3-1.2 2.9-1.2 4.2.2.9.8 1.6 2.3 1.6 3.3 0 2.4-1.7 11.1-2.6 13.5-.6 1.6-.4 1.8 2.2 1.3 7.5-1.5 9.2-2.1 12.7-4.9 4.2-3.3 6.7-3.1 6.7.6s2.9 6.3 10.5 9.2c7.3 2.7 8.9 3 14.2 1.9 3-.7 3.4-.4 6.3 4.1 1.6 2.6 3 5.4 3 6.1 0 .7.5 1.3 1 1.3.6 0 1-1 1-2.3 0-1.2 1.3-4.2 3-6.7 2.6-3.9 2.8-4.6 1.5-6-.8-.9-1.5-2.1-1.5-2.6 0-1.7 5.5-6.4 7.4-6.4.9 0 3-1.4 4.6-3.1 2.5-2.8 3.2-3.1 6.5-2.5 3 .6 3.9 1.4 5.7 5.1 1.2 2.4 2.8 4.7 3.6 5 .9.346 1.918.18 2.867-.31a243 243 0 006.885-14.25c-.886-1.077-1.551-2.136-1.551-2.54 0-.762 2.217-2.868 4.513-4.644a243 243 0 0017.607-90.317 243 243 0 00-243-243z" id="tripoli_patrol_zone"/>
+<g id="markers" fill="#444" stroke="black" stroke-width="2">
+<circle id="year" r="26" cx="175" cy="728"/>
+<circle id="season" r="26" cx="893" cy="728"/>
+</g>
+<g stroke="black">
+<use id="us_frigate_1" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_2" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_3" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_4" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_5" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_6" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_7" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="us_frigate_8" href="#frigate" x="0" y="0" fill="#0977bd"/>
+<use id="tr_frigate_1" href="#frigate" x="0" y="0" fill="#de333e"/>
+<use id="tr_frigate_2" href="#frigate" x="0" y="0" fill="#de333e"/>
+<use id="se_frigate_1" href="#frigate" x="0" y="0" fill="#fdd527"/>
+<use id="se_frigate_2" href="#frigate" x="0" y="0" fill="#fdd527"/>
+<use id="us_gunboat_1" href="#corsair" x="0" y="0" fill="#0977bd"/>
+<use id="us_gunboat_2" href="#corsair" x="0" y="0" fill="#0977bd"/>
+<use id="us_gunboat_3" href="#corsair" x="0" y="0" fill="#0977bd"/>
+<use id="tr_corsair_1" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_2" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_3" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_4" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_5" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_6" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_7" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_8" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="tr_corsair_9" href="#corsair" x="0" y="0" fill="#de333e"/>
+<use id="al_corsair_1" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_2" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_3" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_4" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_5" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_6" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_7" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_8" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="al_corsair_9" href="#corsair" x="0" y="0" fill="#f39331"/>
+<use id="us_marine_1" href="#infantry" x="0" y="0" fill="#0977bd"/>
+<use id="us_marine_2" href="#infantry" x="0" y="0" fill="#0977bd"/>
+<use id="us_marine_3" href="#infantry" x="0" y="0" fill="#0977bd"/>
+<use id="us_marine_4" href="#infantry" x="0" y="0" fill="#0977bd"/>
+<use id="ar_infantry_1" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_2" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_3" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_4" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_5" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_6" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_7" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_8" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_9" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="ar_infantry_10" href="#infantry" x="0" y="0" fill="#e0e0e0"/>
+<use id="tr_infantry_1" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_2" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_3" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_4" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_5" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_6" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_7" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_8" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_9" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_10" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_11" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_12" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_13" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_14" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_15" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_16" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_17" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_18" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_19" href="#infantry" x="0" y="0" fill="#de333e"/>
+<use id="tr_infantry_20" href="#infantry" x="0" y="0" fill="#de333e"/>
+</g>
+</svg>
+
+<div id="hand" class="hand">
+<div id="tr_card_4" class="card tr_card_4"></div>
+<div id="tr_card_5" class="card tr_card_5"></div>
+<div id="tr_card_6" class="card tr_card_6"></div>
+<div id="tr_card_7" class="card tr_card_7"></div>
+<div id="tr_card_8" class="card tr_card_8"></div>
+<div id="tr_card_9" class="card tr_card_9"></div>
+<div id="tr_card_10" class="card tr_card_10"></div>
+<div id="tr_card_11" class="card tr_card_11"></div>
+<div id="tr_card_12" class="card tr_card_12"></div>
+<div id="tr_card_13" class="card tr_card_13"></div>
+<div id="tr_card_14" class="card tr_card_14"></div>
+<div id="tr_card_15" class="card tr_card_15"></div>
+<div id="tr_card_16" class="card tr_card_16"></div>
+<div id="tr_card_17" class="card tr_card_17"></div>
+<div id="tr_card_18" class="card tr_card_18"></div>
+<div id="tr_card_19" class="card tr_card_19"></div>
+<div id="tr_card_20" class="card tr_card_20"></div>
+<div id="tr_card_21" class="card tr_card_21"></div>
+<div id="tr_card_22" class="card tr_card_22"></div>
+<div id="tr_card_23" class="card tr_card_23"></div>
+<div id="tr_card_24" class="card tr_card_24"></div>
+<div id="tr_card_25" class="card tr_card_25"></div>
+<div id="tr_card_26" class="card tr_card_26"></div>
+<div id="tr_card_27" class="card tr_card_27"></div>
+<div id="us_card_4" class="card us_card_4"></div>
+<div id="us_card_5" class="card us_card_5"></div>
+<div id="us_card_6" class="card us_card_6"></div>
+<div id="us_card_7" class="card us_card_7"></div>
+<div id="us_card_8" class="card us_card_8"></div>
+<div id="us_card_9" class="card us_card_9"></div>
+<div id="us_card_10" class="card us_card_10"></div>
+<div id="us_card_11" class="card us_card_11"></div>
+<div id="us_card_12" class="card us_card_12"></div>
+<div id="us_card_13" class="card us_card_13"></div>
+<div id="us_card_14" class="card us_card_14"></div>
+<div id="us_card_15" class="card us_card_15"></div>
+<div id="us_card_16" class="card us_card_16"></div>
+<div id="us_card_17" class="card us_card_17"></div>
+<div id="us_card_18" class="card us_card_18"></div>
+<div id="us_card_19" class="card us_card_19"></div>
+<div id="us_card_20" class="card us_card_20"></div>
+<div id="us_card_21" class="card us_card_21"></div>
+<div id="us_card_22" class="card us_card_22"></div>
+<div id="us_card_23" class="card us_card_23"></div>
+<div id="us_card_24" class="card us_card_24"></div>
+<div id="us_card_25" class="card us_card_25"></div>
+<div id="us_card_26" class="card us_card_26"></div>
+<div id="us_card_27" class="card us_card_27"></div>
+</div>
+
+<div id="tr_table" class="hand">
+<div id="tr_card_deck" class="show card tr_card_back">24</div>
+<div id="tr_card_1" class="show card tr_card_1"></div>
+<div id="tr_card_2" class="show card tr_card_2"></div>
+<div id="tr_card_3" class="show card tr_card_3"></div>
+</div>
+
+<div id="us_table" class="hand">
+<div id="us_card_deck" class="show card us_card_back">24</div>
+<div id="us_card_1" class="show card us_card_1"></div>
+<div id="us_card_2" class="show card us_card_2"></div>
+<div id="us_card_3" class="show card us_card_3"></div>
+</div>
+
+<div id="popup" onmouseleave="hide_popup_menu()">
+<div id="menu_card_event" onclick="on_card_event()">Play Event</div>
+<div id="menu_card_move_frigates" onclick="on_card_move_frigates()">Discard to move frigates</div>
+<div id="menu_card_build_gunboat" onclick="on_card_build_gunboat()">Discard to build a gunboat</div>
+<div id="menu_card_pirate_raid" onclick="on_card_pirate_raid()">Discard to pirate raid</div>
+<div id="menu_card_build_corsair" onclick="on_card_build_corsair()">Discard to build a corsair</div>
+</div>
+
+	</div>
+
+</div>
+</body>

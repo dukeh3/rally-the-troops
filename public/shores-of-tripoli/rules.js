@@ -378,9 +378,11 @@ function count_pieces(list, where) {
 
 function discard_card(player, card, reason = "") {
 	log("");
-	log(game.active + " discards \"" + CARD_NAMES[card] + "\"" + reason + ".");
+	// log(game.active + " discards \"" + CARD_NAMES[card] + "\"" + reason + ".");
+	log(game.active + " discards a card" + reason + ".");
 	remove_from_array(player.hand, card);
 	player.discard.push(card);
+	game.active_card = game.active;
 }
 
 function play_card(player, card) {
@@ -389,6 +391,7 @@ function play_card(player, card) {
 	remove_from_array(player.hand, card);
 	if (!should_remove_after_play(card))
 		player.discard.push(card);
+	game.active_card = card;
 }
 
 function deploy(piece_name, space) {
@@ -411,6 +414,43 @@ function move_all_pieces(list, from, to) {
 			game.location[p] = to;
 		}
 	}
+}
+
+function fire(what, n_dice) {
+	let hits = 0;
+	for (let i = 0; i < n_dice; ++i) {
+		let roll = roll_d6();
+		if (roll == 6)
+			++hits;
+		log(what + " fires " + roll + ".");
+	}
+	return hits;
+}
+
+function intercept(what, n) {
+	let hits = 0;
+	for (let i = 0; i < n; ++i) {
+		let a = roll_d6();
+		let b = roll_d6();
+		if (a == 6) ++hits;
+		if (b == 6) ++hits;
+		log(what + " intercepts " + a + ", " + b + ".");
+	}
+	return hits;
+}
+
+function capture(what, n) {
+	let hits = 0;
+	for (let i = 0; i < n; ++i) {
+		let roll = roll_d6();
+		if (roll >= 5) ++hits;
+		log(what + " captures " + roll + ".");
+	}
+	return hits;
+}
+
+function count_swedish_frigates(where) {
+	return count_pieces(SE_FRIGATES, where);
 }
 
 function count_american_frigates(where) {
@@ -622,13 +662,53 @@ states.tripolitan_play = {
 	},
 	card_pirate_raid: function (c) {
 		discard_card(game.tr, c, " to Pirate Raid with the corsairs from Tripoli");
-		end_tripolitan_play();
+		goto_pirate_raid(TRIPOLI_HARBOR, TRIPOLI_PATROL_ZONE);
 	},
 	pass: function () {
 		log("");
 		log(game.active + " passes.");
 		end_tripolitan_play();
 	}
+}
+
+function goto_pirate_raid(harbor, patrol_zone) {
+	game.where = patrol_zone;
+	interception_roll(harbor, patrol_zone);
+	capture_roll(harbor);
+	game.where = null;
+	end_tripolitan_play();
+}
+
+function interception_roll(harbor, patrol_zone) {
+	let n_se = count_swedish_frigates(patrol_zone);
+	let n_us = count_american_frigates(patrol_zone);
+	let n_tr = count_tripolitan_corsairs(harbor);
+	let n_al = count_allied_corsairs(harbor);
+	let hits = 0;
+	hits += intercept("Swedish frigate", n_se);
+	hits += intercept("US frigate", n_us);
+	if (hits > n_tr + n_al)
+		hits = n_tr + n_al;
+	log(hits + " corsairs sink.");
+	if (n_tr > 0)
+		for (let i = 0; i < hits; ++i)
+			move_one_piece(TR_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
+	else
+		for (let i = 0; i < hits; ++i)
+			move_one_piece(AL_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
+}
+
+function capture_roll(harbor) {
+	let hits = 0;
+	hits += capture("Tripolitan corsair", count_tripolitan_corsairs(harbor));
+	hits += capture("Allied corsair", count_allied_corsairs(harbor));
+	log(hits + " merchant ships captured.");
+
+	game.tr.gold += hits;
+	if (game.tr.gold > 12)
+		game.tr.gold = 12;
+
+	// TODO: check victory
 }
 
 function goto_move_up_to_n_american_frigates(n) {
@@ -700,7 +780,7 @@ states.move_us_frigate_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
-		view.prompt = "United States: Move up to " + game.moves + " frigates. Select a destation.";
+		view.prompt = "United States: Move up to " + game.moves + " frigates. Select a destination.";
 		for (let space of FRIGATE_SPACES)
 			if (space != game.where)
 				gen_action(view, 'space', space);
@@ -775,17 +855,6 @@ states.select_combat = {
 	},
 }
 
-function fire(space, what, n_dice) {
-	let hits = 0;
-	for (let i = 0; i < n_dice; ++i) {
-		let roll = roll_d6();
-		if (roll == 6)
-			++hits;
-		log(what + " fires " + roll + ".");
-	}
-	return hits;
-}
-
 function goto_naval_battle() {
 	log("Naval battle in " + SPACES[game.where] + ".");
 	// TODO: battle cards
@@ -802,15 +871,15 @@ function naval_battle_round() {
 	let tr_hitpoints = n_tr_frigates * 2 + n_tr_corsairs + n_al_corsairs;
 
 	game.n_tr_hits = 0;
-	game.n_tr_hits += fire(game.where, "US frigate", 2 * n_us_frigates);
-	game.n_tr_hits += fire(game.where, "US gunboat", 1 * n_us_gunboats);
+	game.n_tr_hits += fire("US frigate", 2 * n_us_frigates);
+	game.n_tr_hits += fire("US gunboat", 1 * n_us_gunboats);
 	if (game.n_tr_hits > tr_hitpoints)
 		game.n_tr_hits = tr_hitpoints;
 
 	game.n_us_hits = 0;
-	game.n_us_hits += fire(game.where, "Tripolitan frigate", 2 * n_tr_frigates);
-	game.n_us_hits += fire(game.where, "Tripolitan corsair", 1 * n_tr_corsairs);
-	game.n_us_hits += fire(game.where, "Allied corsair", 1 * n_al_corsairs);
+	game.n_us_hits += fire("Tripolitan frigate", 2 * n_tr_frigates);
+	game.n_us_hits += fire("Tripolitan corsair", 1 * n_tr_corsairs);
+	game.n_us_hits += fire("Allied corsair", 1 * n_al_corsairs);
 	if (game.n_us_hits > us_hitpoints)
 		game.n_us_hits = us_hitpoints;
 
@@ -990,8 +1059,8 @@ function naval_bombardment_round() {
 	let n_infantry = count_tripolitan_infantry(game.where);
 
 	let n_hits = 0;
-	n_hits += fire(game.where, "US frigate", 2 * n_frigates);
-	n_hits += fire(game.where, "US gunboat", 1 * n_gunboats);
+	n_hits += fire("US frigate", 2 * n_frigates);
+	n_hits += fire("US gunboat", 1 * n_gunboats);
 	if (n_hits > n_infantry)
 		n_hits = n_infantry;
 
@@ -1034,7 +1103,7 @@ exports.setup = function (scenario, players) {
 			hand: [],
 			deck: [],
 			discard: [],
-			coins: 0,
+			gold: 0,
 		},
 		derne_captured: 0,
 		where: null,
@@ -1153,7 +1222,7 @@ exports.view = function(state, current) {
 			deck: game.tr.deck.length,
 			discard: game.tr.discard.length,
 			hand: game.tr.hand.length,
-			coins: game.tr.coins,
+			gold: game.tr.gold,
 		},
 		us: {
 			core: game.us.core,
@@ -1161,6 +1230,7 @@ exports.view = function(state, current) {
 			discard: game.us.discard.length,
 			hand: game.us.hand.length,
 		},
+		card: game.active_card,
 		where: game.where,
 	};
 

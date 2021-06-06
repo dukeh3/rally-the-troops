@@ -46,9 +46,25 @@
 	border-radius: 12px;
 }
 
+.card_info .card {
+	margin: 15px auto;
+	width: 100px;
+	height: 140px;
+	border-radius: 5px;
+}
+
+.card_info .card:hover {
+	transform: scale(2) translateY(-30px);
+}
+
 .role_info {
-	display: flex;
-	justify-content: center;
+	padding: 5px 20px;
+	background-color: gainsboro;
+	white-space: pre-wrap;
+}
+
+.role_info.card_info {
+	background-color: silver;
 }
 
 /* MAP */
@@ -261,6 +277,7 @@
 			<div class="role_name">United States (<span class="role_user">$USER</span>)</div>
 			<div class="role_info" id="us_info">0 cards in hand</div>
 		</div>
+		<div class="role_info card_info"><div id="active_card" class="card show tr_card_back"></div></div>
 	</div>
 
 	<div class="grid_log">

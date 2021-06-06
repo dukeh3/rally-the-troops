@@ -133,13 +133,43 @@ function update_cards() {
 
 /* MAP AND PIECE LAYOUT */
 
+function tr_info() {
+	let text = "";
+	if (game.tr.hand == 1)
+		text += "1 card in hand";
+	else
+		text += game.tr.hand + " cards in hand";
+	text += "\n$" + game.tr.gold;
+	return text;
+}
+
+function us_info() {
+	let text = "";
+	if (game.us.hand == 1)
+		text += "1 card in hand";
+	else
+		text += game.us.hand + " cards in hand";
+	return text;
+}
+
 function on_update() {
 	show_action_button("#button_pass", "pass");
 	show_action_button("#button_next", "next");
 	show_action_button("#button_undo", "undo");
-	update_year_marker(game.year);
+
+	document.getElementById("tr_info").textContent = tr_info();
+	document.getElementById("us_info").textContent = us_info();
+
+	if (game.card == "United States")
+		document.getElementById("active_card").className = "card show us_card_back";
+	else if (game.card == "Tripolitania")
+		document.getElementById("active_card").className = "card show tr_card_back";
+	else if (game.card < 27)
+		document.getElementById("active_card").className = "card show us_card_" + game.card;
+	else
+		document.getElementById("active_card").className = "card show tr_card_" + (game.card-27);
+
 	update_season_marker(game.season);
-	update_pieces(game.location);
 	update_pieces();
 	update_cards();
 	update_spaces();

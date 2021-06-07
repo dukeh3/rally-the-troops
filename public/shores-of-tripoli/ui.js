@@ -169,6 +169,7 @@ function on_update() {
 	else
 		document.getElementById("active_card").className = "card show tr_card_" + (game.card-27);
 
+	update_year_marker(game.year);
 	update_season_marker(game.season);
 	update_pieces();
 	update_cards();
@@ -296,6 +297,11 @@ function on_card_event() {
 	hide_popup_menu();
 }
 
+function on_card_take() {
+	send_action('card_take', current_popup_card);
+	hide_popup_menu();
+}
+
 function on_card_move_frigates() {
 	send_action('card_move_frigates', current_popup_card);
 	hide_popup_menu();
@@ -328,6 +334,7 @@ function on_click_card(evt) {
 		} else {
 			let menu = [];
 			if (is_card_action('card_event', card)) menu.push('card_event');
+			if (is_card_action('card_take', card)) menu.push('card_take');
 			if (is_card_action('card_move_frigates', card)) menu.push('card_move_frigates');
 			if (is_card_action('card_pirate_raid', card)) menu.push('card_pirate_raid');
 			if (is_card_action('card_build_gunboat', card)) menu.push('card_build_gunboat');

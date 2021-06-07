@@ -5,10 +5,9 @@
 
 // A Show of Force -- can play with fewer than 3 available frigates?
 // Burn the Philadelphia and others -- damaged frigates in 1806, to supply or virtual 1807 box?
-// General Eaton Attacks Derne/Benghazi -- can american gunboats participate?
-// Bainbridge Supplies Intel -- can you play it to pick up itself to stall forever?
-
-// TODO: Open Sea zone during piracy
+// General Eaton Attacks Derne/Benghazi -- should American gunboats participate?
+// Bainbridge Supplies Intel -- can you play it to pick up itself in order to pass without spending cards?
+// Assault on Tripoli -- can you play if benghazi not captured and no send in the marines?
 
 // Battle Card timing:
 
@@ -1306,6 +1305,7 @@ states.assault_on_tripoli = {
 		view.prompt = "United States: Assault on Tripoli.";
 		if (is_inactive_player(current))
 			return view.prompt;
+		// TODO: assault on tripoli
 	},
 	// TODO: battle event -- Send in the Marines
 }
@@ -1537,7 +1537,42 @@ function play_storms() {
 	game.state = 'storms';
 }
 
-// TODO: storms
+states.storms = {
+	prompt: function (view, current) {
+		view.prompt = "Tripolitania: Storms.";
+		if (is_inactive_player(current))
+			return view.prompt;
+		view.prompt += " Select a naval patrol zone.";
+		for (let space of PATROL_ZONES)
+			if (count_american_frigates(space) > 0)
+				gen_action(view, 'space', space);
+	},
+	space: function (space) {
+		let six = false;
+		let n = count_american_frigates(space);
+		for (let i = 0; i < n; ++i) {
+			let roll = roll_d6();
+			if (roll == 6) {
+				if (!six) {
+					log("Storm " + roll + ": American frigate sinks!");
+					move_one_piece(US_FRIGATES, space, TRIPOLITAN_SUPPLY);
+					six = true;
+				} else {
+					log("Storm " + roll + ": American frigate is damaged.");
+					if (year == 1806)
+						move_one_piece(US_FRIGATES, space, UNITED_STATES_SUPPLY);
+					else
+						move_one_piece(US_FRIGATES, space, YEAR_TURN_TRACK[game.year+1]);
+				}
+			} else {
+				log("Storm " + roll + ": No effect.");
+			}
+		}
+		if (check_frigate_victory())
+			return;
+		end_tripolitan_play();
+	},
+}
 
 function can_play_tripoli_attacks() {
 	let n = count_tripolitan_frigates(TRIPOLI_HARBOR) + count_tripolitan_corsairs(TRIPOLI_HARBOR);
@@ -1740,15 +1775,18 @@ function play_treaty_of_peace_and_amity() {
 }
 
 function can_play_assault_on_tripoli() {
-	return is_fall_of_1805_or_later();
+	return is_fall_of_1805_or_later()
+	// && (hamets_army_location() == BENGHAZI_HARBOR || game.us.hand.includes(SEND_IN_THE_MARINES));
 }
 
 function play_assault_on_tripoli() {
 	if (hamets_army_location() == BENGHAZI_HARBOR) {
 		move_all_pieces(US_MARINES, BENGHAZI_HARBOR, TRIPOLI_HARBOR);
 		move_all_pieces(AR_INFANTRY, BENGHAZI_HARBOR, TRIPOLI_HARBOR);
-		move_all_pieces(US_GUNBOATS, MALTA_HARBOR, TRIPOLI_HARBOR);
+	} else {
+		// force play of SEND_IN_THE_MARINES?
 	}
+	move_all_pieces(US_GUNBOATS, MALTA_HARBOR, TRIPOLI_HARBOR);
 	for (let space of FRIGATE_SPACES)
 		if (space != TRIPOLI_HARBOR)
 			move_all_pieces(US_FRIGATES, space, TRIPOLI_HARBOR);

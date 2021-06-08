@@ -29,6 +29,10 @@
 // BATTLE CARDS HANDLED:
 // US: THE_DARING_STEPHEN_DECATUR
 // TR: UNCHARTED_WATERS
+// US: LIEUTENANT_STERETT_IN_PURSUIT
+// TR: US_SIGNAL_BOOKS_OVERBOARD
+// TR: HAPPY_HUNTING
+// TR: MERCHANT_SHIP_CONVERTED
 
 const US = "United States";
 const TR = "Tripolitania";
@@ -135,6 +139,14 @@ const PATROL_ZONES = [
 	TRIPOLI_PATROL_ZONE,
 	TUNIS_PATROL_ZONE,
 ];
+
+const HARBOR = {
+	[ALGIERS_PATROL_ZONE]: ALGIERS_HARBOR,
+	[GIBRALTAR_PATROL_ZONE]: GIBRALTAR_HARBOR,
+	[TANGIER_PATROL_ZONE]: TANGIER_HARBOR,
+	[TRIPOLI_PATROL_ZONE]: TRIPOLI_HARBOR,
+	[TUNIS_PATROL_ZONE]: TUNIS_HARBOR,
+}
 
 const THOMAS_JEFFERSON = 1;
 const SWEDISH_FRIGATES_ARRIVE = 2;
@@ -390,6 +402,23 @@ function draw_cards(hand, deck, n) {
 	}
 }
 
+function discard_random_card(hand, discard) {
+	let i = Math.floor(Math.random() * hand.length);
+	let c = hand[i];
+	discard.push(c);
+	hand.splice(i, 1);
+	return c;
+}
+
+function is_card_unplayed(card) {
+	return game.us.hand.includes(card) ||
+		game.us.deck.includes(card) ||
+		game.us.discard.includes(card) ||
+		game.tr.hand.includes(card) ||
+		game.tr.deck.includes(card) ||
+		game.tr.discard.includes(card);
+}
+
 function count_pieces(list, where) {
 	let n = 0;
 	for (let p of list)
@@ -466,14 +495,20 @@ function fire_1(what, n) {
 	return hits;
 }
 
-function intercept(what, n) {
+function intercept(what, n, n_dice) {
 	let hits = 0;
 	for (let i = 0; i < n; ++i) {
 		let a = roll_d6();
 		let b = roll_d6();
 		if (a == 6) ++hits;
 		if (b == 6) ++hits;
-		log(what + " intercepts " + a + ", " + b + ".");
+		if (n_dice > 2) {
+			let c = roll_d6();
+			if (c == 6) ++hits;
+			log(what + " rolls " + a + ", " + b + ", " + c + ".");
+		} else {
+			log(what + " rolls " + a + ", " + b + ".");
+		}
 	}
 	return hits;
 }
@@ -483,7 +518,7 @@ function capture(what, n) {
 	for (let i = 0; i < n; ++i) {
 		let roll = roll_d6();
 		if (roll >= 5) ++hits;
-		log(what + " captures " + roll + ".");
+		log(what + " rolls " + roll + ".");
 	}
 	return hits;
 }
@@ -507,16 +542,20 @@ function count_american_gunboats(where) {
 	return count_pieces(US_GUNBOATS, where);
 }
 
-function count_tripolitan_corsairs(where) {
-	return count_pieces(TR_CORSAIRS, where);
-}
-
 function count_tripolitan_frigates(where) {
 	return count_pieces(TR_FRIGATES, where);
 }
 
+function count_tripolitan_corsairs(where) {
+	return count_pieces(TR_CORSAIRS, where);
+}
+
 function count_allied_corsairs(where) {
 	return count_pieces(AL_CORSAIRS, where);
+}
+
+function count_corsairs(where) {
+	return count_tripolitan_corsairs(where) + count_allied_corsairs(where);
 }
 
 function count_tripolitan_infantry(where) {
@@ -562,7 +601,7 @@ function is_benghazi_captured() {
 
 function is_naval_battle_location(space) {
 	let n_us = count_american_frigates(space);
-	let n_tr = count_tripolitan_corsairs(space) + count_allied_corsairs(space);
+	let n_tr = count_corsairs(space);
 	return (n_us > 0 && n_tr > 0);
 }
 
@@ -574,7 +613,7 @@ function is_naval_bombardment_location(space) {
 
 function is_naval_battle_or_bombardment_location(space) {
 	let n_us = count_american_frigates(space);
-	let n_tr_ships = count_tripolitan_corsairs(space) + count_allied_corsairs(space);
+	let n_tr_ships = count_tripolitan_frigates(space) + count_corsairs(space);
 	let n_tr_infantry = count_tripolitan_infantry(space);
 	return (n_us > 0 && (n_tr_ships > 0 || n_tr_infantry > 0));
 }
@@ -821,41 +860,155 @@ function take_gold(n) {
 
 function goto_pirate_raid(harbor, patrol_zone) {
 	game.where = patrol_zone;
+	if (count_american_frigates(patrol_zone) > 0) {
+		if (is_card_unplayed(LIEUTENANT_STERETT_IN_PURSUIT)) {
+			game.active = US;
+			game.state = 'raid_before_intercept';
+			return;
+		}
+	}
+	goto_pirate_raid_intercept();
+}
 
-	interception_roll(harbor, patrol_zone);
+states.raid_before_intercept = {
+	prompt: function (view, current) {
+		view.prompt = "Pirate Raid in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return view.prompt;
+		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
+		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
+			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
+		gen_action(view, 'pass');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, LIEUTENANT_STERETT_IN_PURSUIT);
+		game.active = TR;
+		goto_pirate_raid_intercept(3);
+	},
+	pass: function () {
+		game.active = TR;
+		goto_pirate_raid_intercept(2);
+	},
+}
 
-	let hits = 0;
-	hits += capture("Tripolitan corsair", count_tripolitan_corsairs(harbor));
-	hits += capture("Allied corsair", count_allied_corsairs(harbor));
-	log(hits + " merchant ships captured.");
+function goto_pirate_raid_intercept(us_dice) {
+	let patrol_zone = game.where;
+	let harbor = HARBOR[patrol_zone];
+	interception_roll(harbor, patrol_zone, us_dice);
+	if (count_corsairs(harbor) > 0) {
+		if (is_card_unplayed(HAPPY_HUNTING)) {
+			game.state = 'raid_before_hunt';
+			return;
+		}
+	}
+	if (count_american_frigates(patrol_zone) > 0) {
+		if (is_card_unplayed(US_SIGNAL_BOOKS_OVERBOARD)) {
+			game.state = 'raid_before_hunt';
+			return;
+		}
+	}
+	goto_pirate_raid_hunt();
+}
 
-	give_gold(hits);
+states.raid_before_hunt = {
+	prompt: function (view, current) {
+		let patrol_zone = game.where;
+		let harbor = HARBOR[patrol_zone];
+		view.prompt = "Pirate Raid in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return view.prompt;
+		view.prompt += " You may play \"US Signal Books Overboard\" and/or \"Happy Hunting\".";
+		if (count_corsairs(harbor) > 0)
+			if (game.tr.hand.includes(HAPPY_HUNTING))
+				gen_action(view, 'card_event', HAPPY_HUNTING);
+		if (count_american_frigates(patrol_zone) > 0)
+			if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD))
+				gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
+		gen_action(view, 'pass');
+	},
+	card_event: function (card) {
+		play_battle_card(game.tr, card);
+		if (card == US_SIGNAL_BOOKS_OVERBOARD) {
+			let c = discard_random_card(game.us.hand, game.us.discard);
+			log("United States discards \"" + CARD_NAMES[c] + "\".");
+			// allow playing happy hunting too!
+		}
+		if (card == HAPPY_HUNTING) {
+			// TODO: allow play of Happy Hunting before US Signal Books Overboard
+			return goto_pirate_raid_hunt(true);
+		}
+	},
+	pass: function () {
+		goto_pirate_raid_hunt(false);
+	},
+}
+
+function goto_pirate_raid_hunt(happy_hunting) {
+	let patrol_zone = game.where;
+	let harbor = HARBOR[patrol_zone];
+	let corsairs = count_corsairs(harbor);
+	let merchants = capture("Corsair", corsairs);
+	if (happy_hunting)
+		merchants += capture("Happy Hunting", 3);
+	log("Merchant ships captured: " + merchants + ".");
+	give_gold(merchants);
 	if (check_gold_victory())
 		return;
+	if (merchants > 0 && count_tripolitan_corsairs(TRIPOLITAN_SUPPLY) > 0) {
+		if (is_card_unplayed(MERCHANT_SHIP_CONVERTED)) {
+			game.state = 'raid_after_hunt';
+			return;
+		}
+	}
+	end_pirate_raid();
+}
 
+states.raid_after_hunt = {
+	prompt: function (view, current) {
+		view.prompt = "Pirate Raid in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return view.prompt;
+		view.prompt += " You may play \"Merchant Ship Converted\".";
+		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED))
+			gen_action(view, 'card_event', MERCHANT_SHIP_CONVERTED);
+		gen_action(view, 'pass');
+	},
+	card_event: function (card) {
+		play_battle_card(game.tr, MERCHANT_SHIP_CONVERTED);
+		move_one_piece(TR_CORSAIRS, TRIPOLITAN_SUPPLY, TRIPOLI_HARBOR);
+		end_pirate_raid();
+	},
+	pass: function () {
+		end_pirate_raid();
+	},
+}
+
+function end_pirate_raid() {
 	if (game.raids)
 		resume_yusuf_qaramanli();
 	else
 		end_tripolitan_play();
 }
 
-function interception_roll(harbor, patrol_zone) {
+function interception_roll(harbor, patrol_zone, us_dice) {
 	let n_se = count_swedish_frigates(patrol_zone);
 	let n_us = count_american_frigates(patrol_zone);
-	let n_tr = count_tripolitan_corsairs(harbor);
-	let n_al = count_allied_corsairs(harbor);
-	let hits = 0;
-	hits += intercept("Swedish frigate", n_se);
-	hits += intercept("American frigate", n_us);
-	if (hits > n_tr + n_al)
-		hits = n_tr + n_al;
-	log(hits + " corsairs sink.");
-	if (n_tr > 0)
-		for (let i = 0; i < hits; ++i)
-			move_one_piece(TR_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
-	else
-		for (let i = 0; i < hits; ++i)
-			move_one_piece(AL_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
+	if (n_se + n_us > 0) {
+		let n_tr = count_tripolitan_corsairs(harbor);
+		let n_al = count_allied_corsairs(harbor);
+		let hits = 0;
+		hits += intercept("Swedish frigate", n_se, 2);
+		hits += intercept("American frigate", n_us, us_dice);
+		if (hits > n_tr + n_al)
+			hits = n_tr + n_al;
+		log("Corsairs intercepted: " + hits + ".");
+		if (n_tr > 0)
+			for (let i = 0; i < hits; ++i)
+				move_one_piece(TR_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
+		else
+			for (let i = 0; i < hits; ++i)
+				move_one_piece(AL_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
+	}
 }
 
 // AMERICAN NAVAL MOVEMENT

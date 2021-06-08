@@ -26,6 +26,10 @@
 // us: own reaction: assault on tripoli
 // tr: own reaction: philadelphia runs aground
 
+// BATTLE CARDS HANDLED:
+// US: THE_DARING_STEPHEN_DECATUR
+// TR: UNCHARTED_WATERS
+
 const US = "United States";
 const TR = "Tripolitania";
 
@@ -411,6 +415,12 @@ function play_card(player, card) {
 	if (!REMOVE_AFTER_PLAY.includes(card))
 		player.discard.push(card);
 	game.active_card = card;
+}
+
+function play_battle_card(player, card) {
+	log("");
+	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
+	remove_from_array(player.hand, card);
 }
 
 function deploy(piece_name, space) {
@@ -1616,9 +1626,38 @@ function can_play_the_philadelphia_runs_aground() {
 }
 
 function play_the_philadelphia_runs_aground() {
-	// TODO: battle event
+	game.state = 'the_philadelphia_runs_aground';
+}
+
+states.the_philadelphia_runs_aground = {
+	prompt: function (view, current) {
+		view.prompt = "Tripolitania: The Philadelphia Runs Aground.";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"Uncharted Waters\"."
+		if (game.tr.hand.includes(UNCHARTED_WATERS))
+			gen_action(view, 'card_event', UNCHARTED_WATERS);
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.tr, UNCHARTED_WATERS);
+		end_the_philadelphia_runs_aground(true);
+	},
+	next: function (card) {
+		end_the_philadelphia_runs_aground(false);
+	},
+}
+
+function end_the_philadelphia_runs_aground(two) {
 	let roll = roll_d6();
-	log("Tripolitania rolls " + roll + ".");
+	if (two) {
+		let b = roll_d6();
+		log("Tripolitania rolls " + roll + ", " + b + ".");
+		if (b > roll)
+			roll = b;
+	} else {
+		log("Tripolitania rolls " + roll + ".");
+	}
 	switch (roll) {
 	case 1: case 2:
 		log("Minor damage. One frigate moved to Malta.");
@@ -2036,9 +2075,38 @@ function can_play_burn_the_philadelphia() {
 }
 
 function play_burn_the_philadelphia() {
-	// TODO: battle event
+	game.state = 'burn_the_philadelphia';
+}
+
+states.burn_the_philadelphia = {
+	prompt: function (view, current) {
+		view.prompt = "United States: Burn the Philadelphia.";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"The Daring Stephen Decatur\"."
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
+			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, THE_DARING_STEPHEN_DECATUR);
+		end_burn_the_philadelphia(true);
+	},
+	next: function (card) {
+		end_burn_the_philadelphia(false);
+	},
+}
+
+function end_burn_the_philadelphia(two) {
 	let roll = roll_d6();
-	log("United States raids the harbor of Tripoli: " + roll + ".");
+	if (two) {
+		let b = roll_d6();
+		log("United States raids the harbor of Tripoli: " + roll + ", " + b + ".");
+		if (b > roll)
+			roll = b;
+	} else {
+		log("United States raids the harbor of Tripoli: " + roll + ".");
+	}
 	switch (roll) {
 	case 1: case 2:
 		log("The raid is a failure.");
@@ -2064,16 +2132,45 @@ function can_play_launch_the_intrepid() {
 }
 
 function play_launch_the_intrepid() {
-	// TODO: battle event
+	game.state = 'launch_the_intrepid';
+}
+
+states.launch_the_intrepid = {
+	prompt: function (view, current) {
+		view.prompt = "United States: Launch the Intrepid.";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"The Daring Stephen Decatur\"."
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
+			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, THE_DARING_STEPHEN_DECATUR);
+		end_launch_the_intrepid(true);
+	},
+	next: function (card) {
+		end_launch_the_intrepid(false);
+	},
+}
+
+function end_launch_the_intrepid(two) {
 	let roll = roll_d6();
-	log("United States raids the harbor of Tripoli: " + roll + ".");
+	if (two) {
+		let b = roll_d6();
+		log("United States raids the harbor of Tripoli: " + roll + ", " + b + ".");
+		if (b > roll)
+			roll = b;
+	} else {
+		log("United States raids the harbor of Tripoli: " + roll + ".");
+	}
 	switch (roll) {
 	case 1: case 2:
 		log("The raid is a failure.");
 		break;
 	case 3: case 4:
 		if (count_tripolitan_corsairs(TRIPOLI_HARBOR) > 0) {
-			log("A Tripolitan corsair is sunk.");
+			log("One Tripolitan corsair is sunk.");
 			move_one_piece(TR_CORSAIRS, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
 		} else {
 			log("No corsairs to sink.");
@@ -2081,14 +2178,14 @@ function play_launch_the_intrepid() {
 		break;
 	case 5: case 6:
 		if (count_tripolitan_frigates(TRIPOLI_HARBOR) > 0) {
-			log("A Tripolitan frigate is sunk.");
+			log("One Tripolitan frigate is sunk.");
 			move_one_piece(TR_FRIGATES, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
-		} else if (count_tripolitan_corsairs(TRIPOLI_HARBOR) > 1) {
+		} else if (count_tripolitan_corsairs(TRIPOLI_HARBOR) >= 2) {
 			log("Two Tripolitan corsairs are sunk.");
 			move_one_piece(TR_CORSAIRS, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
 			move_one_piece(TR_CORSAIRS, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
-		} else if (count_tripolitan_corsairs(TRIPOLI_HARBOR) > 0) {
-			log("A Tripolitan corsair is sunk.");
+		} else if (count_tripolitan_corsairs(TRIPOLI_HARBOR) >= 1) {
+			log("One Tripolitan corsair is sunk.");
 			move_one_piece(TR_CORSAIRS, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
 		} else {
 			log("No corsairs to sink.");

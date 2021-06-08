@@ -359,12 +359,6 @@ function gen_action_undo(view) {
 		view.actions.undo = 0;
 }
 
-function gen_action_pass(view, text) {
-	if (!view.actions)
-		view.actions = {}
-	view.actions['pass'] = text;
-}
-
 function gen_action(view, action, argument) {
 	if (!view.actions)
 		view.actions = {}
@@ -471,6 +465,20 @@ function move_all_pieces(list, from, to) {
 			game.location[p] = to;
 		}
 	}
+}
+
+function fire_3(what, n) {
+	let hits = 0;
+	for (let i = 0; i < n; ++i) {
+		let a = roll_d6();
+		let b = roll_d6();
+		let c = roll_d6();
+		if (a == 6) ++hits;
+		if (b == 6) ++hits;
+		if (c == 6) ++hits;
+		log(what + " fires " + a + ", " + b + ", " + c + ".");
+	}
+	return hits;
 }
 
 function fire_2(what, n) {
@@ -876,16 +884,17 @@ states.raid_before_intercept = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
-		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
+		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT)) {
 			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
-		gen_action(view, 'pass');
+		}
+		gen_action(view, 'next');
 	},
 	card_event: function (card) {
 		play_battle_card(game.us, LIEUTENANT_STERETT_IN_PURSUIT);
 		game.active = TR;
 		goto_pirate_raid_intercept(3);
 	},
-	pass: function () {
+	next: function () {
 		game.active = TR;
 		goto_pirate_raid_intercept(2);
 	},
@@ -917,14 +926,23 @@ states.raid_before_hunt = {
 		view.prompt = "Pirate Raid in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " You may play \"US Signal Books Overboard\" and/or \"Happy Hunting\".";
-		if (count_corsairs(harbor) > 0)
-			if (game.tr.hand.includes(HAPPY_HUNTING))
-				gen_action(view, 'card_event', HAPPY_HUNTING);
-		if (count_american_frigates(patrol_zone) > 0)
-			if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD))
-				gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
-		gen_action(view, 'pass');
+		if (count_corsairs(harbor) > 0) {
+			if (is_card_unplayed(HAPPY_HUNTING)) {
+				view.prompt += " You may play \"Happy Hunting\".";
+				if (game.tr.hand.includes(HAPPY_HUNTING)) {
+					gen_action(view, 'card_event', HAPPY_HUNTING);
+				}
+			}
+		}
+		if (count_american_frigates(patrol_zone) > 0) {
+			if (is_card_unplayed(US_SIGNAL_BOOKS_OVERBOARD)) {
+				view.prompt += " You may play \"US Signal Books Overboard\".";
+				if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD)) {
+					gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
+				}
+			}
+		}
+		gen_action(view, 'next');
 	},
 	card_event: function (card) {
 		play_battle_card(game.tr, card);
@@ -938,7 +956,7 @@ states.raid_before_hunt = {
 			return goto_pirate_raid_hunt(true);
 		}
 	},
-	pass: function () {
+	next: function () {
 		goto_pirate_raid_hunt(false);
 	},
 }
@@ -969,16 +987,17 @@ states.raid_after_hunt = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Merchant Ship Converted\".";
-		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED))
+		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED)) {
 			gen_action(view, 'card_event', MERCHANT_SHIP_CONVERTED);
-		gen_action(view, 'pass');
+		}
+		gen_action(view, 'next');
 	},
 	card_event: function (card) {
 		play_battle_card(game.tr, MERCHANT_SHIP_CONVERTED);
 		move_one_piece(TR_CORSAIRS, TRIPOLITAN_SUPPLY, TRIPOLI_HARBOR);
 		end_pirate_raid();
 	},
-	pass: function () {
+	next: function () {
 		end_pirate_raid();
 	},
 }
@@ -1164,13 +1183,82 @@ function end_naval_bombardment() {
 // NAVAL BATTLE
 
 function goto_naval_battle(space) {
+	game.save_active = game.active;
 	game.where = space;
 	log("Naval battle in " + SPACES[game.where] + ".");
-	// TODO: battle cards
-	naval_battle_round();
+	goto_naval_battle_american_card();
 }
 
-function naval_battle_round() {
+function goto_naval_battle_american_card() {
+	game.prebles_boys_take_aim = false;
+	if (BATTLE_SPACES.includes(game.where)) {
+		if (is_card_unplayed(PREBLES_BOYS_TAKE_AIM)) {
+			game.active = US;
+			game.state = 'naval_battle_american_card';
+			return;
+		}
+	}
+	goto_naval_battle_tripolitan_card();
+}
+
+states.naval_battle_american_card = {
+	prompt: function (view, current) {
+		view.prompt = "Naval Battle in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"Preble's Boys Take Aim\".";
+		if (game.us.hand.includes(PREBLES_BOYS_TAKE_AIM)) {
+			gen_action(view, 'card_event', PREBLES_BOYS_TAKE_AIM);
+		}
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, PREBLES_BOYS_TAKE_AIM);
+		game.prebles_boys_take_aim = true;
+		goto_naval_battle_tripolitan_card();
+	},
+	next: function (card) {
+		goto_naval_battle_tripolitan_card();
+	},
+}
+
+function goto_naval_battle_tripolitan_card() {
+	game.the_guns_of_tripoli = false;
+	if (game.where == TRIPOLI_HARBOR) {
+		if (is_card_unplayed(THE_GUNS_OF_TRIPOLI)) {
+			game.save_active = game.active;
+			game.active = TR;
+			game.state = 'naval_battle_tripolitan_card';
+			return;
+		}
+	}
+	goto_naval_battle_round();
+}
+
+states.naval_battle_tripolitan_card = {
+	prompt: function (view, current) {
+		view.prompt = "Naval Battle in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"The Guns of Tripoli\".";
+		if (game.tr.hand.includes(THE_GUNS_OF_TRIPOLI)) {
+			gen_action(view, 'card_event', THE_GUNS_OF_TRIPOLI);
+		}
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.tr, THE_GUNS_OF_TRIPOLI);
+		game.the_guns_of_tripoli = true;
+		goto_naval_battle_round();
+	},
+	next: function (card) {
+		goto_naval_battle_round();
+	},
+}
+
+function goto_naval_battle_round() {
+	game.active = game.save_active;
+
 	let n_us_frigates = count_american_frigates(game.where);
 	let n_us_gunboats = count_american_gunboats(game.where);
 	let us_hitpoints = n_us_frigates * 2 + n_us_gunboats;
@@ -1180,12 +1268,17 @@ function naval_battle_round() {
 	let tr_hitpoints = n_tr_frigates * 2 + n_tr_corsairs + n_al_corsairs;
 
 	game.n_tr_hits = 0;
-	game.n_tr_hits += fire_2("American frigate", n_us_frigates);
+	if (game.prebles_boys_take_aim)
+		game.n_tr_hits += fire_3("American frigate", n_us_frigates);
+	else
+		game.n_tr_hits += fire_2("American frigate", n_us_frigates);
 	game.n_tr_hits += fire_1("American gunboat", n_us_gunboats);
 	if (game.n_tr_hits > tr_hitpoints)
 		game.n_tr_hits = tr_hitpoints;
 
 	game.n_us_hits = 0;
+	if (game.the_guns_of_tripoli)
+		game.n_us_hits += fire_1("The Guns of Tripoli", 12);
 	game.n_us_hits += fire_2("Tripolitan frigate", n_tr_frigates);
 	game.n_us_hits += fire_1("Tripolitan corsair", n_tr_corsairs);
 	game.n_us_hits += fire_1("Allied corsair", n_al_corsairs);
@@ -1343,6 +1436,10 @@ function remove_damaged_frigates() {
 }
 
 function end_naval_battle() {
+	delete game.the_guns_of_tripoli;
+	delete game.prebles_boys_take_aim;
+	delete game.save_active;
+
 	remove_damaged_frigates()
 
 	move_all_pieces(US_FRIGATES, game.where, MALTA_HARBOR);
@@ -1787,9 +1884,10 @@ states.the_philadelphia_runs_aground = {
 		view.prompt = "Tripolitania: The Philadelphia Runs Aground.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"Uncharted Waters\"."
-		if (game.tr.hand.includes(UNCHARTED_WATERS))
+		view.prompt += " You may play \"Uncharted Waters\".";
+		if (game.tr.hand.includes(UNCHARTED_WATERS)) {
 			gen_action(view, 'card_event', UNCHARTED_WATERS);
+		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -2236,9 +2334,10 @@ states.burn_the_philadelphia = {
 		view.prompt = "United States: Burn the Philadelphia.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"The Daring Stephen Decatur\"."
-		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
+		view.prompt += " You may play \"The Daring Stephen Decatur\".";
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR)) {
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
+		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -2293,9 +2392,10 @@ states.launch_the_intrepid = {
 		view.prompt = "United States: Launch the Intrepid.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"The Daring Stephen Decatur\"."
-		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
+		view.prompt += " You may play \"The Daring Stephen Decatur\".";
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR)) {
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
+		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {

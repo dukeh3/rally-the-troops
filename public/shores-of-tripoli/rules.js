@@ -1228,7 +1228,7 @@ function goto_allocate_american_hits() {
 		game.active = TR;
 		game.state = 'allocate_tr_hits';
 	} else {
-		end_naval_battle();
+		resume_naval_battle();
 	}
 }
 
@@ -1240,7 +1240,7 @@ function goto_allocate_tripolitan_hits() {
 		game.active = US;
 		game.state = 'allocate_us_hits';
 	} else {
-		end_naval_battle();
+		resume_naval_battle();
 	}
 }
 
@@ -1266,7 +1266,7 @@ states.allocate_us_hits = {
 		--game.n_us_hits;
 		if (US_FRIGATES.includes(p)) {
 			if (game.damaged.includes(p)) {
-				log("American frigate sinks!");
+				log("American frigate sinks.");
 				game.location[p] = TRIPOLITAN_SUPPLY;
 				remove_from_array(game.damaged, p);
 			} else {
@@ -1287,7 +1287,7 @@ states.allocate_us_hits = {
 			game.active = TR;
 			game.state = 'allocate_tr_hits';
 		} else {
-			end_naval_battle();
+			resume_naval_battle();
 		}
 	},
 	undo: pop_undo
@@ -1318,7 +1318,7 @@ states.allocate_tr_hits = {
 		--game.n_tr_hits;
 		if (TR_FRIGATES.includes(p)) {
 			if (game.damaged.includes(p)) {
-				log("Tripolitan frigate sinks!");
+				log("Tripolitan frigate sinks.");
 				game.location[p] = TRIPOLITAN_SUPPLY;
 				remove_from_array(game.damaged, p);
 			} else {
@@ -1341,7 +1341,7 @@ states.allocate_tr_hits = {
 			game.active = US;
 			game.state = 'allocate_us_hits';
 		} else {
-			end_naval_battle();
+			resume_naval_battle();
 		}
 	},
 	undo: pop_undo
@@ -1364,9 +1364,25 @@ function remove_damaged_frigates() {
 			move_damaged_frigate_to_year_track(p, TRIPOLITAN_SUPPLY);
 }
 
-function end_naval_battle() {
+function resume_naval_battle() {
 	delete game.the_guns_of_tripoli;
 	delete game.prebles_boys_take_aim;
+
+	if (game.active_card == ASSAULT_ON_TRIPOLI) {
+		let n_tr = count_tripolitan_frigates(game.where) + count_tripolitan_corsairs(game.where);
+		let n_us = count_american_frigates(game.where) + count_american_gunboats(game.where);
+		if (n_tr == 0) {
+			log("The Tripolitan fleet has been eliminated.");
+			return goto_land_battle();
+		}
+		if (n_us == 0) {
+			log("The American fleet has been eliminated.");
+			return goto_game_over(TR, "Assault on Tripoli failed.");
+		}
+		log("Naval battle continues...");
+		return goto_naval_battle_round();
+	}
+
 	delete game.save_active;
 
 	remove_damaged_frigates()
@@ -1380,9 +1396,6 @@ function end_naval_battle() {
 	}
 
 	switch (game.active_card) {
-	case ASSAULT_ON_TRIPOLI:
-		// TODO
-		break;
 	case TRIPOLI_ATTACKS:
 	case ALGIERS_DECLARES_WAR:
 	case MOROCCO_DECLARES_WAR:
@@ -1537,13 +1550,15 @@ function goto_land_battle_round() {
 		if (n_us_mar + n_ar_inf == 0) {
 			delete game.marine_sharpshooters;
 			delete game.lieutenant_obannon_leads_the_charge;
-			return goto_game_over("Tripolitania wins by eliminating Hamet's army!");
+			return goto_game_over(TR, "Hamet's Army has been eliminated.");
 		}
 
 		if (n_tr_inf == 0) {
 			log("Americans have captured " + SPACES[game.where] + ".");
 			delete game.marine_sharpshooters;
 			delete game.lieutenant_obannon_leads_the_charge;
+			if (game.active_card == ASSAULT_ON_TRIPOLI)
+				return goto_game_over(US, "Assault on Tripoli.");
 			return end_american_play();
 		}
 
@@ -1859,7 +1874,7 @@ states.storms = {
 			let roll = roll_d6();
 			if (roll == 6) {
 				if (!six) {
-					log("Storm " + roll + ": American frigate sinks!");
+					log("Storm " + roll + ": American frigate sinks.");
 					move_one_piece(US_FRIGATES, space, TRIPOLITAN_SUPPLY);
 					six = true;
 				} else {
@@ -2108,7 +2123,7 @@ function can_play_treaty_of_peace_and_amity() {
 }
 
 function play_treaty_of_peace_and_amity() {
-	goto_game_over(US, "United States win by playing Treaty of Peace and Amity!");
+	goto_game_over(US, "Treaty of Peace and Amity.");
 }
 
 function can_play_assault_on_tripoli() {
@@ -2121,13 +2136,13 @@ function play_assault_on_tripoli() {
 		move_all_pieces(US_MARINES, BENGHAZI_HARBOR, TRIPOLI_HARBOR);
 		move_all_pieces(AR_INFANTRY, BENGHAZI_HARBOR, TRIPOLI_HARBOR);
 	} else {
-		// force play of SEND_IN_THE_MARINES?
+		// TODO: force play of SEND_IN_THE_MARINES?
 	}
 	move_all_pieces(US_GUNBOATS, MALTA_HARBOR, TRIPOLI_HARBOR);
 	for (let space of FRIGATE_SPACES)
 		if (space != TRIPOLI_HARBOR)
 			move_all_pieces(US_FRIGATES, space, TRIPOLI_HARBOR);
-	game.state = 'assault_on_tripoli';
+	goto_naval_battle(TRIPOLI_HARBOR);
 }
 
 function can_play_naval_movement() {
@@ -2591,13 +2606,13 @@ function can_play_american_land_battle_card() {
 
 function check_gold_victory() {
 	if (game.tr.gold >= 12)
-		return goto_game_over(TR, "Tripolitania wins by acquiring twelve gold!");
+		return goto_game_over(TR, "Twelve gold.");
 	return false;
 }
 
 function check_frigate_victory() {
 	if (count_american_frigates(TRIPOLITAN_SUPPLY) >= 4)
-		return goto_game_over(TR, "Tripolitania wins by sinking four American frigates!");
+		return goto_game_over(TR, "Four American frigates sunk.");
 	return false;
 }
 
@@ -2608,7 +2623,12 @@ function goto_game_over(result, message) {
 	game.state = 'game_over';
 	game.active = "None";
 	game.result = result;
-	game.victory = message;
+	if (result == TR)
+		game.victory = "Tripolitan victory: " + message;
+	else if (result == US)
+		game.victory = "United States victory: " + message;
+	else
+		game.victory = message;
 	return true;
 }
 

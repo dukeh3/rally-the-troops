@@ -1,38 +1,4 @@
 "use strict";
-// Tribute Paid
-
-// RULES QUESTIONS:
-
-// A Show of Force -- can play with fewer than 3 available frigates?
-// Burn the Philadelphia and others -- damaged frigates in 1806, to supply or virtual 1807 box?
-// General Eaton Attacks Derne/Benghazi -- should American gunboats participate?
-// Bainbridge Supplies Intel -- can you play it to pick up itself in order to pass without spending cards?
-// Assault on Tripoli -- can you play if benghazi not captured and no send in the marines?
-
-// Battle Card timing:
-
-// us: before interception roll
-// tr: after interception roll
-// tr: before pirate raid
-// tr: after pirate raid
-
-// us: before naval battle
-// tr: before naval battle
-// us: before land battle
-// tr: before land battle
-
-// us: own reaction: burn the philadelphia
-// us: own reaction: launch the intrepid
-// us: own reaction: assault on tripoli
-// tr: own reaction: philadelphia runs aground
-
-// BATTLE CARDS HANDLED:
-// US: THE_DARING_STEPHEN_DECATUR
-// TR: UNCHARTED_WATERS
-// US: LIEUTENANT_STERETT_IN_PURSUIT
-// TR: US_SIGNAL_BOOKS_OVERBOARD
-// TR: HAPPY_HUNTING
-// TR: MERCHANT_SHIP_CONVERTED
 
 const US = "United States";
 const TR = "Tripolitania";
@@ -279,12 +245,6 @@ const REMOVE_AFTER_PLAY = [
 	LAUNCH_THE_INTREPID,
 	GENERAL_EATON_ATTACKS_DERNE,
 	GENERAL_EATON_ATTACKS_BENGHAZI,
-	LIEUTENANT_STERETT_IN_PURSUIT,
-	PREBLES_BOYS_TAKE_AIM,
-	THE_DARING_STEPHEN_DECATUR,
-	SEND_IN_THE_MARINES,
-	LIEUTENANT_OBANNON_LEADS_THE_CHARGE,
-	MARINE_SHARPSHOOTERS,
 	YUSUF_QARAMANLI,
 	MURAD_REIS_BREAKS_OUT,
 	CONSTANTINOPLE_SENDS_AID,
@@ -294,12 +254,6 @@ const REMOVE_AFTER_PLAY = [
 	ALGIERS_DECLARES_WAR,
 	MOROCCO_DECLARES_WAR,
 	TUNIS_DECLARES_WAR,
-	US_SIGNAL_BOOKS_OVERBOARD,
-	UNCHARTED_WATERS,
-	MERCHANT_SHIP_CONVERTED,
-	HAPPY_HUNTING,
-	THE_GUNS_OF_TRIPOLI,
-	MERCENARIES_DESERT,
 ];
 
 const states = {};
@@ -404,7 +358,7 @@ function discard_random_card(hand, discard) {
 	return c;
 }
 
-function is_card_unplayed(card) {
+function is_not_removed(card) {
 	return game.us.hand.includes(card) ||
 		game.us.deck.includes(card) ||
 		game.us.discard.includes(card) ||
@@ -467,37 +421,37 @@ function move_all_pieces(list, from, to) {
 	}
 }
 
-function fire_3(what, n) {
+function fire_3(what, n, hit_on = 6) {
 	let hits = 0;
 	for (let i = 0; i < n; ++i) {
 		let a = roll_d6();
 		let b = roll_d6();
 		let c = roll_d6();
-		if (a == 6) ++hits;
-		if (b == 6) ++hits;
-		if (c == 6) ++hits;
+		if (a >= hit_on) ++hits;
+		if (b >= hit_on) ++hits;
+		if (c >= hit_on) ++hits;
 		log(what + " fires " + a + ", " + b + ", " + c + ".");
 	}
 	return hits;
 }
 
-function fire_2(what, n) {
+function fire_2(what, n, hit_on = 6) {
 	let hits = 0;
 	for (let i = 0; i < n; ++i) {
 		let a = roll_d6();
 		let b = roll_d6();
-		if (a == 6) ++hits;
-		if (b == 6) ++hits;
+		if (a >= hit_on) ++hits;
+		if (b >= hit_on) ++hits;
 		log(what + " fires " + a + ", " + b + ".");
 	}
 	return hits;
 }
 
-function fire_1(what, n) {
+function fire_1(what, n, hit_on = 6) {
 	let hits = 0;
 	for (let i = 0; i < n; ++i) {
 		let roll = roll_d6();
-		if (roll == 6) ++hits;
+		if (roll >= hit_on) ++hits;
 		log(what + " fires " + roll + ".");
 	}
 	return hits;
@@ -868,12 +822,10 @@ function take_gold(n) {
 
 function goto_pirate_raid(harbor, patrol_zone) {
 	game.where = patrol_zone;
-	if (count_american_frigates(patrol_zone) > 0) {
-		if (is_card_unplayed(LIEUTENANT_STERETT_IN_PURSUIT)) {
-			game.active = US;
-			game.state = 'raid_before_intercept';
-			return;
-		}
+	if (can_play_lieutenant_sterett_in_pursuit()) {
+		game.active = US;
+		game.state = 'raid_before_intercept';
+		return;
 	}
 	goto_pirate_raid_intercept();
 }
@@ -884,9 +836,8 @@ states.raid_before_intercept = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
-		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT)) {
+		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
 			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -904,43 +855,31 @@ function goto_pirate_raid_intercept(us_dice) {
 	let patrol_zone = game.where;
 	let harbor = HARBOR[patrol_zone];
 	interception_roll(harbor, patrol_zone, us_dice);
-	if (count_corsairs(harbor) > 0) {
-		if (is_card_unplayed(HAPPY_HUNTING)) {
-			game.state = 'raid_before_hunt';
-			return;
-		}
+	if (can_play_happy_hunting(harbor)) {
+		game.state = 'raid_before_hunt';
+		return;
 	}
-	if (count_american_frigates(patrol_zone) > 0) {
-		if (is_card_unplayed(US_SIGNAL_BOOKS_OVERBOARD)) {
-			game.state = 'raid_before_hunt';
-			return;
-		}
+	if (can_play_us_signal_books_overboard(patrol_zone)) {
+		game.state = 'raid_before_hunt';
+		return;
 	}
 	goto_pirate_raid_hunt();
 }
 
 states.raid_before_hunt = {
 	prompt: function (view, current) {
-		let patrol_zone = game.where;
-		let harbor = HARBOR[patrol_zone];
 		view.prompt = "Pirate Raid in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
-		if (count_corsairs(harbor) > 0) {
-			if (is_card_unplayed(HAPPY_HUNTING)) {
-				view.prompt += " You may play \"Happy Hunting\".";
-				if (game.tr.hand.includes(HAPPY_HUNTING)) {
-					gen_action(view, 'card_event', HAPPY_HUNTING);
-				}
-			}
+		if (can_play_happy_hunting()) {
+			view.prompt += " You may play \"Happy Hunting\".";
+			if (game.tr.hand.includes(HAPPY_HUNTING))
+				gen_action(view, 'card_event', HAPPY_HUNTING);
 		}
-		if (count_american_frigates(patrol_zone) > 0) {
-			if (is_card_unplayed(US_SIGNAL_BOOKS_OVERBOARD)) {
-				view.prompt += " You may play \"US Signal Books Overboard\".";
-				if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD)) {
-					gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
-				}
-			}
+		if (can_play_us_signal_books_overboard()) {
+			view.prompt += " You may play \"US Signal Books Overboard\".";
+			if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD))
+				gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
 		}
 		gen_action(view, 'next');
 	},
@@ -972,11 +911,9 @@ function goto_pirate_raid_hunt(happy_hunting) {
 	give_gold(merchants);
 	if (check_gold_victory())
 		return;
-	if (merchants > 0 && count_tripolitan_corsairs(TRIPOLITAN_SUPPLY) > 0) {
-		if (is_card_unplayed(MERCHANT_SHIP_CONVERTED)) {
-			game.state = 'raid_after_hunt';
-			return;
-		}
+	if (can_play_merchant_ship_converted(merchants)) {
+		game.state = 'raid_after_hunt';
+		return;
 	}
 	end_pirate_raid();
 }
@@ -987,9 +924,8 @@ states.raid_after_hunt = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Merchant Ship Converted\".";
-		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED)) {
+		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED))
 			gen_action(view, 'card_event', MERCHANT_SHIP_CONVERTED);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -1092,7 +1028,7 @@ states.move_us_frigate_to = {
 
 function goto_allocate_gunboats() {
 	if (count_american_gunboats(MALTA_HARBOR) == 0)
-		return goto_select_combat();
+		return goto_select_battle();
 	game.where = MALTA_HARBOR;
 	game.state = 'allocate_gunboats';
 }
@@ -1117,24 +1053,24 @@ states.allocate_gunboats = {
 	},
 	next: function () {
 		game.where = null;
-		goto_select_combat();
+		goto_select_battle();
 	},
 	undo: pop_undo
 }
 
-function goto_select_combat() {
+function goto_select_battle() {
 	clear_undo();
 	game.where = null;
 	game.active = US;
 	if (count_naval_battle_or_bombardment_locations() > 0)
-		game.state = 'select_combat';
+		game.state = 'select_battle';
 	else
 		end_american_play();
 }
 
-states.select_combat = {
+states.select_battle = {
 	prompt: function (view, current) {
-		view.prompt = "United States: Pick the next naval combat or bombardment."
+		view.prompt = "United States: Pick the next naval battle or bombardment."
 		if (is_inactive_player(current))
 			return view.prompt;
 		for (let space of BATTLE_SPACES)
@@ -1153,7 +1089,6 @@ states.select_combat = {
 
 function goto_naval_bombardment(space) {
 	game.where = space;
-	log("Naval bombardment in " + SPACES[game.where] + ".");
 	naval_bombardment_round();
 	end_naval_bombardment();
 }
@@ -1161,23 +1096,24 @@ function goto_naval_bombardment(space) {
 function naval_bombardment_round() {
 	let n_frigates = count_american_frigates(game.where);
 	let n_gunboats = count_american_gunboats(game.where);
-	let n_infantry = count_tripolitan_infantry(game.where);
-
-	let n_hits = 0;
-	n_hits += fire_2("American frigate", n_frigates);
-	n_hits += fire_1("American gunboat", n_gunboats);
-	if (n_hits > n_infantry)
-		n_hits = n_infantry;
-
-	log(n_hits + " Tripolitan infantry eliminated.");
-	for (let i = 0; i < n_hits; ++i)
-		move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
+	if (n_frigates + n_gunboats > 0) {
+		let n_infantry = count_tripolitan_infantry(game.where);
+		let n_hits = 0;
+		log("Naval Bombardment in " + SPACES[game.where] + ".");
+		n_hits += fire_2("American frigate", n_frigates);
+		n_hits += fire_1("American gunboat", n_gunboats);
+		if (n_hits > n_infantry)
+			n_hits = n_infantry;
+		log(n_hits + " Tripolitan infantry eliminated.");
+		for (let i = 0; i < n_hits; ++i)
+			move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
+	}
 }
 
 function end_naval_bombardment() {
 	move_all_pieces(US_FRIGATES, game.where, MALTA_HARBOR);
 	move_all_pieces(US_GUNBOATS, game.where, MALTA_HARBOR);
-	goto_select_combat();
+	goto_select_battle();
 }
 
 // NAVAL BATTLE
@@ -1191,12 +1127,10 @@ function goto_naval_battle(space) {
 
 function goto_naval_battle_american_card() {
 	game.prebles_boys_take_aim = false;
-	if (BATTLE_SPACES.includes(game.where)) {
-		if (is_card_unplayed(PREBLES_BOYS_TAKE_AIM)) {
-			game.active = US;
-			game.state = 'naval_battle_american_card';
-			return;
-		}
+	if (can_play_prebles_boys_take_aim()) {
+		game.active = US;
+		game.state = 'naval_battle_american_card';
+		return;
 	}
 	goto_naval_battle_tripolitan_card();
 }
@@ -1207,9 +1141,8 @@ states.naval_battle_american_card = {
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"Preble's Boys Take Aim\".";
-		if (game.us.hand.includes(PREBLES_BOYS_TAKE_AIM)) {
+		if (game.us.hand.includes(PREBLES_BOYS_TAKE_AIM))
 			gen_action(view, 'card_event', PREBLES_BOYS_TAKE_AIM);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -1224,13 +1157,10 @@ states.naval_battle_american_card = {
 
 function goto_naval_battle_tripolitan_card() {
 	game.the_guns_of_tripoli = false;
-	if (game.where == TRIPOLI_HARBOR) {
-		if (is_card_unplayed(THE_GUNS_OF_TRIPOLI)) {
-			game.save_active = game.active;
-			game.active = TR;
-			game.state = 'naval_battle_tripolitan_card';
-			return;
-		}
+	if (can_play_the_guns_of_tripoli()) {
+		game.active = TR;
+		game.state = 'naval_battle_tripolitan_card';
+		return;
 	}
 	goto_naval_battle_round();
 }
@@ -1241,9 +1171,8 @@ states.naval_battle_tripolitan_card = {
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"The Guns of Tripoli\".";
-		if (game.tr.hand.includes(THE_GUNS_OF_TRIPOLI)) {
+		if (game.tr.hand.includes(THE_GUNS_OF_TRIPOLI))
 			gen_action(view, 'card_event', THE_GUNS_OF_TRIPOLI);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -1461,14 +1390,14 @@ function end_naval_battle() {
 		end_tripolitan_play();
 		break;
 	default:
-		goto_select_combat();
+		goto_select_battle();
 		break;
 	}
 }
 
-// GROUND COMBAT
+// LAND BATTLE
 
-states.ground_combat_move_frigates = {
+states.land_battle_move_frigates = {
 	prompt: function (view, current) {
 		view.prompt = "United States: " + CARD_NAMES[game.active_card] + ".";
 		if (is_inactive_player(current))
@@ -1491,15 +1420,157 @@ states.ground_combat_move_frigates = {
 	next: function () {
 		let n = count_american_frigates(game.where);
 		log(n + " American frigates move to " + SPACES[game.where] + ".");
-		goto_ground_combat_bombard();
+		goto_land_battle();
 	},
 	undo: pop_undo
 }
 
-function goto_ground_combat_bombard() {
+function goto_land_battle() {
 	naval_bombardment_round();
-	// TODO: play battle events
-	goto_ground_combat_round();
+
+	log("Land Battle in " + SPACES[game.where] + ".");
+
+	goto_land_battle_american_card();
+}
+
+function goto_land_battle_american_card() {
+	game.marine_sharpshooters = false;
+	game.lieutenant_obannon_leads_the_charge = false;
+	if (can_play_american_land_battle_card()) {
+		game.active = US;
+		game.state = 'land_battle_american_card';
+	} else {
+		goto_land_battle_tripolitan_card();
+	}
+}
+
+states.land_battle_american_card = {
+	prompt: function (view, current) {
+		view.prompt = "Land Battle in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return;
+		let options = [];
+		if (can_play_send_in_the_marines()) {
+			options.push("\"Send in the Marines\"");
+			if (game.us.hand.includes(SEND_IN_THE_MARINES))
+				gen_action(view, 'card_event', SEND_IN_THE_MARINES);
+		}
+		if (can_play_marine_sharpshooters()) {
+			options.push("\"Marine Sharpshooters\"");
+			if (game.us.hand.includes(MARINE_SHARPSHOOTERS))
+				gen_action(view, 'card_event', MARINE_SHARPSHOOTERS);
+		}
+		if (can_play_lieutenant_obannon_leads_the_charge()) {
+			options.push("\"Lieutenant O'Bannon Leads the Charge\"");
+			if (game.us.hand.includes(LIEUTENANT_OBANNON_LEADS_THE_CHARGE))
+				gen_action(view, 'card_event', LIEUTENANT_OBANNON_LEADS_THE_CHARGE);
+		}
+		view.prompt += " You may play " + options.join(", ") + ".";
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, card);
+		switch (card) {
+		case SEND_IN_THE_MARINES:
+			move_one_piece(US_MARINES, UNITED_STATES_SUPPLY, TRIPOLI_HARBOR);
+			move_one_piece(US_MARINES, UNITED_STATES_SUPPLY, TRIPOLI_HARBOR);
+			move_one_piece(US_MARINES, UNITED_STATES_SUPPLY, TRIPOLI_HARBOR);
+			break;
+		case MARINE_SHARPSHOOTERS:
+			game.marine_sharpshooters = true;
+			break;
+		case LIEUTENANT_OBANNON_LEADS_THE_CHARGE:
+			game.lieutenant_obannon_leads_the_charge = true;
+			break;
+		}
+		if (!can_play_american_land_battle_card())
+			goto_land_battle_tripolitan_card();
+	},
+	next: function (card) {
+		goto_land_battle_tripolitan_card();
+	},
+}
+
+function goto_land_battle_tripolitan_card() {
+	if (can_play_mercenaries_desert()) {
+		game.active = TR;
+		game.state = 'land_battle_tripolitan_card';
+	} else {
+		goto_land_battle_round();
+	}
+}
+
+states.land_battle_tripolitan_card = {
+	prompt: function (view, current) {
+		view.prompt = "Land Battle in " + SPACES[game.where] + ".";
+		if (is_inactive_player(current))
+			return;
+		view.prompt += " You may play \"Mercenaries Desert\".";
+		if (game.tr.hand.includes(MERCENARIES_DESERT))
+			gen_action(view, 'card_event', MERCENARIES_DESERT);
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.tr, MERCENARIES_DESERT);
+		let n = count_arab_infantry(game.where);
+		for (let i = 0; i < n; ++i) {
+			let roll = roll_d6();
+			log("Arab infantry rolls " + roll + ".");
+			if (roll == 6)
+				move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
+		}
+		log("Deserters: " + (n - count_arab_infantry(game.where)) + ".");
+		goto_land_battle_round();
+	},
+	next: function (card) {
+		goto_land_battle_round();
+	},
+}
+
+function goto_land_battle_round() {
+	game.active = US;
+	for (;;) {
+		let n_us_mar = count_american_marines(game.where);
+		let n_ar_inf = count_arab_infantry(game.where);
+		let n_tr_inf = count_tripolitan_infantry(game.where);
+
+		if (n_us_mar + n_ar_inf == 0) {
+			delete game.marine_sharpshooters;
+			delete game.lieutenant_obannon_leads_the_charge;
+			return goto_game_over("Tripolitania wins by eliminating Hamet's army!");
+		}
+
+		if (n_tr_inf == 0) {
+			log("Americans have captured " + SPACES[game.where] + ".");
+			delete game.marine_sharpshooters;
+			delete game.lieutenant_obannon_leads_the_charge;
+			return end_american_play();
+		}
+
+		log("Land battle round.");
+
+		let n_tr_hits = 0;
+		if (game.lieutenant_obannon_leads_the_charge && n_us_mar > 0) {
+			if (game.marine_sharpshooters) {
+				n_tr_hits += fire_3("O'Bannon", 1, 5);
+				n_tr_hits += fire_1("American marine", n_us_mar - 1, 5);
+			} else {
+				n_tr_hits += fire_3("O'Bannon", 1, 6);
+				n_tr_hits += fire_1("American marine", n_us_mar - 1, 6);
+			}
+		} else {
+			if (game.marine_sharpshooters)
+				n_tr_hits += fire_1("American marine", n_us_mar, 5);
+			else
+				n_tr_hits += fire_1("American marine", n_us_mar, 6);
+		}
+		n_tr_hits += fire_1("Arab infantry", n_ar_inf);
+
+		let n_us_hits = fire_1("Tripolitan infantry", n_tr_inf);
+
+		apply_tr_hits(n_tr_hits);
+		apply_us_hits(n_us_hits);
+	}
 }
 
 function apply_tr_hits(n) {
@@ -1529,33 +1600,6 @@ function apply_us_hits(total) {
 	log(n + " American marines eliminated.");
 	for (let i = 0; i < n; ++i)
 		move_one_piece(US_MARINES, game.where, UNITED_STATES_SUPPLY);
-}
-
-function goto_ground_combat_round() {
-	for (;;) {
-		let n_us_mar = count_american_marines(game.where);
-		let n_ar_inf = count_arab_infantry(game.where);
-		let n_tr_inf = count_tripolitan_infantry(game.where);
-
-		if (n_us_mar + n_ar_inf == 0)
-			return goto_game_over("Tripolitania wins by eliminating Hamet's army!");
-
-		if (n_tr_inf == 0) {
-			log("Americans have captured " + SPACES[game.where] + ".");
-			return end_american_play();
-		}
-
-		log("Ground battle round.");
-
-		let n_tr_hits = 0;
-		n_tr_hits += fire_1("American marine", n_us_mar);
-		n_tr_hits += fire_1("Arab infantry", n_ar_inf);
-
-		let n_us_hits = fire_1("Tripolitan infantry", n_tr_inf);
-
-		apply_tr_hits(n_tr_hits);
-		apply_us_hits(n_us_hits);
-	}
 }
 
 // ASSAULT ON TRIPOLI
@@ -1645,6 +1689,7 @@ function play_yusuf_qaramanli() {
 }
 
 function resume_yusuf_qaramanli() {
+	game.where = null;
 	if (game.raids.length > 0)
 		game.state = 'yusuf_qaramanli';
 	else
@@ -1876,7 +1921,10 @@ function can_play_the_philadelphia_runs_aground() {
 }
 
 function play_the_philadelphia_runs_aground() {
-	game.state = 'the_philadelphia_runs_aground';
+	if (can_play_uncharted_waters())
+		game.state = 'the_philadelphia_runs_aground';
+	else
+		end_the_philadelphia_runs_aground(false);
 }
 
 states.the_philadelphia_runs_aground = {
@@ -1885,9 +1933,8 @@ states.the_philadelphia_runs_aground = {
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"Uncharted Waters\".";
-		if (game.tr.hand.includes(UNCHARTED_WATERS)) {
+		if (game.tr.hand.includes(UNCHARTED_WATERS))
 			gen_action(view, 'card_event', UNCHARTED_WATERS);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -2326,7 +2373,10 @@ function can_play_burn_the_philadelphia() {
 }
 
 function play_burn_the_philadelphia() {
-	game.state = 'burn_the_philadelphia';
+	if (can_play_the_daring_stephen_decatur())
+		game.state = 'burn_the_philadelphia';
+	else
+		end_burn_the_philadelphia(false);
 }
 
 states.burn_the_philadelphia = {
@@ -2335,9 +2385,8 @@ states.burn_the_philadelphia = {
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"The Daring Stephen Decatur\".";
-		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR)) {
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -2384,7 +2433,10 @@ function can_play_launch_the_intrepid() {
 }
 
 function play_launch_the_intrepid() {
-	game.state = 'launch_the_intrepid';
+	if (can_play_the_daring_stephen_decatur())
+		game.state = 'launch_the_intrepid';
+	else
+		end_launch_the_intrepid(false);
 }
 
 states.launch_the_intrepid = {
@@ -2393,9 +2445,8 @@ states.launch_the_intrepid = {
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"The Daring Stephen Decatur\".";
-		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR)) {
+		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
-		}
 		gen_action(view, 'next');
 	},
 	card_event: function (card) {
@@ -2458,7 +2509,7 @@ function play_general_eaton_attacks_derne() {
 	move_all_pieces(AR_INFANTRY, ALEXANDRIA_HARBOR, DERNE_HARBOR);
 	game.where = DERNE_HARBOR;
 	game.moves = 3;
-	game.state = 'ground_combat_move_frigates';
+	game.state = 'land_battle_move_frigates';
 }
 
 function can_play_general_eaton_attacks_benghazi() {
@@ -2471,7 +2522,69 @@ function play_general_eaton_attacks_benghazi() {
 	move_all_pieces(AR_INFANTRY, DERNE_HARBOR, BENGHAZI_HARBOR);
 	game.where = BENGHAZI_HARBOR;
 	game.moves = 3;
-	game.state = 'ground_combat_move_frigates';
+	game.state = 'land_battle_move_frigates';
+}
+
+// TRIPOLITAN BATTLE EVENTS
+
+function can_play_us_signal_books_overboard() {
+	let patrol_zone = game.where;
+	return (count_american_frigates(patrol_zone) > 0) && is_not_removed(US_SIGNAL_BOOKS_OVERBOARD);
+}
+
+function can_play_uncharted_waters() {
+	return is_not_removed(UNCHARTED_WATERS);
+}
+
+function can_play_merchant_ship_converted(merchants) {
+	return (merchants > 0) &&
+		(count_tripolitan_corsairs(TRIPOLITAN_SUPPLY) > 0) &&
+		is_not_removed(MERCHANT_SHIP_CONVERTED);
+}
+
+function can_play_happy_hunting() {
+	let harbor = HARBOR[game.where];
+	return (count_corsairs(harbor) > 0) && is_not_removed(HAPPY_HUNTING);
+}
+
+function can_play_the_guns_of_tripoli() {
+	return (game.where == TRIPOLI_HARBOR) && is_not_removed(THE_GUNS_OF_TRIPOLI);
+}
+
+function can_play_mercenaries_desert() {
+	return (count_arab_infantry(game.where) > 0) && is_not_removed(MERCENARIES_DESERT);
+}
+
+// AMERICAN BATTLE EVENTS
+
+function can_play_lieutenant_sterett_in_pursuit() {
+	return (count_american_frigates(game.where) > 0) && is_not_removed(LIEUTENANT_STERETT_IN_PURSUIT);
+}
+
+function can_play_prebles_boys_take_aim() {
+	return BATTLE_SPACES.includes(game.where) && is_not_removed(PREBLES_BOYS_TAKE_AIM);
+}
+
+function can_play_the_daring_stephen_decatur() {
+	return is_not_removed(THE_DARING_STEPHEN_DECATUR);
+}
+
+function can_play_send_in_the_marines() {
+	return game.active_card == ASSAULT_ON_TRIPOLI && is_not_removed(SEND_IN_THE_MARINES);
+}
+
+function can_play_lieutenant_obannon_leads_the_charge() {
+	return (count_american_marines(game.where) > 0) && is_not_removed(LIEUTENANT_OBANNON_LEADS_THE_CHARGE);
+}
+
+function can_play_marine_sharpshooters() {
+	return (count_american_marines(game.where) > 0) && is_not_removed(MARINE_SHARPSHOOTERS);
+}
+
+function can_play_american_land_battle_card() {
+	return can_play_send_in_the_marines() ||
+		can_play_marine_sharpshooters() ||
+		can_play_lieutenant_obannon_leads_the_charge();
 }
 
 // VICTORY

@@ -1190,11 +1190,9 @@ function goto_naval_battle_round() {
 
 	let n_us_frigates = count_american_frigates(game.where);
 	let n_us_gunboats = count_american_gunboats(game.where);
-	let us_hitpoints = n_us_frigates * 2 + n_us_gunboats;
 	let n_tr_frigates = count_tripolitan_frigates(game.where);
 	let n_tr_corsairs = count_tripolitan_corsairs(game.where);
 	let n_al_corsairs = count_allied_corsairs(game.where);
-	let tr_hitpoints = n_tr_frigates * 2 + n_tr_corsairs + n_al_corsairs;
 
 	game.n_tr_hits = 0;
 	if (game.prebles_boys_take_aim)
@@ -1202,8 +1200,6 @@ function goto_naval_battle_round() {
 	else
 		game.n_tr_hits += fire_2("American frigate", n_us_frigates);
 	game.n_tr_hits += fire_1("American gunboat", n_us_gunboats);
-	if (game.n_tr_hits > tr_hitpoints)
-		game.n_tr_hits = tr_hitpoints;
 
 	game.n_us_hits = 0;
 	if (game.the_guns_of_tripoli)
@@ -1211,8 +1207,6 @@ function goto_naval_battle_round() {
 	game.n_us_hits += fire_2("Tripolitan frigate", n_tr_frigates);
 	game.n_us_hits += fire_1("Tripolitan corsair", n_tr_corsairs);
 	game.n_us_hits += fire_1("Allied corsair", n_al_corsairs);
-	if (game.n_us_hits > us_hitpoints)
-		game.n_us_hits = us_hitpoints;
 
 	if (game.active == US)
 		goto_allocate_american_hits();
@@ -1437,6 +1431,7 @@ states.land_battle_move_frigates = {
 	next: function () {
 		let n = count_american_frigates(game.where);
 		log(n + " American frigates move to " + SPACES[game.where] + ".");
+		move_all_pieces(US_GUNBOATS, MALTA_HARBOR, game.where);
 		goto_land_battle();
 	},
 	undo: pop_undo
@@ -1605,8 +1600,6 @@ function apply_tr_hits(n) {
 }
 
 function apply_us_hits(total) {
-	// TODO: let the player choose victims?
-
 	let n = total;
 	let max_ar = count_arab_infantry(game.where);
 	if (n > max_ar)
@@ -1622,18 +1615,6 @@ function apply_us_hits(total) {
 	log(n + " American marines eliminated.");
 	for (let i = 0; i < n; ++i)
 		move_one_piece(US_MARINES, game.where, UNITED_STATES_SUPPLY);
-}
-
-// ASSAULT ON TRIPOLI
-
-states.assault_on_tripoli = {
-	prompt: function (view, current) {
-		view.prompt = "United States: Assault on Tripoli.";
-		if (is_inactive_player(current))
-			return view.prompt;
-		// TODO: assault on tripoli
-	},
-	// TODO: battle event -- Send in the Marines
 }
 
 // TRIPOLITAN EVENTS
@@ -1750,7 +1731,40 @@ function can_play_murad_reis_breaks_out() {
 
 function play_murad_reis_breaks_out() {
 	log("Two Tripolitan corsairs move from Gibraltar Harbor to Tripoli Harbor.");
-	// TODO: intercept!
+	game.where = GIBRALTAR_PATROL_ZONE;
+	if (can_play_lieutenant_sterett_in_pursuit()) {
+		game.active = US;
+		game.state = 'murad_reis_breaks_out';
+	} else {
+		end_murad_reis_breaks_out();
+		move_all_pieces(TR_CORSAIRS, GIBRALTAR_HARBOR, TRIPOLI_HARBOR);
+		end_tripolitan_play();
+	}
+}
+
+states.murad_reis_breaks_out = {
+	prompt: function (view, current) {
+		view.prompt = "Murad Reis Breaks Out.";
+		if (is_inactive_player(current))
+			return view.prompt;
+		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
+		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
+			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
+		gen_action(view, 'next');
+	},
+	card_event: function (card) {
+		play_battle_card(game.us, LIEUTENANT_STERETT_IN_PURSUIT);
+		game.active = TR;
+		end_murad_reis_breaks_out(3);
+	},
+	next: function () {
+		game.active = TR;
+		end_murad_reis_breaks_out(2);
+	},
+}
+
+function end_murad_reis_breaks_out(us_dice) {
+	interception_roll(GIBRALTAR_HARBOR, GIBRALTAR_PATROL_ZONE, us_dice);
 	move_all_pieces(TR_CORSAIRS, GIBRALTAR_HARBOR, TRIPOLI_HARBOR);
 	end_tripolitan_play();
 }

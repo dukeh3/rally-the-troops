@@ -1250,6 +1250,8 @@ states.allocate_us_hits = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		gen_action_undo(view);
+		if (count_american_frigates(game.where) + count_american_gunboats(game.where) == 0)
+			gen_action(view, 'next');
 		if (game.n_us_hits > 0) {
 			for (let p of US_FRIGATES)
 				if (game.location[p] == game.where)
@@ -1299,6 +1301,8 @@ states.allocate_tr_hits = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		gen_action_undo(view);
+		if (count_tripolitan_frigates(game.where) + count_tripolitan_corsairs(game.where) + count_allied_corsairs(game.where) == 0)
+			gen_action(view, 'next');
 		if (game.n_tr_hits > 0) {
 			for (let p of TR_FRIGATES)
 				if (game.location[p] == game.where)
@@ -1332,7 +1336,7 @@ states.allocate_tr_hits = {
 		}
 		if (AL_CORSAIRS.includes(p)) {
 			log("Allied corsair sinks.");
-			move_one_piece(TR_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
+			move_one_piece(AL_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
 		}
 	},
 	next: function () {
@@ -1440,6 +1444,9 @@ states.land_battle_move_frigates = {
 
 function goto_land_battle() {
 	naval_bombardment_round();
+
+	move_all_pieces(US_FRIGATES, TRIPOLI_HARBOR, MALTA_HARBOR);
+	move_all_pieces(US_GUNBOATS, TRIPOLI_HARBOR, MALTA_HARBOR);
 
 	log("Land Battle in " + SPACES[game.where] + ".");
 
@@ -1743,6 +1750,7 @@ function can_play_murad_reis_breaks_out() {
 
 function play_murad_reis_breaks_out() {
 	log("Two Tripolitan corsairs move from Gibraltar Harbor to Tripoli Harbor.");
+	// TODO: intercept!
 	move_all_pieces(TR_CORSAIRS, GIBRALTAR_HARBOR, TRIPOLI_HARBOR);
 	end_tripolitan_play();
 }
@@ -1879,7 +1887,7 @@ states.storms = {
 					six = true;
 				} else {
 					log("Storm " + roll + ": American frigate is damaged.");
-					if (year == 1806)
+					if (game.year == 1806)
 						move_one_piece(US_FRIGATES, space, UNITED_STATES_SUPPLY);
 					else
 						move_one_piece(US_FRIGATES, space, YEAR_TURN_TRACK[game.year+1]);
@@ -1978,11 +1986,11 @@ function end_the_philadelphia_runs_aground(two) {
 		break;
 	case 3: case 4:
 		log("Frigate sunk.");
-		move_one_piece(US_FRIGATES, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
+		move_one_piece(US_FRIGATES, TRIPOLI_PATROL_ZONE, TRIPOLITAN_SUPPLY);
 		break;
 	case 5: case 6:
 		log("Frigate captured.");
-		move_one_piece(US_FRIGATES, TRIPOLI_HARBOR, TRIPOLITAN_SUPPLY);
+		move_one_piece(US_FRIGATES, TRIPOLI_PATROL_ZONE, TRIPOLITAN_SUPPLY);
 		move_one_piece(TR_FRIGATES, TRIPOLITAN_SUPPLY, TRIPOLI_HARBOR);
 		break;
 	}
@@ -2559,7 +2567,7 @@ function can_play_merchant_ship_converted(merchants) {
 
 function can_play_happy_hunting() {
 	let harbor = HARBOR[game.where];
-	return (count_corsairs(harbor) > 0) && is_not_removed(HAPPY_HUNTING);
+	return (count_tripolitan_corsairs(harbor) > 0) && is_not_removed(HAPPY_HUNTING);
 }
 
 function can_play_the_guns_of_tripoli() {
@@ -2617,8 +2625,6 @@ function check_frigate_victory() {
 }
 
 function goto_game_over(result, message) {
-	log("");
-	log(message);
 	game.where = null;
 	game.state = 'game_over';
 	game.active = "None";
@@ -2629,6 +2635,8 @@ function goto_game_over(result, message) {
 		game.victory = "United States victory: " + message;
 	else
 		game.victory = message;
+	log("");
+	log(game.victory);
 	return true;
 }
 
@@ -2667,7 +2675,7 @@ exports.setup = function (scenario, players) {
 		undo: [],
 	};
 
-	if (scenario)
+	if (scenario && scenario != "Historical")
 		game.year = scenario;
 
 	game.tr.core.push(YUSUF_QARAMANLI);

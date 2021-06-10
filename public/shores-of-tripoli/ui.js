@@ -21,7 +21,16 @@ function create_piece_list(n, name) {
 
 const US_FRIGATES = create_piece_list(8, 'us_frigate_');
 const TR_FRIGATES = create_piece_list(2, 'tr_frigate_');
+const SE_FRIGATES = create_piece_list(2, 'se_frigate_');
+const US_GUNBOATS = create_piece_list(3, 'us_gunboat_');
+const TR_CORSAIRS = create_piece_list(9, 'tr_corsair_');
+const AL_CORSAIRS = create_piece_list(9, 'al_corsair_');
+const US_MARINES = create_piece_list(4, 'us_marine_');
+const AR_INFANTRY = create_piece_list(10, 'ar_infantry_');
+const TR_INFANTRY = create_piece_list(20, 'tr_infantry_');
+
 const FRIGATES = US_FRIGATES.concat(TR_FRIGATES);
+const CORSAIRS = TR_CORSAIRS.concat(AL_CORSAIRS);
 
 const ALEXANDRIA_HARBOR = get_space_id("Alexandria Harbor");
 const ALGIERS_HARBOR = get_space_id("Algiers Harbor");
@@ -111,7 +120,29 @@ function build_map() {
 	}
 }
 
+const CARD_ACTIONS = [
+	'card_build_corsair',
+	'card_build_gunboat',
+	'card_event',
+	'card_move_frigates',
+	'card_pirate_raid',
+	'card_take',
+	'discard',
+];
+
+function is_card_enabled(c) {
+	if (game.actions)
+		for (let a of CARD_ACTIONS)
+			if (game.actions[a] && game.actions[a].includes(c))
+				return true;
+	return false;
+}
+
 function update_card(c, show) {
+	if (is_card_enabled(c))
+		ui.cards[c].classList.add('enabled');
+	else
+		ui.cards[c].classList.add('enabled');
 	if (show)
 		ui.cards[c].classList.add('show');
 	else
@@ -119,11 +150,9 @@ function update_card(c, show) {
 }
 
 function update_cards() {
-	document.getElementById("us_card_deck").textContent = game.us.deck;
-	document.getElementById("tr_card_deck").textContent = game.tr.deck;
 	for (let i = 1; i <= 3; ++i) {
-		update_card(i, game.us.core.includes(i));
-		update_card(i+27, game.tr.core.includes(i+27));
+		update_card(i, game.core.includes(i));
+		update_card(i+27, game.core.includes(i+27));
 	}
 	for (let i = 4; i <= 27; ++i) {
 		update_card(i, game.hand.includes(i));
@@ -135,20 +164,18 @@ function update_cards() {
 
 function tr_info() {
 	let text = "";
-	if (game.tr.hand == 1)
-		text += "1 card in hand";
-	else
-		text += game.tr.hand + " cards in hand";
-	text += "\n$" + game.tr.gold;
+	text += "Hand: " + game.tr.hand + "\n";
+	text += "Draw: " + game.tr.draw + "\n";
+	text += "Discard: " + game.tr.discard + "\n";
+	text += "Gold: " + game.tr.gold + "\n";
 	return text;
 }
 
 function us_info() {
 	let text = "";
-	if (game.us.hand == 1)
-		text += "1 card in hand";
-	else
-		text += game.us.hand + " cards in hand";
+	text += "Hand: " + game.us.hand + "\n";
+	text += "Draw: " + game.us.draw + "\n";
+	text += "Discard: " + game.us.discard + "\n";
 	return text;
 }
 
@@ -160,7 +187,9 @@ function on_update() {
 	document.getElementById("tr_info").textContent = tr_info();
 	document.getElementById("us_info").textContent = us_info();
 
-	if (game.card == "United States")
+	if (game.card == undefined)
+		document.getElementById("active_card").className = "card show blank";
+	else if (game.card == "United States")
 		document.getElementById("active_card").className = "card show us_card_back";
 	else if (game.card == "Tripolitania")
 		document.getElementById("active_card").className = "card show tr_card_back";
@@ -194,37 +223,67 @@ function set_piece_xy(p, x, y) {
 	e.setAttribute("y", y);
 }
 
-function layout_space(location, s, x0, y0, wrap, dx=45, dy=30) {
-	let n = 0;
-	for (let p = 0; p < PIECES.length; ++p)
-		if (location[p] == s)
-			++n;
-	let rows = Math.ceil(n / wrap);
-	let cols = rows == 1 ? n : wrap;
-	let y = y0 - (rows-1)/2 * dx;
-	let x = x0 - (cols-1)/2 * dx;
-	let k = 0;
+function layout_space(location, s, x0, y0, size) {
+	const LOUT_W = { se_f:46, us_f:46, tr_f:46, us_g:36, tr_c:36, al_c:36, us_m:28, ar_i:28, tr_i:28 };
+	const LOUT_H = { se_f:32, us_f:32, tr_f:32, us_g:28, tr_c:28, al_c:28, us_m:28, ar_i:28, tr_i:28 };
+	function lout(row, prefix) {
+		row.w = LOUT_W[prefix];
+		row.h = LOUT_H[prefix];
+		return row;
+	}
+
+	let pps = { se_f:[], us_f:[], us_g:[], us_m:[], ar_i:[], tr_f:[], tr_c:[], al_c:[], tr_i:[] };
 	for (let p = 0; p < PIECES.length; ++p) {
 		if (location[p] == s) {
-			set_piece_xy(p, x + k * dx, y);
-			if (++k == wrap) {
-				y += dy;
-				k = 0;
+			let prefix = PIECES[p].substring(0,4);
+			if (prefix == 'se_f') prefix = 'us_f';
+			if (prefix == 'al_c') prefix = 'tr_c';
+			pps[prefix].push(p);
+		}
+	}
+
+	let rows = [];
+	for (let prefix in pps) {
+		let row = pps[prefix];
+		if (row.length > 0) {
+			let wrap = (prefix == 'ar_i' || prefix == 'tr_i') ? size+1 : size;
+			if (row.length > wrap*2) {
+				rows.push(lout(row.slice(0,wrap), prefix))
+				rows.push(lout(row.slice(wrap,wrap*2), prefix))
+				rows.push(lout(row.slice(wrap*2), prefix))
+			} else if (row.length > wrap) {
+				rows.push(lout(row.slice(0,wrap), prefix))
+				rows.push(lout(row.slice(wrap), prefix))
+			} else {
+				rows.push(lout(row, prefix));
 			}
 		}
+	}
+
+	let h = rows.reduce((acc, row) => acc + row.h, 0);
+	let y = y0 - h / 2;
+	for (let r = 0; r < rows.length; ++r) {
+		let row = rows[r];
+		let w = row.w * row.length;
+		let x = x0 - w / 2 + row.w/2;
+		for (let c = 0; c < row.length; ++c) {
+			let p = row[c];
+			set_piece_xy(p, x + c * row.w, y + row.h/2);
+		}
+		y += row.h;
 	}
 }
 
 function update_pieces() {
-	layout_space(game.location, UNITED_STATES_SUPPLY, 1933, 180, 6, 38, 26);
-	layout_space(game.location, TRIPOLITAN_SUPPLY, 2195, 180, 6, 38, 26);
+	layout_space(game.location, UNITED_STATES_SUPPLY, 1933, 180, 6);
+	layout_space(game.location, TRIPOLITAN_SUPPLY, 2195, 180, 6);
 
-	layout_space(game.location, TRACK_1801, YEAR_X[1801], 625, 1);
-	layout_space(game.location, TRACK_1802, YEAR_X[1802], 625, 1);
-	layout_space(game.location, TRACK_1803, YEAR_X[1803], 625, 1);
-	layout_space(game.location, TRACK_1804, YEAR_X[1804], 625, 1);
-	layout_space(game.location, TRACK_1805, YEAR_X[1805], 625, 1);
-	layout_space(game.location, TRACK_1806, YEAR_X[1806], 625, 1);
+	layout_space(game.location, TRACK_1801, YEAR_X[1801], 625, 2);
+	layout_space(game.location, TRACK_1802, YEAR_X[1802], 625, 2);
+	layout_space(game.location, TRACK_1803, YEAR_X[1803], 625, 2);
+	layout_space(game.location, TRACK_1804, YEAR_X[1804], 625, 2);
+	layout_space(game.location, TRACK_1805, YEAR_X[1805], 625, 2);
+	layout_space(game.location, TRACK_1806, YEAR_X[1806], 625, 2);
 
 	layout_space(game.location, ALEXANDRIA_HARBOR, 2335, 454, 3);
 	layout_space(game.location, ALGIERS_HARBOR, 883, 318, 3);
@@ -233,13 +292,13 @@ function update_pieces() {
 	layout_space(game.location, GIBRALTAR_HARBOR, 374, 216, 3);
 	layout_space(game.location, MALTA_HARBOR, 1592, 189, 3);
 	layout_space(game.location, TANGIER_HARBOR, 296, 426, 3);
-	layout_space(game.location, TRIPOLI_HARBOR, 1416, 604, 4);
+	layout_space(game.location, TRIPOLI_HARBOR, 1416, 604, 5);
 	layout_space(game.location, TUNIS_HARBOR, 1232, 278, 3);
 
 	layout_space(game.location, ALGIERS_PATROL_ZONE, 875, 170, 3);
 	layout_space(game.location, GIBRALTAR_PATROL_ZONE, 560, 245, 3);
 	layout_space(game.location, TANGIER_PATROL_ZONE, 125, 410, 3);
-	layout_space(game.location, TRIPOLI_PATROL_ZONE, 1575, 390, 6);
+	layout_space(game.location, TRIPOLI_PATROL_ZONE, 1575, 420, 5);
 	layout_space(game.location, TUNIS_PATROL_ZONE, 1300, 130, 3);
 
 	for (let p of FRIGATES) {
@@ -247,6 +306,13 @@ function update_pieces() {
 			ui.pieces[p].classList.add("damaged");
 		else
 			ui.pieces[p].classList.remove("damaged");
+	}
+
+	for (let p = 0; p < PIECES.length; ++p) {
+		if (game.actions && game.actions.piece && game.actions.piece.includes(p))
+			ui.pieces[p].classList.add("highlight");
+		else
+			ui.pieces[p].classList.remove("highlight");
 	}
 }
 
@@ -260,7 +326,6 @@ function update_spaces() {
 	}
 	if (game.actions && game.actions.space) {
 		for (let space of game.actions.space) {
-			console.log("enable space " + space);
 			ui.spaces[space].classList.add('highlight');
 		}
 	}

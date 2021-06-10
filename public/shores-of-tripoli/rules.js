@@ -330,23 +330,16 @@ function roll_d6() {
 	return Math.floor(Math.random() * 6) + 1;
 }
 
-function reset_deck() {
-	let deck = [];
-	for (let c = 1; c <= 27; ++c)
-		deck.push(c);
-	return deck;
-}
-
-function reshuffle_discard(deck, discard) {
+function reshuffle_discard(draw, discard) {
 	while (discard.length > 0)
-		deck.push(discard.pop());
+		draw.push(discard.pop());
 }
 
-function draw_cards(hand, deck, n) {
+function draw_cards(hand, draw, n) {
 	for (let i = 0; i < n; ++i) {
-		let c = Math.floor(Math.random() * deck.length);
-		hand.push(deck[c]);
-		deck.splice(c, 1);
+		let c = Math.floor(Math.random() * draw.length);
+		hand.push(draw[c]);
+		draw.splice(c, 1);
 	}
 }
 
@@ -360,10 +353,10 @@ function discard_random_card(hand, discard) {
 
 function is_not_removed(card) {
 	return game.us.hand.includes(card) ||
-		game.us.deck.includes(card) ||
+		game.us.draw.includes(card) ||
 		game.us.discard.includes(card) ||
 		game.tr.hand.includes(card) ||
-		game.tr.deck.includes(card) ||
+		game.tr.draw.includes(card) ||
 		game.tr.discard.includes(card);
 }
 
@@ -389,7 +382,9 @@ function play_card(player, card) {
 	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
 	remove_from_array(player.core, card);
 	remove_from_array(player.hand, card);
-	if (!REMOVE_AFTER_PLAY.includes(card))
+	if (REMOVE_AFTER_PLAY.includes(card))
+		game.removed.push(card);
+	else
 		player.discard.push(card);
 	game.active_card = card;
 }
@@ -398,6 +393,7 @@ function play_battle_card(player, card) {
 	log("");
 	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
 	remove_from_array(player.hand, card);
+	game.removed.push(card);
 }
 
 function deploy(piece_name, space) {
@@ -610,18 +606,18 @@ function start_of_year() {
 	move_all_pieces(TR_FRIGATES, YEAR_TURN_TRACK[game.year], TRIPOLI_HARBOR);
 
 	if (game.year <= 1804) {
-		draw_cards(game.us.hand, game.us.deck, 6);
-		draw_cards(game.tr.hand, game.tr.deck, 6);
+		draw_cards(game.us.hand, game.us.draw, 6);
+		draw_cards(game.tr.hand, game.tr.draw, 6);
 	}
 	if (game.year == 1805) {
-		reshuffle_discard(game.us.deck, game.us.discard);
-		draw_cards(game.us.hand, game.us.deck, 6);
-		reshuffle_discard(game.tr.deck, game.tr.discard);
-		draw_cards(game.tr.hand, game.tr.deck, 6);
+		reshuffle_discard(game.us.draw, game.us.discard);
+		draw_cards(game.us.hand, game.us.draw, 6);
+		reshuffle_discard(game.tr.draw, game.tr.discard);
+		draw_cards(game.tr.hand, game.tr.draw, 6);
 	}
 	if (game.year == 1806) {
-		draw_cards(game.us.hand, game.us.deck, game.us.deck.length);
-		draw_cards(game.tr.hand, game.tr.deck, game.tr.deck.length);
+		draw_cards(game.us.hand, game.us.draw, game.us.draw.length);
+		draw_cards(game.tr.hand, game.tr.draw, game.tr.draw.length);
 	}
 
 	goto_american_discard();
@@ -654,7 +650,8 @@ states.american_discard = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "American hand limit.";
-		view.prompt = "American hand limit: discard down to eight cards in hand.";
+		let n = game.us.hand.length - 8;
+		view.prompt = "American hand limit: discard " + n + " cards.";
 		gen_action_undo(view);
 		if (game.us.hand.length > 8) {
 			for (let c of game.us.hand)
@@ -679,7 +676,8 @@ states.tripolitan_discard = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Tripolitan hand limit.";
-		view.prompt = "Tripolitan hand limit: discard down to eight cards in hand.";
+		let n = game.tr.hand.length - 8;
+		view.prompt = "Tripolitan hand limit: discard " + n + " cards.";
 		gen_action_undo(view);
 		if (game.tr.hand.length > 8) {
 			for (let c of game.tr.hand)
@@ -852,18 +850,14 @@ states.raid_before_intercept = {
 }
 
 function goto_pirate_raid_intercept(us_dice) {
+	game.happy_hunting = false;
 	let patrol_zone = game.where;
 	let harbor = HARBOR[patrol_zone];
 	interception_roll(harbor, patrol_zone, us_dice);
-	if (can_play_happy_hunting(harbor)) {
+	if (can_play_happy_hunting(harbor) || can_play_us_signal_books_overboard(patrol_zone))
 		game.state = 'raid_before_hunt';
-		return;
-	}
-	if (can_play_us_signal_books_overboard(patrol_zone)) {
-		game.state = 'raid_before_hunt';
-		return;
-	}
-	goto_pirate_raid_hunt();
+	else
+		goto_pirate_raid_hunt();
 }
 
 states.raid_before_hunt = {
@@ -888,25 +882,26 @@ states.raid_before_hunt = {
 		if (card == US_SIGNAL_BOOKS_OVERBOARD) {
 			let c = discard_random_card(game.us.hand, game.us.discard);
 			log("United States discards \"" + CARD_NAMES[c] + "\".");
-			// allow playing happy hunting too!
 		}
 		if (card == HAPPY_HUNTING) {
-			// TODO: allow play of Happy Hunting before US Signal Books Overboard
-			return goto_pirate_raid_hunt(true);
+			game.happy_hunting = true;
 		}
+		if (!can_play_happy_hunting() && !can_play_us_signal_books_overboard())
+			goto_pirate_raid_hunt();
 	},
 	next: function () {
-		goto_pirate_raid_hunt(false);
+		goto_pirate_raid_hunt();
 	},
 }
 
-function goto_pirate_raid_hunt(happy_hunting) {
+function goto_pirate_raid_hunt() {
 	let patrol_zone = game.where;
 	let harbor = HARBOR[patrol_zone];
 	let corsairs = count_corsairs(harbor);
 	let merchants = capture("Corsair", corsairs);
-	if (happy_hunting)
+	if (game.happy_hunting)
 		merchants += capture("Happy Hunting", 3);
+	delete game.happy_hunting;
 	log("Merchant ships captured: " + merchants + ".");
 	give_gold(merchants);
 	if (check_gold_victory())
@@ -967,23 +962,20 @@ function interception_roll(harbor, patrol_zone, us_dice) {
 }
 
 // AMERICAN NAVAL MOVEMENT
-// TODO: click 'from' location to go back to selecting source?
-// TODO: select multiple frigates then destination?
 
 function goto_move_up_to_n_american_frigates(n) {
 	game.moves = n;
 	game.active = US;
 	game.state = 'move_us_frigate_from';
-	push_undo();
 }
 
 states.move_us_frigate_from = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
-		view.prompt = "United States: Move up to " + game.moves + " frigates."
+			return view.prompt = "United States: Naval Movement.";
+		view.prompt = "United States: Naval Movement. " + game.moves + " moves left.";
 		if (game.moves > 0) {
-			view.prompt += " Select a frigate to move.";
+			view.prompt += " Select an origin.";
 			for (let space of FRIGATE_SPACES) {
 				if (count_american_frigates(space) > 0)
 					gen_action(view, 'space', space);
@@ -1009,19 +1001,30 @@ states.move_us_frigate_from = {
 states.move_us_frigate_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "United States: Move up to " + game.moves + " frigates.";
-		view.prompt = "United States: Move up to " + game.moves + " frigates. Select a destination.";
+			return view.prompt = "United States: Naval Movement.";
+		view.prompt = "United States: Naval Movement. " + game.moves + " moves left. Select a destination.";
 		for (let space of FRIGATE_SPACES)
-			if (space != game.where)
-				gen_action(view, 'space', space);
+			gen_action(view, 'space', space);
+		gen_action(view, 'next');
 		gen_action_undo(view);
 	},
 	space: function (space) {
-		log(game.active + " moves a frigate from " + SPACES[game.where] + " to " + SPACES[space] + ".");
-		move_one_piece(US_FRIGATES, game.where, space);
-		--game.moves;
+		push_undo();
+		if (space != game.where) {
+			log(game.active + " moves a frigate from " + SPACES[game.where] + " to " + SPACES[space] + ".");
+			move_one_piece(US_FRIGATES, game.where, space);
+			--game.moves;
+			if (count_american_frigates(game.where) > 0 && game.moves > 0)
+				return;
+		}
 		game.where = null;
 		game.state = 'move_us_frigate_from'
+	},
+	next: function () {
+		if (count_naval_battle_or_bombardment_locations() > 0)
+			goto_allocate_gunboats();
+		else
+			end_american_play();
 	},
 	undo: pop_undo
 }
@@ -2402,6 +2405,7 @@ function play_corsairs_confiscated() {
 	move_all_pieces(TR_CORSAIRS, GIBRALTAR_HARBOR, TRIPOLITAN_SUPPLY);
 	log("\"Murad Reis Breaks Out\" card removed.");
 	remove_from_array(game.tr.core, MURAD_REIS_BREAKS_OUT);
+	game.removed.push(MURAD_REIS_BREAKS_OUT);
 	end_american_play();
 }
 
@@ -2675,16 +2679,17 @@ exports.setup = function (scenario, players) {
 		us: {
 			core: [],
 			hand: [],
-			deck: [],
+			draw: [],
 			discard: [],
 		},
 		tr: {
 			core: [],
 			hand: [],
-			deck: [],
+			draw: [],
 			discard: [],
 			gold: 0,
 		},
+		removed: [],
 		where: null,
 		undo: [],
 	};
@@ -2701,8 +2706,8 @@ exports.setup = function (scenario, players) {
 	game.us.core.push(HAMETS_ARMY_CREATED);
 
 	for (let i = 4; i <= 27; ++i) {
-		game.us.deck.push(i);
-		game.tr.deck.push(i+27);
+		game.us.draw.push(i);
+		game.tr.draw.push(i+27);
 	}
 
 	deploy("us_frigate_1", GIBRALTAR_HARBOR);
@@ -2798,31 +2803,35 @@ exports.view = function(state, current) {
 		actions: null,
 		tr: {
 			core: game.tr.core,
-			deck: game.tr.deck.length,
+			draw: game.tr.draw.length,
 			discard: game.tr.discard.length,
 			hand: game.tr.hand.length,
 			gold: game.tr.gold,
 		},
 		us: {
 			core: game.us.core,
-			deck: game.us.deck.length,
+			draw: game.us.draw.length,
 			discard: game.us.discard.length,
 			hand: game.us.hand.length,
 		},
 		card: game.active_card,
+		removed: game.removed,
 		where: game.where,
 	};
 
 	states[game.state].prompt(view, current);
 
-	if (current == US && game.state == 'bainbridge_supplies_intel')
+	if (current == US && game.state == 'bainbridge_supplies_intel') {
 		view.hand = game.us.discard;
-	else if (current == US)
+	} else if (current == US) {
 		view.hand = game.us.hand;
-	else if (current == TR)
+		view.core = game.us.core;
+	} else if (current == TR) {
 		view.hand = game.tr.hand;
-	else
+		view.core = game.tr.core;
+	} else {
 		view.hand = [];
+	}
 
 	return view;
 }

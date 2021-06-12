@@ -442,42 +442,6 @@ function move_all_pieces(list, from, to) {
 	}
 }
 
-function fire_3(what, n, hit_on = 6) {
-	let hits = 0;
-	for (let i = 0; i < n; ++i) {
-		let a = roll_d6();
-		let b = roll_d6();
-		let c = roll_d6();
-		if (a >= hit_on) ++hits;
-		if (b >= hit_on) ++hits;
-		if (c >= hit_on) ++hits;
-		log(what + " fires " + a + ", " + b + ", " + c + ".");
-	}
-	return hits;
-}
-
-function fire_2(what, n, hit_on = 6) {
-	let hits = 0;
-	for (let i = 0; i < n; ++i) {
-		let a = roll_d6();
-		let b = roll_d6();
-		if (a >= hit_on) ++hits;
-		if (b >= hit_on) ++hits;
-		log(what + " fires " + a + ", " + b + ".");
-	}
-	return hits;
-}
-
-function fire_1(what, n, hit_on = 6) {
-	let hits = 0;
-	for (let i = 0; i < n; ++i) {
-		let roll = roll_d6();
-		if (roll >= hit_on) ++hits;
-	}
-	log(what + " fires " + rolls.join(", ") + ".");
-	return hits;
-}
-
 function roll_many_dice(what, n, hit=6) {
 	let hits = 0;
 	if (n > 0) {
@@ -1118,11 +1082,11 @@ function naval_bombardment_round() {
 		let n_infantry = count_tripolitan_infantry(game.where);
 		let n_hits = 0;
 		log("Naval Bombardment in " + SPACES[game.where] + ".");
-		n_hits += fire_2("American frigate", n_frigates);
-		n_hits += fire_1("American gunboat", n_gunboats);
+		n_hits += roll_many_dice("American frigates:\n", n_frigates * 2, 6);
+		n_hits += roll_many_dice("American gunboats:\n", n_gunboats, 6);
 		if (n_hits > n_infantry)
 			n_hits = n_infantry;
-		log(n_hits + " Tripolitan infantry eliminated.");
+		log("Infantry eliminated: " + n_hits + ".");
 		for (let i = 0; i < n_hits; ++i)
 			move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
 	}
@@ -1214,17 +1178,20 @@ function goto_naval_battle_round() {
 
 	game.n_tr_hits = 0;
 	if (game.prebles_boys_take_aim)
-		game.n_tr_hits += fire_3("American frigate", n_us_frigates);
+		game.n_tr_hits += roll_many_dice("American frigates:\n", n_us_frigates * 3, 6);
 	else
-		game.n_tr_hits += fire_2("American frigate", n_us_frigates);
-	game.n_tr_hits += fire_1("American gunboat", n_us_gunboats);
+		game.n_tr_hits += roll_many_dice("American frigates:\n", n_us_frigates * 2, 6);
+	game.n_tr_hits += roll_many_dice("American gunboats:\n", n_us_gunboats, 6);
 
 	game.n_us_hits = 0;
 	if (game.the_guns_of_tripoli)
-		game.n_us_hits += fire_1("The Guns of Tripoli", 12);
-	game.n_us_hits += fire_2("Tripolitan frigate", n_tr_frigates);
-	game.n_us_hits += fire_1("Tripolitan corsair", n_tr_corsairs);
-	game.n_us_hits += fire_1("Allied corsair", n_al_corsairs);
+		game.n_us_hits += roll_many_dice("The Guns of Tripoli:\n", 12, 6);
+	game.n_us_hits += roll_many_dice("Tripolitan frigates:\n", n_tr_frigates * 2, 6);
+	game.n_us_hits += roll_many_dice("Tripolitan corsairs:\n", n_tr_corsairs, 6);
+	game.n_us_hits += roll_many_dice("Allied corsairs:\n", n_al_corsairs, 6);
+
+	log("United States scores " + game.n_tr_hits + (game.n_tr_hits == 1 ? " hit." : " hits."));
+	log("Tripolitania scores " + game.n_us_hits + (game.n_us_hits == 1 ? " hit." : " hits."));
 
 	if (game.active == US)
 		goto_allocate_american_hits();
@@ -1458,8 +1425,8 @@ states.land_battle_move_frigates = {
 function goto_land_battle() {
 	naval_bombardment_round();
 
-	move_all_pieces(US_FRIGATES, TRIPOLI, MALTA);
-	move_all_pieces(US_GUNBOATS, TRIPOLI, MALTA);
+	move_all_pieces(US_FRIGATES, game.where, MALTA);
+	move_all_pieces(US_GUNBOATS, game.where, MALTA);
 
 	log("Land Battle in " + SPACES[game.where] + ".");
 
@@ -1545,14 +1512,10 @@ states.land_battle_tripolitan_card = {
 	},
 	card_event: function (card) {
 		play_battle_card(game.tr, MERCENARIES_DESERT);
-		let n = count_arab_infantry(game.where);
-		for (let i = 0; i < n; ++i) {
-			let roll = roll_d6();
-			log("Arab infantry rolls " + roll + ".");
-			if (roll == 6)
-				move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
-		}
-		log("Deserters: " + (n - count_arab_infantry(game.where)) + ".");
+		let n = roll_many_dice("Mercenaries Desert:\n", count_arab_infantry(game.where), 6);;
+		for (let i = 0; i < n; ++i)
+			move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
+		log("Deserters: " + n + " Arab infantry.");
 		goto_land_battle_round();
 	},
 	next: function (card) {
@@ -1587,24 +1550,26 @@ function goto_land_battle_round() {
 		let n_tr_hits = 0;
 		if (game.lieutenant_obannon_leads_the_charge && n_us_mar > 0) {
 			if (game.marine_sharpshooters) {
-				n_tr_hits += fire_3("O'Bannon", 1, 5);
-				n_tr_hits += fire_1("American marine", n_us_mar - 1, 5);
+				n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 5);
+				n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 5);
 			} else {
-				n_tr_hits += fire_3("O'Bannon", 1, 6);
-				n_tr_hits += fire_1("American marine", n_us_mar - 1, 6);
+				n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 6);
+				n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 6);
 			}
 		} else {
 			if (game.marine_sharpshooters)
-				n_tr_hits += fire_1("American marine", n_us_mar, 5);
+				n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 5);
 			else
-				n_tr_hits += fire_1("American marine", n_us_mar, 6);
+				n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 6);
 		}
-		n_tr_hits += fire_1("Arab infantry", n_ar_inf);
+		n_tr_hits += roll_many_dice("Arab infantry: ", n_ar_inf);
 
-		let n_us_hits = fire_1("Tripolitan infantry", n_tr_inf);
+		let n_us_hits = roll_many_dice("Tripolitan infantry: ", n_tr_inf);
 
-		apply_tr_hits(n_tr_hits);
-		apply_us_hits(n_us_hits);
+		let msg = "Losses:";
+		msg += apply_tr_hits(n_tr_hits);
+		msg += apply_us_hits(n_us_hits);
+		log(msg);
 	}
 }
 
@@ -1612,9 +1577,9 @@ function apply_tr_hits(n) {
 	let max = count_tripolitan_infantry(game.where);
 	if (n > max)
 		n = max;
-	log(n + " Tripolitan infantry eliminated.");
 	for (let i = 0; i < n; ++i)
 		move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
+	return "\n" + n + " Tripolitan infantry"
 }
 
 function apply_us_hits(total) {
@@ -1622,17 +1587,20 @@ function apply_us_hits(total) {
 	let max_ar = count_arab_infantry(game.where);
 	if (n > max_ar)
 		n = max_ar;
-	log(n + " Arab infantry eliminated.");
 	for (let i = 0; i < n; ++i)
 		move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
+	let msg = "\n" + n + " Arab infantry"
 
 	n = total - n;
 	let max_us = count_american_marines(game.where);
 	if (n > max_us)
 		n = max_us;
-	log(n + " American marines eliminated.");
 	for (let i = 0; i < n; ++i)
 		move_one_piece(US_MARINES, game.where, UNITED_STATES_SUPPLY);
+	if (n == 1)
+		return msg + "\n" + n + " American marine"
+	else
+		return msg + "\n" + n + " American marines"
 }
 
 // TRIPOLITAN EVENTS
@@ -1728,6 +1696,7 @@ states.yusuf_qaramanli = {
 		gen_action(view, 'next');
 	},
 	space: function (space) {
+		log("");
 		log("Pirate Raid from " + SPACES[space] + ".");
 		remove_from_array(game.raids, space);
 		switch (space) {
@@ -2165,12 +2134,9 @@ function can_play_assault_on_tripoli() {
 }
 
 function play_assault_on_tripoli() {
-	if (hamets_army_location() == BENGHAZI) {
-		move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
-		move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
-	} else {
-		// TODO: force play of SEND_IN_THE_MARINES?
-	}
+	// TODO: force play of SEND_IN_THE_MARINES if no hamet's army in benghazi
+	move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
+	move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
 	move_all_pieces(US_GUNBOATS, MALTA, TRIPOLI);
 	for (let space of FRIGATE_SPACES)
 		if (space != TRIPOLI)
@@ -2549,6 +2515,7 @@ function can_play_general_eaton_attacks_derne() {
 function play_general_eaton_attacks_derne() {
 	move_all_pieces(US_MARINES, ALEXANDRIA, DERNE);
 	move_all_pieces(AR_INFANTRY, ALEXANDRIA, DERNE);
+	move_all_pieces(US_GUNBOATS, MALTA, DERNE);
 	game.where = DERNE;
 	game.moves = 3;
 	game.state = 'land_battle_move_frigates';
@@ -2561,6 +2528,7 @@ function can_play_general_eaton_attacks_benghazi() {
 function play_general_eaton_attacks_benghazi() {
 	move_all_pieces(US_MARINES, DERNE, BENGHAZI);
 	move_all_pieces(AR_INFANTRY, DERNE, BENGHAZI);
+	move_all_pieces(US_GUNBOATS, MALTA, BENGHAZI);
 	game.where = BENGHAZI;
 	game.moves = 3;
 	game.state = 'land_battle_move_frigates';

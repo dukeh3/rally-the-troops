@@ -1,7 +1,7 @@
 "use strict";
 
 // [x]: summarize naval movements
-// [ ]: summarize pirate raids
+// [x]: summarize pirate raids
 // [ ]: summarize naval bombardments
 // [ ]: summarize naval combat
 // [ ]: summarize ground combat
@@ -112,12 +112,12 @@ const PATROL_ZONES = [
 	TUNIS_PATROL_ZONE,
 ];
 
-const HARBOR = {
-	[ALGIERS_PATROL_ZONE]: ALGIERS,
-	[GIBRALTAR_PATROL_ZONE]: GIBRALTAR,
-	[TANGIER_PATROL_ZONE]: TANGIER,
-	[TRIPOLI_PATROL_ZONE]: TRIPOLI,
-	[TUNIS_PATROL_ZONE]: TUNIS,
+const PATROL_ZONE_OF_HARBOR = {
+	[ALGIERS]: ALGIERS_PATROL_ZONE,
+	[GIBRALTAR]: GIBRALTAR_PATROL_ZONE,
+	[TANGIER]: TANGIER_PATROL_ZONE,
+	[TRIPOLI]: TRIPOLI_PATROL_ZONE,
+	[TUNIS]: TUNIS_PATROL_ZONE,
 }
 
 const THOMAS_JEFFERSON = 1;
@@ -473,35 +473,22 @@ function fire_1(what, n, hit_on = 6) {
 	for (let i = 0; i < n; ++i) {
 		let roll = roll_d6();
 		if (roll >= hit_on) ++hits;
-		log(what + " fires " + roll + ".");
 	}
+	log(what + " fires " + rolls.join(", ") + ".");
 	return hits;
 }
 
-function intercept(what, n, n_dice) {
+function roll_many_dice(what, n, hit=6) {
 	let hits = 0;
-	for (let i = 0; i < n; ++i) {
-		let a = roll_d6();
-		let b = roll_d6();
-		if (a == 6) ++hits;
-		if (b == 6) ++hits;
-		if (n_dice > 2) {
-			let c = roll_d6();
-			if (c == 6) ++hits;
-			log(what + " rolls " + a + ", " + b + ", " + c + ".");
-		} else {
-			log(what + " rolls " + a + ", " + b + ".");
+	if (n > 0) {
+		let rolls = [];
+		for (let i = 0; i < n; ++i) {
+			let roll = roll_d6();
+			if (roll >= hit)
+				++hits;
+			rolls.push(roll);
 		}
-	}
-	return hits;
-}
-
-function capture(what, n) {
-	let hits = 0;
-	for (let i = 0; i < n; ++i) {
-		let roll = roll_d6();
-		if (roll >= 5) ++hits;
-		log(what + " rolls " + roll + ".");
+		log(what + rolls.join(", ") + ".");
 	}
 	return hits;
 }
@@ -819,7 +806,7 @@ states.tripolitan_play = {
 	},
 	card_pirate_raid: function (c) {
 		discard_card(game.tr, c, " to Pirate Raid with the corsairs from Tripoli");
-		goto_pirate_raid(TRIPOLI, TRIPOLI_PATROL_ZONE);
+		goto_pirate_raid(TRIPOLI);
 	},
 	card_event: play_tripolitan_event,
 	pass: function () {
@@ -843,19 +830,19 @@ function take_gold(n) {
 		game.tr.gold = 0;
 }
 
-function goto_pirate_raid(harbor, patrol_zone) {
-	game.where = patrol_zone;
+function goto_pirate_raid(from) {
+	game.where = from;
 	if (can_play_lieutenant_sterett_in_pursuit()) {
 		game.active = US;
 		game.state = 'raid_before_intercept';
 		return;
 	}
-	goto_pirate_raid_intercept();
+	goto_pirate_raid_intercept(2);
 }
 
 states.raid_before_intercept = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[HARBOR[game.where]] + ".";
+		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
@@ -876,10 +863,8 @@ states.raid_before_intercept = {
 
 function goto_pirate_raid_intercept(us_dice) {
 	game.happy_hunting = false;
-	let patrol_zone = game.where;
-	let harbor = HARBOR[patrol_zone];
-	interception_roll(harbor, patrol_zone, us_dice);
-	if (can_play_happy_hunting(harbor) || can_play_us_signal_books_overboard(patrol_zone))
+	interception_roll(game.where, us_dice);
+	if (can_play_happy_hunting() || can_play_us_signal_books_overboard())
 		game.state = 'raid_before_hunt';
 	else
 		goto_pirate_raid_hunt();
@@ -887,7 +872,7 @@ function goto_pirate_raid_intercept(us_dice) {
 
 states.raid_before_hunt = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[HARBOR[game.where]] + ".";
+		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		if (can_play_happy_hunting()) {
@@ -920,14 +905,12 @@ states.raid_before_hunt = {
 }
 
 function goto_pirate_raid_hunt() {
-	let patrol_zone = game.where;
-	let harbor = HARBOR[patrol_zone];
-	let corsairs = count_corsairs(harbor);
-	let merchants = capture("Corsair", corsairs);
+	let corsairs = count_corsairs(game.where);
+	let merchants = roll_many_dice("Corsairs raid: ", corsairs, 5);
 	if (game.happy_hunting)
-		merchants += capture("Happy Hunting", 3);
+		merchants += roll_many_dice("Happy Hunting: ", 3, 5);
 	delete game.happy_hunting;
-	log("Merchant ships captured: " + merchants + ".");
+	log("Captured: " + merchants + (merchants == 1 ? " merchant ship." : " merchant ships."));
 	give_gold(merchants);
 	if (check_gold_victory())
 		return;
@@ -940,7 +923,7 @@ function goto_pirate_raid_hunt() {
 
 states.raid_after_hunt = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[HARBOR[game.where]] + ".";
+		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Merchant Ship Converted\".";
@@ -965,18 +948,20 @@ function end_pirate_raid() {
 		end_tripolitan_play();
 }
 
-function interception_roll(harbor, patrol_zone, us_dice) {
+function interception_roll(harbor, us_dice) {
+	let patrol_zone = PATROL_ZONE_OF_HARBOR[harbor];
+	console.log("interception_roll", SPACES[harbor], SPACES[patrol_zone], "us_dice=", us_dice);
 	let n_se = count_swedish_frigates(patrol_zone);
 	let n_us = count_american_frigates(patrol_zone);
 	if (n_se + n_us > 0) {
 		let n_tr = count_tripolitan_corsairs(harbor);
 		let n_al = count_allied_corsairs(harbor);
 		let hits = 0;
-		hits += intercept("Swedish frigate", n_se, 2);
-		hits += intercept("American frigate", n_us, us_dice);
+		hits += roll_many_dice("Swedish frigates intercept:\n", n_se * 2, 6);
+		hits += roll_many_dice("American frigates intercept:\n", n_us * us_dice, 6);
 		if (hits > n_tr + n_al)
 			hits = n_tr + n_al;
-		log("Corsairs intercepted: " + hits + ".");
+		log("Intercepted: " + hits + (hits == 1 ? " corsair." : " corsairs."));
 		if (n_tr > 0)
 			for (let i = 0; i < hits; ++i)
 				move_one_piece(TR_CORSAIRS, harbor, TRIPOLITAN_SUPPLY);
@@ -1104,8 +1089,8 @@ function goto_select_battle() {
 states.select_battle = {
 	prompt: function (view, current) {
 		view.prompt = "United States: Pick the next naval battle or bombardment."
-		if (is_inactive_player(current))
-			return view.prompt;
+			if (is_inactive_player(current))
+				return view.prompt;
 		for (let space of BATTLE_SPACES)
 			if (is_naval_battle_or_bombardment_location(space))
 				gen_action(view, 'space', space);
@@ -1418,7 +1403,7 @@ function resume_naval_battle() {
 
 	remove_damaged_frigates()
 
-	move_all_pieces(US_FRIGATES, game.where, MALTA);
+		move_all_pieces(US_FRIGATES, game.where, MALTA);
 	move_all_pieces(US_GUNBOATS, game.where, MALTA);
 
 	if (game.where == TRIPOLI_PATROL_ZONE) {
@@ -1738,18 +1723,18 @@ states.yusuf_qaramanli = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " Choose a harbor with corsairs to pirate raid from."
-		for (let space of game.raids)
-			gen_action(view, 'space', space);
+			for (let space of game.raids)
+				gen_action(view, 'space', space);
 		gen_action(view, 'next');
 	},
 	space: function (space) {
 		log("Pirate Raid from " + SPACES[space] + ".");
 		remove_from_array(game.raids, space);
 		switch (space) {
-		case ALGIERS: return goto_pirate_raid(ALGIERS, ALGIERS_PATROL_ZONE);
-		case TANGIER: return goto_pirate_raid(TANGIER, TANGIER_PATROL_ZONE);
-		case TUNIS: return goto_pirate_raid(TUNIS, TUNIS_PATROL_ZONE);
-		case TRIPOLI: return goto_pirate_raid(TRIPOLI, TRIPOLI_PATROL_ZONE);
+		case ALGIERS: return goto_pirate_raid(ALGIERS);
+		case TANGIER: return goto_pirate_raid(TANGIER);
+		case TUNIS: return goto_pirate_raid(TUNIS);
+		case TRIPOLI: return goto_pirate_raid(TRIPOLI);
 		}
 	},
 	next: function () {
@@ -1763,12 +1748,12 @@ function can_play_murad_reis_breaks_out() {
 }
 
 function play_murad_reis_breaks_out() {
-	game.where = GIBRALTAR_PATROL_ZONE;
+	game.where = GIBRALTAR;
 	if (can_play_lieutenant_sterett_in_pursuit()) {
 		game.active = US;
 		game.state = 'murad_reis_breaks_out';
 	} else {
-		end_murad_reis_breaks_out();
+		end_murad_reis_breaks_out(2);
 		move_all_pieces(TR_CORSAIRS, GIBRALTAR, TRIPOLI);
 		end_tripolitan_play();
 	}
@@ -1796,7 +1781,7 @@ states.murad_reis_breaks_out = {
 }
 
 function end_murad_reis_breaks_out(us_dice) {
-	interception_roll(GIBRALTAR, GIBRALTAR_PATROL_ZONE, us_dice);
+	interception_roll(GIBRALTAR, us_dice);
 	move_all_pieces(TR_CORSAIRS, GIBRALTAR, TRIPOLI);
 	end_tripolitan_play();
 }
@@ -1856,15 +1841,15 @@ function can_play_tunisian_corsairs_raid() {
 }
 
 function play_algerine_corsairs_raid() {
-	goto_pirate_raid(ALGIERS, ALGIERS_PATROL_ZONE);
+	goto_pirate_raid(ALGIERS);
 }
 
 function play_moroccan_corsairs_raid() {
-	goto_pirate_raid(TANGIER, TANGIER_PATROL_ZONE);
+	goto_pirate_raid(TANGIER);
 }
 
 function play_tunisian_corsairs_raid() {
-	goto_pirate_raid(TUNIS, TUNIS_PATROL_ZONE);
+	goto_pirate_raid(TUNIS);
 }
 
 function can_play_troops_to_derne() {
@@ -2584,7 +2569,7 @@ function play_general_eaton_attacks_benghazi() {
 // TRIPOLITAN BATTLE EVENTS
 
 function can_play_us_signal_books_overboard() {
-	let patrol_zone = game.where;
+	let patrol_zone = PATROL_ZONE_OF_HARBOR[game.where];
 	return (count_american_frigates(patrol_zone) > 0) && is_not_removed(US_SIGNAL_BOOKS_OVERBOARD);
 }
 
@@ -2593,14 +2578,14 @@ function can_play_uncharted_waters() {
 }
 
 function can_play_merchant_ship_converted(merchants) {
-	return (game.where == TRIPOLI_PATROL_ZONE) &&
+	return (game.where == TRIPOLI) &&
 		(merchants > 0) &&
 		(count_tripolitan_corsairs(TRIPOLITAN_SUPPLY) > 0) &&
 		is_not_removed(MERCHANT_SHIP_CONVERTED);
 }
 
 function can_play_happy_hunting() {
-	return (game.where == TRIPOLI_PATROL_ZONE) && is_not_removed(HAPPY_HUNTING);
+	return (game.where == TRIPOLI) && is_not_removed(HAPPY_HUNTING);
 }
 
 function can_play_the_guns_of_tripoli() {
@@ -2614,7 +2599,8 @@ function can_play_mercenaries_desert() {
 // AMERICAN BATTLE EVENTS
 
 function can_play_lieutenant_sterett_in_pursuit() {
-	return (count_american_frigates(game.where) > 0) && is_not_removed(LIEUTENANT_STERETT_IN_PURSUIT);
+	let patrol_zone = PATROL_ZONE_OF_HARBOR[game.where];
+	return (count_american_frigates(patrol_zone) > 0) && is_not_removed(LIEUTENANT_STERETT_IN_PURSUIT);
 }
 
 function can_play_prebles_boys_take_aim() {

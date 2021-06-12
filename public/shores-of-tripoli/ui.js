@@ -142,7 +142,7 @@ function update_card(c, show) {
 	if (is_card_enabled(c))
 		ui.cards[c].classList.add('enabled');
 	else
-		ui.cards[c].classList.add('enabled');
+		ui.cards[c].classList.remove('enabled');
 	if (show)
 		ui.cards[c].classList.add('show');
 	else

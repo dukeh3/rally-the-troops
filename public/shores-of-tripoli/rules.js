@@ -395,7 +395,6 @@ function count_pieces(list, where) {
 }
 
 function discard_card(player, card, reason = "") {
-	log("");
 	log(game.active + " discards a card" + reason + ".");
 	remove_from_array(player.hand, card);
 	player.discard.push(card);
@@ -403,7 +402,6 @@ function discard_card(player, card, reason = "") {
 }
 
 function play_card(player, card) {
-	log("");
 	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
 	remove_from_array(player.core, card);
 	remove_from_array(player.hand, card);
@@ -415,7 +413,6 @@ function play_card(player, card) {
 }
 
 function play_battle_card(player, card) {
-	log("");
 	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
 	remove_from_array(player.hand, card);
 	game.removed.push(card);
@@ -573,8 +570,8 @@ function can_pirate_raid_from_tripoli() {
 }
 
 function start_of_year() {
-	log("");
 	log("Start of " + game.year + ".");
+	log("");
 
 	game.season = SPRING;
 
@@ -675,6 +672,7 @@ states.tripolitan_discard = {
 }
 
 function end_american_play() {
+	log("");
 	clear_undo();
 	game.where = null;
 	game.active = TR;
@@ -682,6 +680,7 @@ function end_american_play() {
 }
 
 function end_tripolitan_play() {
+	log("");
 	clear_undo();
 	game.where = null;
 	end_of_season();
@@ -735,7 +734,6 @@ states.american_play = {
 	},
 	card_event: play_american_event,
 	pass: function () {
-		log("");
 		log(game.active + " passes.");
 		end_american_play();
 	}
@@ -774,7 +772,6 @@ states.tripolitan_play = {
 	},
 	card_event: play_tripolitan_event,
 	pass: function () {
-		log("");
 		log(game.active + " passes.");
 		end_tripolitan_play();
 	}
@@ -1193,34 +1190,20 @@ function goto_naval_battle_round() {
 	log("United States scores " + game.n_tr_hits + (game.n_tr_hits == 1 ? " hit." : " hits."));
 	log("Tripolitania scores " + game.n_us_hits + (game.n_us_hits == 1 ? " hit." : " hits."));
 
-	if (game.active == US)
+	if (game.save_active == US)
 		goto_allocate_american_hits();
 	else
 		goto_allocate_tripolitan_hits();
 }
 
 function goto_allocate_american_hits() {
-	if (game.n_us_hits > 0) {
-		game.active = US;
-		game.state = 'allocate_us_hits';
-	} else if (game.n_tr_hits > 0) {
-		game.active = TR;
-		game.state = 'allocate_tr_hits';
-	} else {
-		resume_naval_battle();
-	}
+	game.active = US;
+	game.state = 'allocate_us_hits';
 }
 
 function goto_allocate_tripolitan_hits() {
-	if (game.n_tr_hits > 0) {
-		game.active = TR;
-		game.state = 'allocate_tr_hits';
-	} else if (game.n_us_hits > 0) {
-		game.active = US;
-		game.state = 'allocate_us_hits';
-	} else {
-		resume_naval_battle();
-	}
+	game.active = TR;
+	game.state = 'allocate_tr_hits';
 }
 
 states.allocate_us_hits = {
@@ -1264,12 +1247,10 @@ states.allocate_us_hits = {
 		clear_undo();
 		if (check_frigate_victory())
 			return;
-		if (game.n_tr_hits > 0) {
-			game.active = TR;
-			game.state = 'allocate_tr_hits';
-		} else {
+		if (game.save_active == US)
+			goto_allocate_tripolitan_hits();
+		else
 			resume_naval_battle();
-		}
 	},
 	undo: pop_undo
 }
@@ -1320,12 +1301,10 @@ states.allocate_tr_hits = {
 	},
 	next: function () {
 		clear_undo();
-		if (game.n_us_hits > 0) {
-			game.active = US;
-			game.state = 'allocate_us_hits';
-		} else {
+		if (game.save_active == TR)
+			goto_allocate_american_hits();
+		else
 			resume_naval_battle();
-		}
 	},
 	undo: pop_undo
 }
@@ -1362,15 +1341,16 @@ function resume_naval_battle() {
 			log("The American fleet has been eliminated.");
 			return goto_game_over(TR, "Assault on Tripoli failed.");
 		}
+		log("");
 		log("Naval battle continues...");
 		return goto_naval_battle_round();
 	}
 
 	delete game.save_active;
 
-	remove_damaged_frigates()
+	remove_damaged_frigates();
 
-		move_all_pieces(US_FRIGATES, game.where, MALTA);
+	move_all_pieces(US_FRIGATES, game.where, MALTA);
 	move_all_pieces(US_GUNBOATS, game.where, MALTA);
 
 	if (game.where == TRIPOLI_PATROL_ZONE) {
@@ -1524,53 +1504,64 @@ states.land_battle_tripolitan_card = {
 }
 
 function goto_land_battle_round() {
+	delete game.flash;
 	game.active = US;
-	for (;;) {
-		let n_us_mar = count_american_marines(game.where);
-		let n_ar_inf = count_arab_infantry(game.where);
-		let n_tr_inf = count_tripolitan_infantry(game.where);
 
-		if (n_us_mar + n_ar_inf == 0) {
-			delete game.marine_sharpshooters;
-			delete game.lieutenant_obannon_leads_the_charge;
-			return goto_game_over(TR, "Hamet's Army has been eliminated.");
-		}
+	let n_us_mar = count_american_marines(game.where);
+	let n_ar_inf = count_arab_infantry(game.where);
+	let n_tr_inf = count_tripolitan_infantry(game.where);
 
-		if (n_tr_inf == 0) {
-			log("Americans have captured " + SPACES[game.where] + ".");
-			delete game.marine_sharpshooters;
-			delete game.lieutenant_obannon_leads_the_charge;
-			if (game.active_card == ASSAULT_ON_TRIPOLI)
-				return goto_game_over(US, "Assault on Tripoli.");
-			return end_american_play();
-		}
-
-		log("Land battle round.");
-
-		let n_tr_hits = 0;
-		if (game.lieutenant_obannon_leads_the_charge && n_us_mar > 0) {
-			if (game.marine_sharpshooters) {
-				n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 5);
-				n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 5);
-			} else {
-				n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 6);
-				n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 6);
-			}
-		} else {
-			if (game.marine_sharpshooters)
-				n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 5);
-			else
-				n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 6);
-		}
-		n_tr_hits += roll_many_dice("Arab infantry: ", n_ar_inf);
-
-		let n_us_hits = roll_many_dice("Tripolitan infantry: ", n_tr_inf);
-
-		let msg = "Losses:";
-		msg += apply_tr_hits(n_tr_hits);
-		msg += apply_us_hits(n_us_hits);
-		log(msg);
+	if (n_us_mar + n_ar_inf == 0) {
+		delete game.marine_sharpshooters;
+		delete game.lieutenant_obannon_leads_the_charge;
+		return goto_game_over(TR, "Hamet's Army has been eliminated.");
 	}
+
+	if (n_tr_inf == 0) {
+		log("Americans have captured " + SPACES[game.where] + ".");
+		delete game.marine_sharpshooters;
+		delete game.lieutenant_obannon_leads_the_charge;
+		if (game.active_card == ASSAULT_ON_TRIPOLI)
+			return goto_game_over(US, "Assault on Tripoli.");
+		return end_american_play();
+	}
+
+	log("Land battle round.");
+
+	let n_tr_hits = 0;
+	if (game.lieutenant_obannon_leads_the_charge && n_us_mar > 0) {
+		if (game.marine_sharpshooters) {
+			n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 5);
+			n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 5);
+		} else {
+			n_tr_hits += roll_many_dice("Lieutenant O'Bannon: ", 3, 6);
+			n_tr_hits += roll_many_dice("American marines: ", n_us_mar - 1, 6);
+		}
+	} else {
+		if (game.marine_sharpshooters)
+			n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 5);
+		else
+			n_tr_hits += roll_many_dice("American marines: ", n_us_mar, 6);
+	}
+	n_tr_hits += roll_many_dice("Arab infantry: ", n_ar_inf);
+
+	let n_us_hits = roll_many_dice("Tripolitan infantry: ", n_tr_inf);
+
+	game.flash = apply_tr_hits(n_tr_hits) + apply_us_hits(n_us_hits);
+	log("Losses: " + game.flash);
+	game.state = 'land_battle_results';
+}
+
+states.land_battle_results = {
+	prompt: function (view, current) {
+		view.prompt = "Land Battle Round in " + SPACES[game.where] + ": " + game.flash;
+		if (is_inactive_player(current))
+			return;
+		gen_action(view, 'next');
+	},
+	next: function (card) {
+		goto_land_battle_round();
+	},
 }
 
 function apply_tr_hits(n) {
@@ -1579,7 +1570,7 @@ function apply_tr_hits(n) {
 		n = max;
 	for (let i = 0; i < n; ++i)
 		move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
-	return "\n" + n + " Tripolitan infantry"
+	return "\n" + n + " Tripolitan infantry,"
 }
 
 function apply_us_hits(total) {
@@ -1589,7 +1580,7 @@ function apply_us_hits(total) {
 		n = max_ar;
 	for (let i = 0; i < n; ++i)
 		move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
-	let msg = "\n" + n + " Arab infantry"
+	let msg = "\n" + n + " Arab infantry,"
 
 	n = total - n;
 	let max_us = count_american_marines(game.where);
@@ -1598,9 +1589,9 @@ function apply_us_hits(total) {
 	for (let i = 0; i < n; ++i)
 		move_one_piece(US_MARINES, game.where, UNITED_STATES_SUPPLY);
 	if (n == 1)
-		return msg + "\n" + n + " American marine"
+		return msg + "\n" + n + " American marine."
 	else
-		return msg + "\n" + n + " American marines"
+		return msg + "\n" + n + " American marines."
 }
 
 // TRIPOLITAN EVENTS
@@ -1874,23 +1865,21 @@ states.storms = {
 	},
 	space: function (space) {
 		let six = false;
-		let n = count_american_frigates(space);
-		for (let i = 0; i < n; ++i) {
-			let roll = roll_d6();
-			if (roll == 6) {
-				if (!six) {
-					log("Storm roll " + roll + ": American frigate sinks.");
-					move_one_piece(US_FRIGATES, space, TRIPOLITAN_SUPPLY);
-					six = true;
-				} else {
-					log("Storm roll " + roll + ": American frigate is damaged.");
-					if (game.year == 1806)
-						move_one_piece(US_FRIGATES, space, UNITED_STATES_SUPPLY);
-					else
-						move_one_piece(US_FRIGATES, space, YEAR_TURN_TRACK[game.year+1]);
-				}
-			} else {
-				log("Storm roll " + roll + ": No effect.");
+		let n = roll_many_dice("Storms: ", count_american_frigates(space), 6);
+		if (n > 0) {
+			log("One American frigate sinks.");
+			move_one_piece(US_FRIGATES, space, TRIPOLITAN_SUPPLY);
+		}
+		if (n > 1) {
+			if (n == 2)
+				log("One American frigate is damaged.");
+			else
+				log(n + " American frigates are damaged.");
+			for (let i = 1; i < n; ++i) {
+				if (game.year == 1806)
+					move_one_piece(US_FRIGATES, space, UNITED_STATES_SUPPLY);
+				else
+					move_one_piece(US_FRIGATES, space, YEAR_TURN_TRACK[game.year+1]);
 			}
 		}
 		if (check_frigate_victory())
@@ -2411,25 +2400,25 @@ function end_burn_the_philadelphia(two) {
 	let roll = roll_d6();
 	if (two) {
 		let b = roll_d6();
-		log("United States raids the harbor of Tripoli: " + roll + ", " + b + ".");
+		log("Burn the Philadelphia: " + roll + ", " + b + ".");
 		if (b > roll)
 			roll = b;
 	} else {
-		log("United States raids the harbor of Tripoli: " + roll + ".");
+		log("Burn the Philadelphia: " + roll + ".");
 	}
 	switch (roll) {
 	case 1: case 2:
-		log("The raid is a failure.");
+		log("1-2: The raid is a failure.");
 		break;
 	case 3: case 4:
-		log("A Tripolitan frigate is damaged.");
+		log("3-4: A Tripolitan frigate is damaged.");
 		if (game.year == 1806)
 			move_one_piece(TR_FRIGATES, TRIPOLI, TRIPOLITAN_SUPPLY);
 		else
 			move_one_piece(TR_FRIGATES, TRIPOLI, YEAR_TURN_TRACK[game.year + 1]);
 		break;
 	case 5: case 6:
-		log("A Tripolitan frigate is sunk.");
+		log("5-6: A Tripolitan frigate is sunk.");
 		move_one_piece(TR_FRIGATES, TRIPOLI, TRIPOLITAN_SUPPLY);
 		break;
 	}
@@ -2471,37 +2460,28 @@ function end_launch_the_intrepid(two) {
 	let roll = roll_d6();
 	if (two) {
 		let b = roll_d6();
-		log("United States raids the harbor of Tripoli: " + roll + ", " + b + ".");
+		log("Launch the Intrepid: " + roll + ", " + b + ".");
 		if (b > roll)
 			roll = b;
 	} else {
-		log("United States raids the harbor of Tripoli: " + roll + ".");
+		log("Launch the Intrepid: " + roll + ".");
 	}
 	switch (roll) {
 	case 1: case 2:
-		log("The raid is a failure.");
+		log("1-2: The raid is a failure.");
 		break;
 	case 3: case 4:
-		if (count_tripolitan_corsairs(TRIPOLI) > 0) {
-			log("One Tripolitan corsair is sunk.");
-			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
-		} else {
-			log("No corsairs to sink.");
-		}
+		log("3-4: One Tripolitan corsair is sunk.");
+		move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
 		break;
 	case 5: case 6:
 		if (count_tripolitan_frigates(TRIPOLI) > 0) {
-			log("One Tripolitan frigate is sunk.");
+			log("5-6: One Tripolitan frigate is sunk.");
 			move_one_piece(TR_FRIGATES, TRIPOLI, TRIPOLITAN_SUPPLY);
-		} else if (count_tripolitan_corsairs(TRIPOLI) >= 2) {
-			log("Two Tripolitan corsairs are sunk.");
-			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
-			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
-		} else if (count_tripolitan_corsairs(TRIPOLI) >= 1) {
-			log("One Tripolitan corsair is sunk.");
-			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
 		} else {
-			log("No corsairs to sink.");
+			log("5-6: Two Tripolitan corsairs are sunk.");
+			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
+			move_one_piece(TR_CORSAIRS, TRIPOLI, TRIPOLITAN_SUPPLY);
 		}
 		break;
 	}

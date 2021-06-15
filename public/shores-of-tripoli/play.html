@@ -15,13 +15,13 @@
 <style>
 
 .grid_center { background-color: slategray; }
-.grid_role { background-color: ghostwhite; }
-.grid_log { background-color: ghostwhite; }
+.grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
 .grid_top.Tripolitania.your_turn { background-color: salmon; }
 .grid_top.United_States.your_turn { background-color: skyblue; }
 .grid_top.disconnected { background-color: red; }
 .role_info { background-color: gainsboro; }
+.role_info.card_info { background-color: silver; }
 .one .role_name { background-color: skyblue; }
 .two .role_name { background-color: salmon; }
 
@@ -35,19 +35,13 @@
 	font-family: "Source Serif SmText";
 }
 
-/* XXX: Work around z-stacking drawing glitch in Firefox 90 on Linux */
-#status { min-height: 1px; }
-#status:empty { background-color: slategray; }
-
 .hand {
 	min-height: 300px;
 	justify-content: left;
 }
 
 .hand_separator {
-	color: gainsboro;
 	border-bottom: 2px dotted gainsboro;
-	text-align: center;
 }
 
 .card {
@@ -58,6 +52,7 @@
 
 .card.blank {
 	background-color: dimgray;
+	transform: none !important;
 }
 
 .card_info .card {
@@ -73,12 +68,7 @@
 
 .role_info {
 	padding: 5px 20px;
-	background-color: gainsboro;
 	white-space: pre-wrap;
-}
-
-.role_info.card_info {
-	background-color: silver;
 }
 
 /* MAP */
@@ -478,12 +468,12 @@
 </div>
 <div class="hand_separator"></div>
 <div id="core_cards" class="hand">
-<div id="tr_card_1" class="show card tr_card_1"></div>
-<div id="tr_card_2" class="show card tr_card_2"></div>
-<div id="tr_card_3" class="show card tr_card_3"></div>
-<div id="us_card_1" class="show card us_card_1"></div>
-<div id="us_card_2" class="show card us_card_2"></div>
-<div id="us_card_3" class="show card us_card_3"></div>
+<div id="tr_card_1" class="show card tr_card_1 tr_core"></div>
+<div id="tr_card_2" class="show card tr_card_2 tr_core"></div>
+<div id="tr_card_3" class="show card tr_card_3 tr_core"></div>
+<div id="us_card_1" class="show card us_card_1 us_core"></div>
+<div id="us_card_2" class="show card us_card_2 us_core"></div>
+<div id="us_card_3" class="show card us_card_3 us_core"></div>
 </div>
 
 <div id="popup" onmouseleave="hide_popup_menu()">

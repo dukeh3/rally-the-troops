@@ -593,30 +593,20 @@ function start_of_year() {
 		draw_cards(game.tr.hand, game.tr.draw, game.tr.draw.length);
 	}
 
-	goto_american_discard();
+	goto_hand_size();
 }
 
-function goto_american_discard() {
-	if (game.us.hand.length > 8) {
-		game.active = US;
-		game.state = 'american_discard';
-	} else {
-		goto_tripolitan_discard();
-	}
-}
-
-function goto_tripolitan_discard() {
-	if (game.tr.hand.length > 8) {
-		game.active = TR;
-		game.state = 'tripolitan_discard';
+function goto_hand_size() {
+	if (game.us.hand.length > 8 || game.tr.hand.length > 8) {
+		game.active = "Both";
+		game.state = 'hand_size';
+		if (game.tr.hand.length > 8)
+			game.tr.queue = [];
+		if (game.us.hand.length > 8)
+			game.us.queue = [];
 	} else {
 		goto_american_play();
 	}
-}
-
-function goto_american_play() {
-	game.active = US;
-	game.state = 'american_play';
 }
 
 function format_discard(n) {
@@ -625,56 +615,87 @@ function format_discard(n) {
 	return " \u2014 discard " + n + " cards.";
 }
 
-states.american_discard = {
+states.hand_size = {
 	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "United States: Hand Limit.";
-		let n = game.us.hand.length - 8;
-		view.prompt = "United States: Hand Limit" + format_discard(n);
-		gen_action_undo(view);
-		if (game.us.hand.length > 8) {
-			for (let c of game.us.hand)
-				gen_action(view, 'discard', c);
-		} else {
-			gen_action(view, 'next');
+		if (current == TR) {
+			if (game.tr.queue) {
+				view.actions = {};
+				view.actions.undo = (game.tr.queue.length > 0);
+				if (game.tr.hand.length > 8) {
+					for (let c of game.tr.hand)
+						gen_action(view, 'discard', c);
+				} else {
+					gen_action(view, 'next');
+				}
+				let n = game.tr.hand.length - 8;
+				return view.prompt = "Tripolitania: Hand Limit" + format_discard(n);
+			} else {
+				return view.prompt = "United States: Hand Limit.";
+			}
+		}
+		if (current == US) {
+			if (game.us.queue) {
+				view.actions = {};
+				view.actions.undo = (game.us.queue.length > 0);
+				if (game.us.hand.length > 8) {
+					for (let c of game.us.hand)
+						gen_action(view, 'discard', c);
+				} else {
+					gen_action(view, 'next');
+				}
+				let n = game.us.hand.length - 8;
+				return view.prompt = "United States: Hand Limit" + format_discard(n);
+			} else {
+				return view.prompt = "Tripolitania: Hand Limit.";
+			}
+		}
+		view.prompt = "Hand Limit.";
+	},
+	discard: function (card, current) {
+		if (current == TR) {
+			remove_from_array(game.tr.hand, card);
+			game.tr.queue.push(card);
+		}
+		if (current == US) {
+			remove_from_array(game.us.hand, card);
+			game.us.queue.push(card);
 		}
 	},
-	discard: function (card) {
-		push_undo();
-		remove_from_array(game.us.hand, card);
-		game.us.discard.push(card);
+	next: function (_, current) {
+		if (current == TR) {
+			for (let card of game.tr.queue)
+				game.tr.discard.push(card);
+			delete game.tr.queue;
+		}
+		if (current == US) {
+			for (let card of game.us.queue)
+				game.us.discard.push(card);
+			delete game.us.queue;
+		}
+		if (game.tr.queue && game.us.queue)
+			game.active = "Both";
+		else if (game.tr.queue)
+			game.active = TR;
+		else if (game.us.queue)
+			game.active = US;
+		else
+			goto_american_play();
 	},
-	next: function () {
-		clear_undo();
-		goto_tripolitan_discard();
-	},
-	undo: pop_undo
+	undo: function (_, current) {
+		if (current == TR && game.tr.queue.length > 0) {
+			let card = game.tr.queue.pop();
+			game.tr.hand.push(card);
+		}
+		if (current == US && game.us.queue.length > 0) {
+			let card = game.us.queue.pop();
+			game.us.hand.push(card);
+		}
+	}
 }
 
-states.tripolitan_discard = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Tripolitania: Hand Limit.";
-		let n = game.tr.hand.length - 8;
-		view.prompt = "Tripolitania: Hand Limit" + format_discard(n);
-		gen_action_undo(view);
-		if (game.tr.hand.length > 8) {
-			for (let c of game.tr.hand)
-				gen_action(view, 'discard', c);
-		} else {
-			gen_action(view, 'next');
-		}
-	},
-	discard: function (card) {
-		push_undo();
-		remove_from_array(game.tr.hand, card);
-		game.tr.discard.push(card);
-	},
-	next: function () {
-		clear_undo();
-		goto_american_play();
-	},
-	undo: pop_undo
+function goto_american_play() {
+	game.active = US;
+	game.state = 'american_play';
 }
 
 function end_american_play() {
@@ -2773,14 +2794,14 @@ exports.view = function(state, current) {
 		tr: {
 			core: game.tr.core,
 			draw: game.tr.draw.length,
-			discard: game.tr.discard.length,
+			discard: game.tr.discard.length + (game.tr.queue ? game.tr.queue.length : 0),
 			hand: game.tr.hand.length,
 			gold: game.tr.gold,
 		},
 		us: {
 			core: game.us.core,
 			draw: game.us.draw.length,
-			discard: game.us.discard.length,
+			discard: game.us.discard.length + (game.us.queue ? game.us.queue.length : 0),
 			hand: game.us.hand.length,
 		},
 		card: game.active_card,

@@ -184,6 +184,8 @@ function on_update() {
 	show_action_button("#button_next", "next");
 	show_action_button("#button_undo", "undo");
 
+	document.getElementById("tr_score").textContent = game.tr.score;
+	document.getElementById("us_score").textContent = game.us.score;
 	document.getElementById("tr_info").textContent = tr_info();
 	document.getElementById("us_info").textContent = us_info();
 

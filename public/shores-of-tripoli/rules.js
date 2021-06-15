@@ -1,11 +1,5 @@
 "use strict";
 
-// [x]: summarize naval movements
-// [x]: summarize pirate raids
-// [ ]: summarize naval bombardments
-// [ ]: summarize naval combat
-// [ ]: summarize ground combat
-
 const US = "United States";
 const TR = "Tripolitania";
 
@@ -2782,6 +2776,8 @@ exports.resign = function (state, current) {
 exports.view = function(state, current) {
 	game = state;
 
+	let tr_score = count_american_frigates(TRIPOLITAN_SUPPLY) * 3 + game.tr.gold;
+
 	let view = {
 		log: game.log,
 		year: game.year,
@@ -2797,12 +2793,14 @@ exports.view = function(state, current) {
 			discard: game.tr.discard.length + (game.tr.queue ? game.tr.queue.length : 0),
 			hand: game.tr.hand.length,
 			gold: game.tr.gold,
+			score: tr_score,
 		},
 		us: {
 			core: game.us.core,
 			draw: game.us.draw.length,
 			discard: game.us.discard.length + (game.us.queue ? game.us.queue.length : 0),
 			hand: game.us.hand.length,
+			score: 30 - tr_score,
 		},
 		card: game.active_card,
 		removed: game.removed,

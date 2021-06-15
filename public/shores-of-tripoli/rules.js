@@ -179,7 +179,7 @@ const CARD_NAMES = [
 	// United States Cards
 	"Thomas Jefferson",
 	"Swedish Frigates Arrive",
-	"Hamet's Army Created",
+	"Hamet\u{2019}s Army Created",
 	"Treaty of Peace and Amity",
 	"Assault on Tripoli",
 	"Naval Movement",
@@ -199,7 +199,7 @@ const CARD_NAMES = [
 	"General Eaton Attacks Derne",
 	"General Eaton Attacks Benghazi",
 	"Lieutenant Sterett in Pursuit",
-	"Preble's Boys Take Aim",
+	"Preble\u{2019}s Boys Take Aim",
 	"The Daring Stephen Decatur",
 	"Send in the Marines",
 	"Lieutenant O'Bannon Leads the Charge",
@@ -396,7 +396,7 @@ function discard_card(player, card, reason = "") {
 }
 
 function play_card(player, card) {
-	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
+	log(game.active + " plays \u{201c}" + CARD_NAMES[card] + "\u{201d}.");
 	remove_from_array(player.core, card);
 	remove_from_array(player.hand, card);
 	if (REMOVE_AFTER_PLAY.includes(card))
@@ -407,7 +407,7 @@ function play_card(player, card) {
 }
 
 function play_battle_card(player, card) {
-	log(game.active + " plays \"" + CARD_NAMES[card] + "\".");
+	log(game.active + " plays \u{201c}" + CARD_NAMES[card] + "\u{201d}.");
 	remove_from_array(player.hand, card);
 	game.removed.push(card);
 }
@@ -827,7 +827,7 @@ states.raid_before_intercept = {
 		view.prompt = "United States: Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
+		view.prompt += " You may play \u{201c}Lieutenant Sterett in Pursuit\u{201d}.";
 		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
 			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
 		gen_action(view, 'next');
@@ -858,12 +858,12 @@ states.raid_before_hunt = {
 		if (is_inactive_player(current))
 			return view.prompt;
 		if (can_play_happy_hunting()) {
-			view.prompt += " You may play \"Happy Hunting\".";
+			view.prompt += " You may play \u{201c}Happy Hunting\u{201d}.";
 			if (game.tr.hand.includes(HAPPY_HUNTING))
 				gen_action(view, 'card_event', HAPPY_HUNTING);
 		}
 		if (can_play_us_signal_books_overboard()) {
-			view.prompt += " You may play \"US Signal Books Overboard\".";
+			view.prompt += " You may play \u{201c}US Signal Books Overboard\u{201d}.";
 			if (game.tr.hand.includes(US_SIGNAL_BOOKS_OVERBOARD))
 				gen_action(view, 'card_event', US_SIGNAL_BOOKS_OVERBOARD);
 		}
@@ -873,7 +873,7 @@ states.raid_before_hunt = {
 		play_battle_card(game.tr, card);
 		if (card == US_SIGNAL_BOOKS_OVERBOARD) {
 			let c = discard_random_card(game.us.hand, game.us.discard);
-			log("United States discards \"" + CARD_NAMES[c] + "\".");
+			log("United States discards \u{201c}" + CARD_NAMES[c] + "\u{201d}.");
 		}
 		if (card == HAPPY_HUNTING) {
 			game.happy_hunting = true;
@@ -908,7 +908,7 @@ states.raid_after_hunt = {
 		view.prompt = "Tripolitania: Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " You may play \"Merchant Ship Converted\".";
+		view.prompt += " You may play \u{201c}Merchant Ship Converted\u{201d}.";
 		if (game.tr.hand.includes(MERCHANT_SHIP_CONVERTED))
 			gen_action(view, 'card_event', MERCHANT_SHIP_CONVERTED);
 		gen_action(view, 'next');
@@ -1145,7 +1145,7 @@ states.naval_battle_american_card = {
 		view.prompt = "United States: Naval Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"Preble's Boys Take Aim\".";
+		view.prompt += " You may play \u{201c}Preble\u{2019}s Boys Take Aim\u{201d}.";
 		if (game.us.hand.includes(PREBLES_BOYS_TAKE_AIM))
 			gen_action(view, 'card_event', PREBLES_BOYS_TAKE_AIM);
 		gen_action(view, 'next');
@@ -1175,7 +1175,7 @@ states.naval_battle_tripolitan_card = {
 		view.prompt = "Tripolitania: Naval Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"The Guns of Tripoli\".";
+		view.prompt += " You may play \u{201c}The Guns of Tripoli\u{201d}.";
 		if (game.tr.hand.includes(THE_GUNS_OF_TRIPOLI))
 			gen_action(view, 'card_event', THE_GUNS_OF_TRIPOLI);
 		gen_action(view, 'next');
@@ -1463,17 +1463,17 @@ states.land_battle_american_card = {
 			return;
 		let options = [];
 		if (can_play_send_in_the_marines()) {
-			options.push("\"Send in the Marines\"");
+			options.push("\u{201c}Send in the Marines\u{201d}");
 			if (game.us.hand.includes(SEND_IN_THE_MARINES))
 				gen_action(view, 'card_event', SEND_IN_THE_MARINES);
 		}
 		if (can_play_marine_sharpshooters()) {
-			options.push("\"Marine Sharpshooters\"");
+			options.push("\u{201c}Marine Sharpshooters\u{201d}");
 			if (game.us.hand.includes(MARINE_SHARPSHOOTERS))
 				gen_action(view, 'card_event', MARINE_SHARPSHOOTERS);
 		}
 		if (can_play_lieutenant_obannon_leads_the_charge()) {
-			options.push("\"Lieutenant O'Bannon Leads the Charge\"");
+			options.push("\u{201c}Lieutenant O'Bannon Leads the Charge\u{201d}");
 			if (game.us.hand.includes(LIEUTENANT_OBANNON_LEADS_THE_CHARGE))
 				gen_action(view, 'card_event', LIEUTENANT_OBANNON_LEADS_THE_CHARGE);
 		}
@@ -1517,7 +1517,7 @@ states.land_battle_tripolitan_card = {
 		view.prompt = "Tripolitania: Land Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"Mercenaries Desert\".";
+		view.prompt += " You may play \u{201c}Mercenaries Desert\u{201d}.";
 		if (game.tr.hand.includes(MERCENARIES_DESERT))
 			gen_action(view, 'card_event', MERCENARIES_DESERT);
 		gen_action(view, 'next');
@@ -1546,7 +1546,7 @@ function goto_land_battle_round() {
 	if (n_us_mar + n_ar_inf == 0) {
 		delete game.marine_sharpshooters;
 		delete game.lieutenant_obannon_leads_the_charge;
-		return goto_game_over(TR, "Hamet's Army has been eliminated.");
+		return goto_game_over(TR, "Hamet\u{2019}s Army has been eliminated.");
 	}
 
 	if (n_tr_inf == 0) {
@@ -1754,7 +1754,7 @@ states.murad_reis_breaks_out = {
 		view.prompt = "United States: Murad Reis Breaks Out.";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
+		view.prompt += " You may play \u{201c}Lieutenant Sterett in Pursuit\u{201d}.";
 		if (game.us.hand.includes(LIEUTENANT_STERETT_IN_PURSUIT))
 			gen_action(view, 'card_event', LIEUTENANT_STERETT_IN_PURSUIT);
 		gen_action(view, 'next');
@@ -1971,7 +1971,7 @@ states.the_philadelphia_runs_aground = {
 		view.prompt = "Tripolitania: The Philadelphia Runs Aground.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"Uncharted Waters\".";
+		view.prompt += " You may play \u{201c}Uncharted Waters\u{201d}.";
 		if (game.tr.hand.includes(UNCHARTED_WATERS))
 			gen_action(view, 'card_event', UNCHARTED_WATERS);
 		gen_action(view, 'next');
@@ -2417,7 +2417,7 @@ states.burn_the_philadelphia = {
 		view.prompt = "United States: Burn the Philadelphia.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"The Daring Stephen Decatur\".";
+		view.prompt += " You may play \u{201c}The Daring Stephen Decatur\u{201d}.";
 		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
 		gen_action(view, 'next');
@@ -2477,7 +2477,7 @@ states.launch_the_intrepid = {
 		view.prompt = "United States: Launch the Intrepid.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " You may play \"The Daring Stephen Decatur\".";
+		view.prompt += " You may play \u{201c}The Daring Stephen Decatur\u{201d}.";
 		if (game.us.hand.includes(THE_DARING_STEPHEN_DECATUR))
 			gen_action(view, 'card_event', THE_DARING_STEPHEN_DECATUR);
 		gen_action(view, 'next');

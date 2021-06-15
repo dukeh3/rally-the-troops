@@ -619,12 +619,18 @@ function goto_american_play() {
 	game.state = 'american_play';
 }
 
+function format_discard(n) {
+	if (n == 0) return " \u2014 done.";
+	if (n == 1) return " \u2014 discard 1 card.";
+	return " \u2014 discard " + n + " cards.";
+}
+
 states.american_discard = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "American hand limit.";
+			return view.prompt = "United States: Hand Limit.";
 		let n = game.us.hand.length - 8;
-		view.prompt = "American hand limit: discard " + n + " cards.";
+		view.prompt = "United States: Hand Limit" + format_discard(n);
 		gen_action_undo(view);
 		if (game.us.hand.length > 8) {
 			for (let c of game.us.hand)
@@ -648,9 +654,9 @@ states.american_discard = {
 states.tripolitan_discard = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Tripolitan hand limit.";
+			return view.prompt = "Tripolitania: Hand Limit.";
 		let n = game.tr.hand.length - 8;
-		view.prompt = "Tripolitan hand limit: discard " + n + " cards.";
+		view.prompt = "Tripolitania: Hand Limit" + format_discard(n);
 		gen_action_undo(view);
 		if (game.tr.hand.length > 8) {
 			for (let c of game.tr.hand)
@@ -705,9 +711,9 @@ function end_of_year() {
 
 states.american_play = {
 	prompt: function (view, current) {
+		view.prompt = "United States: Play an event, move two frigates, or build a gunboat.";
 		if (is_inactive_player(current))
-			return view.prompt = "American play.";
-		view.prompt = "American play.";
+			return view.prompt;
 		let build = can_build_gunboat_in_malta();
 		for (let c of game.us.core) {
 			if (can_play_american_event(c))
@@ -741,9 +747,9 @@ states.american_play = {
 
 states.tripolitan_play = {
 	prompt: function (view, current) {
+		view.prompt = "Tripolitania: Play an event, pirate raid, or build a corsair.";
 		if (is_inactive_player(current))
-			return view.prompt = "Tripolitan play.";
-		view.prompt = "Tripolitan play.";
+			return view.prompt;
 		let build = can_build_corsair_in_tripoli();
 		let raid = can_pirate_raid_from_tripoli();
 		for (let c of game.tr.core) {
@@ -803,7 +809,7 @@ function goto_pirate_raid(from) {
 
 states.raid_before_intercept = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
+		view.prompt = "United States: Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
@@ -833,7 +839,7 @@ function goto_pirate_raid_intercept(us_dice) {
 
 states.raid_before_hunt = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
+		view.prompt = "Tripolitania: Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		if (can_play_happy_hunting()) {
@@ -884,7 +890,7 @@ function goto_pirate_raid_hunt() {
 
 states.raid_after_hunt = {
 	prompt: function (view, current) {
-		view.prompt = "Pirate Raid from " + SPACES[game.where] + ".";
+		view.prompt = "Tripolitania: Pirate Raid from " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Merchant Ship Converted\".";
@@ -941,13 +947,18 @@ function goto_move_up_to_n_american_frigates(n) {
 	game.state = 'move_us_frigate_from';
 }
 
+function format_moves_left() {
+	if (game.moves == 0) return " \u2014 no moves left.";
+	if (game.moves == 1) return " \u2014 1 move left.";
+	return " \u2014 " + game.moves + " moves left.";
+}
+
 states.move_us_frigate_from = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "United States: Naval Movement.";
-		view.prompt = "United States: Naval Movement. " + game.moves + " moves left.";
+		view.prompt = "United States: Naval Movement" + format_moves_left();
 		if (game.moves > 0) {
-			view.prompt += " Select an origin.";
 			for (let space of FRIGATE_SPACES) {
 				if (count_american_frigates(space) > 0)
 					gen_action(view, 'space', space);
@@ -975,7 +986,7 @@ states.move_us_frigate_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "United States: Naval Movement.";
-		view.prompt = "United States: Naval Movement. " + game.moves + " moves left. Select a destination.";
+		view.prompt = "United States: Naval Movement" + format_moves_left();
 		for (let space of FRIGATE_SPACES)
 			gen_action(view, 'space', space);
 		gen_action(view, 'next');
@@ -1116,7 +1127,7 @@ function goto_naval_battle_american_card() {
 
 states.naval_battle_american_card = {
 	prompt: function (view, current) {
-		view.prompt = "Naval Battle in " + SPACES[game.where] + ".";
+		view.prompt = "United States: Naval Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"Preble's Boys Take Aim\".";
@@ -1146,7 +1157,7 @@ function goto_naval_battle_tripolitan_card() {
 
 states.naval_battle_tripolitan_card = {
 	prompt: function (view, current) {
-		view.prompt = "Naval Battle in " + SPACES[game.where] + ".";
+		view.prompt = "Tripolitania: Naval Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"The Guns of Tripoli\".";
@@ -1206,11 +1217,17 @@ function goto_allocate_tripolitan_hits() {
 	game.state = 'allocate_tr_hits';
 }
 
+function format_allocate_hits(n) {
+	if (n == 0) return "Allocate hits \u2014 none.";
+	if (n == 1) return "Allocate hits \u2014 1 left.";
+	return "Allocate hits \u2014 " + n + " left.";
+}
+
 states.allocate_us_hits = {
 	prompt: function (view, current) {
-		view.prompt = "United States: Allocate " + game.n_us_hits + " hits in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
-			return view.prompt;
+			return view.prompt = "United States: Allocate hits.";
+		view.prompt = "United States: " + format_allocate_hits(game.n_us_hits);
 		gen_action_undo(view);
 		if (count_american_frigates(game.where) + count_american_gunboats(game.where) == 0)
 			gen_action(view, 'next');
@@ -1257,9 +1274,9 @@ states.allocate_us_hits = {
 
 states.allocate_tr_hits = {
 	prompt: function (view, current) {
-		view.prompt = "Tripolitania: Allocate " + game.n_tr_hits + " hits in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
-			return view.prompt;
+			return view.prompt = "Tripolitania: Allocate hits.";
+		view.prompt = "Tripolitania: " + format_allocate_hits(game.n_tr_hits);
 		gen_action_undo(view);
 		if (count_tripolitan_frigates(game.where) + count_tripolitan_corsairs(game.where) + count_allied_corsairs(game.where) == 0)
 			gen_action(view, 'next');
@@ -1378,7 +1395,7 @@ states.land_battle_move_frigates = {
 		view.prompt = "United States: " + CARD_NAMES[game.active_card] + ".";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " Move up to " + game.moves + " frigates to " + SPACES[game.where] + ".";
+		view.prompt += " Move frigates to " + SPACES[game.where] + format_moves_left();
 		gen_action_undo(view);
 		gen_action(view, 'next');
 		if (game.moves > 0) {
@@ -1426,7 +1443,7 @@ function goto_land_battle_american_card() {
 
 states.land_battle_american_card = {
 	prompt: function (view, current) {
-		view.prompt = "Land Battle in " + SPACES[game.where] + ".";
+		view.prompt = "United States: Land Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
 		let options = [];
@@ -1482,7 +1499,7 @@ function goto_land_battle_tripolitan_card() {
 
 states.land_battle_tripolitan_card = {
 	prompt: function (view, current) {
-		view.prompt = "Land Battle in " + SPACES[game.where] + ".";
+		view.prompt = "Tripolitania: Land Battle in " + SPACES[game.where] + ".";
 		if (is_inactive_player(current))
 			return;
 		view.prompt += " You may play \"Mercenaries Desert\".";
@@ -1554,7 +1571,7 @@ function goto_land_battle_round() {
 
 states.land_battle_results = {
 	prompt: function (view, current) {
-		view.prompt = "Land Battle Round in " + SPACES[game.where] + ": " + game.flash;
+		view.prompt = "United States: Land Battle Round in " + SPACES[game.where] + ": " + game.flash;
 		if (is_inactive_player(current))
 			return;
 		gen_action(view, 'next');
@@ -1681,7 +1698,7 @@ states.yusuf_qaramanli = {
 		view.prompt = "Tripolitania: Yusuf Qaramanli.";
 		if (is_inactive_player(current))
 			return view.prompt;
-		view.prompt += " Choose a harbor with corsairs to pirate raid from."
+		view.prompt += " Select a harbor with corsairs to pirate raid from."
 			for (let space of game.raids)
 				gen_action(view, 'space', space);
 		gen_action(view, 'next');
@@ -1714,14 +1731,12 @@ function play_murad_reis_breaks_out() {
 		game.state = 'murad_reis_breaks_out';
 	} else {
 		end_murad_reis_breaks_out(2);
-		move_all_pieces(TR_CORSAIRS, GIBRALTAR, TRIPOLI);
-		end_tripolitan_play();
 	}
 }
 
 states.murad_reis_breaks_out = {
 	prompt: function (view, current) {
-		view.prompt = "Murad Reis Breaks Out.";
+		view.prompt = "United States: Murad Reis Breaks Out.";
 		if (is_inactive_player(current))
 			return view.prompt;
 		view.prompt += " You may play \"Lieutenant Sterett in Pursuit\".";
@@ -1866,6 +1881,9 @@ states.storms = {
 	space: function (space) {
 		let six = false;
 		let n = roll_many_dice("Storms: ", count_american_frigates(space), 6);
+		if (n == 0) {
+			log("No effect.");
+		}
 		if (n > 0) {
 			log("One American frigate sinks.");
 			move_one_piece(US_FRIGATES, space, TRIPOLITAN_SUPPLY);
@@ -2197,6 +2215,7 @@ states.a_show_of_force_where = {
 		push_undo();
 		game.where = space;
 		game.state = 'a_show_of_force_who';
+		game.moves = 3 - count_american_frigates(game.where);
 	},
 }
 
@@ -2205,9 +2224,9 @@ states.a_show_of_force_who = {
 		view.prompt = "United States: A Show of Force.";
 		if (is_inactive_player(current))
 			return;
-		view.prompt += " Move 3 frigates to " + SPACES[game.where] + ".";
+		view.prompt += " Move frigates to " + SPACES[game.where] + format_moves_left();
 		gen_action_undo(view);
-		if (count_american_frigates(game.where) == 3) {
+		if (count_american_frigates(game.where) >= 3) {
 			gen_action(view, 'next');
 		} else {
 			for (let space of FRIGATE_SPACES)
@@ -2220,6 +2239,7 @@ states.a_show_of_force_who = {
 		push_undo();
 		game.summary.push("from " + SPACES[space]);
 		move_one_piece(US_FRIGATES, space, game.where);
+		--game.moves;
 	},
 	next: function () {
 		flush_summary("Frigates moved to " + SPACES[game.where] + ":");

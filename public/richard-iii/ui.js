@@ -48,8 +48,6 @@ function toggle_blocks() {
 	document.getElementById("map").classList.toggle("hide_blocks");
 }
 
-let game = null;
-
 let ui = {
 	cards: {},
 	areas: {},
@@ -629,7 +627,7 @@ function update_cards() {
 		document.querySelector("#york_card").className = "small_card " + CARDS[game.y_card].image;
 }
 
-function update_battle(player) {
+function update_battle() {
 	function fill_cell(name, list, reserve) {
 		let cell = window[name];
 
@@ -717,9 +715,7 @@ function update_battle(player) {
 	}
 }
 
-function on_update(state, player) {
-	game = state;
-
+function on_update() {
 	show_action_button("#undo_button", "undo");
 	show_action_button("#pass_button", "pass");
 	show_action_button("#end_action_phase_button", "end_action_phase");
@@ -743,7 +739,7 @@ function on_update(state, player) {
 		document.querySelector(".battle_header").textContent = game.battle.title;
 		document.querySelector(".battle_message").textContent = game.battle.flash;
 		document.querySelector(".battle").classList.add("show");
-		update_battle(player);
+		update_battle();
 	} else {
 		document.querySelector(".battle").classList.remove("show");
 	}

@@ -54,8 +54,6 @@ const step_up_animation = [
 		{ transform: 'translateY(0px)' },
 ];
 
-let game = null;
-
 let ui = {
 	spaces: {},
 	known: {},
@@ -530,7 +528,7 @@ function update_map() {
 	}
 }
 
-function update_battle(player) {
+function update_battle() {
 	function fill_cell(name, list, reserve) {
 		let cell = window[name];
 
@@ -649,9 +647,7 @@ function update_cards() {
 	}
 }
 
-function on_update(state, player) {
-	game = state;
-
+function on_update() {
 	document.getElementById("turn").className = "year_" + game.year;
 	document.getElementById("caesar_vp").textContent = game.c_vp + " VP";
 	document.getElementById("pompeius_vp").textContent = game.p_vp + " VP";
@@ -675,7 +671,7 @@ function on_update(state, player) {
 		document.querySelector(".battle_header").textContent = game.battle.title;
 		document.querySelector(".battle_message").textContent = game.battle.flash;
 		document.querySelector(".battle").classList.add("show");
-		update_battle(player);
+		update_battle();
 	} else {
 		document.querySelector(".battle").classList.remove("show");
 	}

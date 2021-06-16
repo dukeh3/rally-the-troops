@@ -1388,6 +1388,7 @@ function end_movement() {
 		game.mercury == game.active)
 		return end_player_turn();
 
+	game.who = null;
 	game.moves = 0;
 	game.state = 'levy';
 	game.turn_log = [];

@@ -399,6 +399,7 @@ function play_card(player, card) {
 	log(game.active + " plays \u{201c}" + CARD_NAMES[card] + "\u{201d}.");
 	remove_from_array(player.core, card);
 	remove_from_array(player.hand, card);
+	remove_from_array(player.discard, card);
 	if (REMOVE_AFTER_PLAY.includes(card))
 		game.removed.push(card);
 	else
@@ -1233,7 +1234,7 @@ function goto_allocate_tripolitan_hits() {
 }
 
 function format_allocate_hits(n) {
-	if (n == 0) return "Allocate hits \u2014 none.";
+	if (n == 0) return "Allocate hits \u2014 done.";
 	if (n == 1) return "Allocate hits \u2014 1 left.";
 	return "Allocate hits \u2014 " + n + " left.";
 }

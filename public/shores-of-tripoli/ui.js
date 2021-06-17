@@ -55,7 +55,7 @@ const TRACK_1804 = get_space_id("1804");
 const TRACK_1805 = get_space_id("1805");
 const TRACK_1806 = get_space_id("1806");
 
-let map = document.getElementById("map");
+let map = document.getElementById("svgmap");
 
 let ui = {
 	spaces: {},
@@ -99,7 +99,7 @@ function build_map() {
 	}
 	for (let i = 0; i < PIECES.length; ++i) {
 		let piece = PIECES[i];
-		let e = map.getElementById(piece);
+		let e = document.getElementById(piece);
 		if (e) {
 			e.addEventListener("mouseenter", on_focus_piece);
 			e.addEventListener("mouseleave", on_blur);
@@ -221,8 +221,8 @@ function update_season_marker(season) {
 
 function set_piece_xy(p, x, y) {
 	let e = ui.pieces[p];
-	e.setAttribute("x", x);
-	e.setAttribute("y", y);
+	e.style.left = Math.round(x - e.offsetWidth/2) + "px";
+	e.style.top = Math.round(y - e.offsetHeight/2) + "px";
 }
 
 function layout_space(location, s, x0, y0, size) {
@@ -416,10 +416,7 @@ function on_click_card(evt) {
 
 /* INITIALIZE CLIENT */
 
-function toggle_fit() {
-	document.getElementById("map").classList.toggle("fit");
-}
-
 build_map();
 scroll_with_middle_mouse(".grid_center");
+init_map_zoom();
 init_client([ "Tripolitania", "United States" ]);

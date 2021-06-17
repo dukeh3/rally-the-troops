@@ -73,55 +73,60 @@
 
 /* MAP */
 
+.mapwrap.fit {
+	box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
+}
+
 #map {
+	position: relative;
 	display: block;
 	width: 2476px;
 	height: 801px;
 	background-color: black;
-	box-shadow: 0 0 15px rgba(0,0,0,0.8);
+	box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
 }
 
-#map.fit {
-	width: 100%;
-	height: auto;
+svg {
+	position: absolute;
 }
 
-#map image {
+svg image {
 	pointer-events: none;
 }
 
-#map use, #map circle {
-	transition-property: x, y, cx, cy;
+svg circle, .piece {
+	transition-property: x, y, cx, cy, top, left;
 	transition-duration: 700ms;
 	transition-timing-function: ease;
 }
 
-#map use {
+.piece {
+	position: absolute;
 	pointer-events: none;
+	background-size: cover;
+	background-repeat: none;
+	filter: drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
 }
 
-#map use.highlight {
+.piece.highlight {
 	pointer-events: all;
 	cursor: pointer;
-	stroke: white;
+	filter: brightness(150%) drop-shadow(0 0 3px white);
 }
 
-#map use.highlight.damaged {
-	stroke: lightgray;
+.piece.damaged {
+	filter: brightness(60%) drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
 }
 
-.us_frigate { fill: #0977bd; }
-.us_gunboat { fill: #0977bd; }
-.se_frigate { fill: #fdd527; }
-.tr_frigate { fill: #de333e; }
-.tr_corsair { fill: #de333e; }
-.al_corsair { fill: #f39331; }
-.us_marine { fill: #0977bd; }
-.ar_infantry { fill: #e0e0e0; }
-.tr_infantry { fill: #de333e; }
-
-.us_frigate.damaged { fill: #005577; }
-.tr_frigate.damaged { fill: #881111; }
+.piece.us_frigate { width: 42px; height: 29px; background-image: url("icons/us_frigate.svg"); }
+.piece.se_frigate { width: 42px; height: 29px; background-image: url("icons/se_frigate.svg"); }
+.piece.tr_frigate { width: 42px; height: 29px; background-image: url("icons/tr_frigate.svg"); }
+.piece.us_gunboat { width: 33px; height: 27px; background-image: url("icons/us_gunboat.svg"); }
+.piece.tr_corsair { width: 33px; height: 27px; background-image: url("icons/tr_corsair.svg"); }
+.piece.al_corsair { width: 33px; height: 27px; background-image: url("icons/al_corsair.svg"); }
+.piece.us_marine { width: 21px; height: 21px; background-image: url("icons/us_marine.svg"); }
+.piece.ar_infantry { width: 21px; height: 21px; background-image: url("icons/ar_infantry.svg"); }
+.piece.tr_infantry { width: 21px; height: 21px; background-image: url("icons/tr_infantry.svg"); }
 
 .harbor {
 	fill-opacity: 0;
@@ -275,7 +280,7 @@
 			</div>
 		</div>
 
-		<div class="image_button" onclick="toggle_fit()"><img src="/images/magnifying-glass.svg"></div>
+		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
@@ -308,18 +313,9 @@
 
 	<div class="grid_center">
 
-<svg id="map" class="fit" viewBox="0 0 2476 801">
-<defs>
-<symbol id="corsair" x="-15" y="-13" width="33.2" height="27" viewBox="0 0 332 270">
-<path d="M113.3 16.2c-.4.7-1 38.5-1.1 84-.2 45.6-.5 82.9-.5 83-.1.1-20.1.5-44.4.8-55.9.6-50.8-2.4-50.8 30.3 0 23.2 0 23.2 2.7 27.7 3.4 5.8 6.3 8.4 11.8 10.9 4.4 1.9 7.6 2 114.5 2.3 110 .3 110 .3 114.9-2 8.5-3.9 12.4-8 22.1-22.7 10.4-15.7 16.4-22.4 23.4-25.9 7.6-3.9 9.6-6.8 9.6-13.6 0-4.8-.4-6.3-2.3-8.3-4-4.2-7.4-5.1-14.5-3.8-18.5 3.5-96.7 6.9-96.7 4.3 0-.7 1.5-3.6 3.4-6.5 6.2-9.6 8.1-17.3 8.1-32.2-.1-10.5-.5-14.6-2.4-21.5-2.8-10.3-10-25.6-17.2-36.5C178 62.1 148.6 34.9 120 18c-5.9-3.5-5.6-3.4-6.7-1.8z" stroke-width="15"/>
-</symbol>
-<symbol id="frigate" x="-20" y="-15" width="42.9" height="29.6" viewBox="0 0 428 296">
-<path d="M153.5 17.2c-.3.7-.6 42.7-.8 93.3l-.2 92-16.2.3c-9.3.1-16.3-.1-16.3-.7 0-.5 1.1-3.7 2.4-7.2 4-10.6 5.1-23.4 3.3-36.4-5.2-36.2-28-73.7-63.4-104.4-11.9-10.4-10.8-17.6-11.1 71.7L51 203h-9.6c-7.9 0-10.1.3-12.4 2-4.9 3.5-5.1 5.5-4.8 35.1.3 26.9.3 27.5 2.7 31.6 1.4 2.4 4.3 5.5 6.5 7 4 2.6 4.7 2.7 22.1 3.4 9.9.4 61.2.8 114 .8 101 .1 104 0 117-4.4 14-4.8 26.4-13.8 37-27.1 11.3-14 15.9-17.5 36.1-27.8 9.8-5.1 23.3-12 30-15.4 12.6-6.5 14.4-8.2 14.4-14.2 0-6.3-4.5-11-10.5-11-2.2 0-33.6 10.1-48.5 15.6-10.6 3.9-24 5.6-24 3.1 0-.7.4-1.7.9-2.3 1.9-1.9 5-13.7 6.2-23.3 1.3-10.6.3-24.7-2.7-37.6-4.9-21.7-19.8-50.7-37.4-72.7-6.8-8.6-29.4-30.8-31.3-30.8-.8 0-1.8.7-2.1 1.6-.3.9-.6 38.7-.6 84V203h-18c-9.9 0-18-.2-18-.5 0-.2 1.4-3.9 3-8.1 1.7-4.2 3.7-11.1 4.5-15.3 2.9-15.2 1.3-42.1-3.4-56.9-1.2-3.5-2.6-8.2-3.2-10.5-.6-2.3-3.1-8.9-5.5-14.6-11.7-27.2-26.7-49.6-48.1-71.9-8.7-9-10.9-10.5-11.8-8z" stroke-width="15"/>
-</symbol>
-<symbol id="infantry" x="-10" y="-10" width="21" height="21" viewBox="0 0 105 105">
-<path d="M8 53v44h89V9H8v44z" stroke-width="6"/>
-</symbol>
-</defs>
+<div id="mapwrap" class="mapwrap fit">
+<div id="map" class="map">
+<svg id="svgmap" width="2476px" height="801px" viewBox="0 0 2476 801">
 <image href="map.jpg" x="0" y="0" width="2476" height="801" />
 <path class="patrol_zone" d="M184.82 276.533a136 136 0 00-136 136 136 136 0 0073.566 120.69c1.096.19 2.461.65 4.215 1.378 3.6 1.5 4.499 1.5 10.399.1 3.6-.9 10.3-2.1 15-2.7 4.7-.7 12.3-2.601 16.9-4.301 7.3-2.8 9.3-4.1 15.5-10.2 3.9-3.9 10-8.7 13.6-10.7 4.5-2.5 8.9-6.3 14-12 3.316-3.722 7.856-8.463 11.225-11.737a92.27 92.27 0 01-19.04-55.945 92.27 92.27 0 0192.075-92.26 136 136 0 00-111.44-58.325z" id="tangier_patrol_zone"/>
 <path class="patrol_zone" d="M615.705 21.148c-2.433.155-2.407.483-1.205 1.352 3.9 2.8 4.2 3.4 4.1 7.7-.2 4.9-1.2 7.1-2.8 6.2-.6-.4-2-.7-3.2-.8-1.7-.1-2.1-.7-1.9-2.9.2-2.4 0-2.7-1.3-1.6-1.7 1.4-.9 7.5 1.3 9.7 1.6 1.7 1.6 1.7-.2 5.1-.8 1.7-1.2 4.2-.9 6.3.5 2.9.3 3.5-2 4.6-2.8 1.3-5.4 5.7-4.1 7 .4.4 1 .1 1.2-.6.3-.6 1.1-1.2 1.9-1.2 1.9 0 1.9 6.4-.1 8-1.9 1.6-1.9 3 .1 4.5 1.4.9 1.4 1.6.5 3.3-1.4 2.7-.6 4.3 1.6 3.5 1.4-.5 1.5-.1.9 2.8-.5 1.9-.8 3.8-.8 4.4 0 1.8 2 12.9 2.7 15.1.5 1.8.1 2.3-2.6 3.3-1.7.6-4.2 1.1-5.5 1.1-1.2 0-3.5 1.3-5.1 3-3.2 3.4-4.8 3.8-5.7 1.3-.6-1.4-.8-1.4-2.2.5-.8 1.2-2.4 2.2-3.4 2.2-1.6 0-1.8.5-1.4 2.9.3 1.6.1 3.8-.5 5-1 1.8-1.5 1.9-3.2 1-2.4-1.2-2.5-1.1-4.7 3.3-1.6 3.1-2 3.3-6.3 3.1l-4.7-.1-.7 8.1c-.4 4.5-1.1 8.8-1.7 9.4-.6.7-1.9 4.5-2.9 8.5-1 3.9-2.5 7.8-3.3 8.7-1.1 1.3-1.2 3.2-.6 9.1.6 5.6.4 8.2-.6 10.4-.8 1.6-1.4 3.7-1.4 4.8 0 1-1.1 2.4-2.5 3-2.7 1.2-2.7 1-2.9 13.7-.1 9.3-1.4 11.3-4.1 6.2-.8-1.7-2.2-3.1-3.1-3.1-.8 0-1.9-1-2.4-2.3-1.2-2.8-4.5-6.7-5.8-6.7-.5 0-1.5.7-2.2 1.6-.8.8-2.5 1.4-4.1 1.2-1.6-.1-3.6.5-4.8 1.6-1.1 1-2.5 1.5-3.1 1.1-.6-.4-1.7-.2-2.4.4-.7.6-2.1.9-3 .5-1-.4-1.8 0-2.2 1-.8 2-4 2.1-4.8.1-.3-.8-1.6-1.5-3-1.5s-2.8-.5-3.2-1.1c-.4-.7-1.6-.1-3.4 1.6-2.1 2-3.3 2.5-5.4 1.9-2.3-.5-2.7-1-2.1-3.1.4-1.6.2-2.2-.5-1.8-.5.3-1 1.6-1 2.9 0 2.4-3.4 4.6-6.9 4.6-1 0-2.4.7-3.1 1.5-.7.8-2.1 1.5-3.2 1.5s-2.6.7-3.4 1.5c-1.522 1.439-2.921 1.203-5.975-1.378.038.626.07 1.252.094 1.878 0 50.96-41.31 92.27-92.269 92.27-50.96 0-92.27-41.31-92.27-92.27a92.27 92.27 0 015.942-32.45c-4.284-.742-6.922-1.72-6.922-2.75 0-.5-1.2-.7-2.8-.3-3.5.7-4.1 0-8.7-9.4-1.9-3.9-4-7.1-4.6-7.1-.6 0-.9.3-.7.7 2.1 4.1 3.6 8.5 4.2 12 .5 3.5.2 4.6-1.7 6.9-2.4 2.8-11.9 6-13.9 4.7-.6-.3-2.7-.6-4.6-.5-1.823.076-3.414-.312-4.951-1.246C260.979 286.86 348.139 359.979 450 360c115.98 0 210-94.02 210-210a210 210 0 00-44.295-128.852z" id="gibraltar_patrol_zone"/>
@@ -339,76 +335,78 @@
 <circle id="year" r="26" cx="175" cy="728"/>
 <circle id="season" r="26" cx="893" cy="728"/>
 </g>
-<g stroke="black">
-<use id="us_frigate_1" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_2" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_3" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_4" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_5" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_6" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_7" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="us_frigate_8" href="#frigate" x="0" y="0" class="us_frigate"/>
-<use id="tr_frigate_1" href="#frigate" x="0" y="0" class="tr_frigate"/>
-<use id="tr_frigate_2" href="#frigate" x="0" y="0" class="tr_frigate"/>
-<use id="se_frigate_1" href="#frigate" x="0" y="0" class="se_frigate"/>
-<use id="se_frigate_2" href="#frigate" x="0" y="0" class="se_frigate"/>
-<use id="us_gunboat_1" href="#corsair" x="0" y="0" class="us_gunboat"/>
-<use id="us_gunboat_2" href="#corsair" x="0" y="0" class="us_gunboat"/>
-<use id="us_gunboat_3" href="#corsair" x="0" y="0" class="us_gunboat"/>
-<use id="tr_corsair_1" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_2" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_3" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_4" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_5" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_6" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_7" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_8" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="tr_corsair_9" href="#corsair" x="0" y="0" class="tr_corsair"/>
-<use id="al_corsair_1" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_2" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_3" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_4" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_5" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_6" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_7" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_8" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="al_corsair_9" href="#corsair" x="0" y="0" class="al_corsair"/>
-<use id="us_marine_1" href="#infantry" x="0" y="0" class="us_marine"/>
-<use id="us_marine_2" href="#infantry" x="0" y="0" class="us_marine"/>
-<use id="us_marine_3" href="#infantry" x="0" y="0" class="us_marine"/>
-<use id="us_marine_4" href="#infantry" x="0" y="0" class="us_marine"/>
-<use id="ar_infantry_1" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_2" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_3" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_4" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_5" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_6" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_7" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_8" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_9" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="ar_infantry_10" href="#infantry" x="0" y="0" class="ar_infantry"/>
-<use id="tr_infantry_1" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_2" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_3" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_4" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_5" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_6" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_7" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_8" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_9" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_10" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_11" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_12" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_13" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_14" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_15" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_16" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_17" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_18" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_19" href="#infantry" x="0" y="0" class="tr_infantry"/>
-<use id="tr_infantry_20" href="#infantry" x="0" y="0" class="tr_infantry"/>
-</g>
 </svg>
+<div id="pieces">
+<div id="us_frigate_1" class="piece us_frigate"></div>
+<div id="us_frigate_2" class="piece us_frigate"></div>
+<div id="us_frigate_3" class="piece us_frigate"></div>
+<div id="us_frigate_4" class="piece us_frigate"></div>
+<div id="us_frigate_5" class="piece us_frigate"></div>
+<div id="us_frigate_6" class="piece us_frigate"></div>
+<div id="us_frigate_7" class="piece us_frigate"></div>
+<div id="us_frigate_8" class="piece us_frigate"></div>
+<div id="tr_frigate_1" class="piece tr_frigate"></div>
+<div id="tr_frigate_2" class="piece tr_frigate"></div>
+<div id="se_frigate_1" class="piece se_frigate"></div>
+<div id="se_frigate_2" class="piece se_frigate"></div>
+<div id="us_gunboat_1" class="piece us_gunboat"></div>
+<div id="us_gunboat_2" class="piece us_gunboat"></div>
+<div id="us_gunboat_3" class="piece us_gunboat"></div>
+<div id="tr_corsair_1" class="piece tr_corsair"></div>
+<div id="tr_corsair_2" class="piece tr_corsair"></div>
+<div id="tr_corsair_3" class="piece tr_corsair"></div>
+<div id="tr_corsair_4" class="piece tr_corsair"></div>
+<div id="tr_corsair_5" class="piece tr_corsair"></div>
+<div id="tr_corsair_6" class="piece tr_corsair"></div>
+<div id="tr_corsair_7" class="piece tr_corsair"></div>
+<div id="tr_corsair_8" class="piece tr_corsair"></div>
+<div id="tr_corsair_9" class="piece tr_corsair"></div>
+<div id="al_corsair_1" class="piece al_corsair"></div>
+<div id="al_corsair_2" class="piece al_corsair"></div>
+<div id="al_corsair_3" class="piece al_corsair"></div>
+<div id="al_corsair_4" class="piece al_corsair"></div>
+<div id="al_corsair_5" class="piece al_corsair"></div>
+<div id="al_corsair_6" class="piece al_corsair"></div>
+<div id="al_corsair_7" class="piece al_corsair"></div>
+<div id="al_corsair_8" class="piece al_corsair"></div>
+<div id="al_corsair_9" class="piece al_corsair"></div>
+<div id="us_marine_1" class="piece us_marine"></div>
+<div id="us_marine_2" class="piece us_marine"></div>
+<div id="us_marine_3" class="piece us_marine"></div>
+<div id="us_marine_4" class="piece us_marine"></div>
+<div id="ar_infantry_1" class="piece ar_infantry"></div>
+<div id="ar_infantry_2" class="piece ar_infantry"></div>
+<div id="ar_infantry_3" class="piece ar_infantry"></div>
+<div id="ar_infantry_4" class="piece ar_infantry"></div>
+<div id="ar_infantry_5" class="piece ar_infantry"></div>
+<div id="ar_infantry_6" class="piece ar_infantry"></div>
+<div id="ar_infantry_7" class="piece ar_infantry"></div>
+<div id="ar_infantry_8" class="piece ar_infantry"></div>
+<div id="ar_infantry_9" class="piece ar_infantry"></div>
+<div id="ar_infantry_10" class="piece ar_infantry"></div>
+<div id="tr_infantry_1" class="piece tr_infantry"></div>
+<div id="tr_infantry_2" class="piece tr_infantry"></div>
+<div id="tr_infantry_3" class="piece tr_infantry"></div>
+<div id="tr_infantry_4" class="piece tr_infantry"></div>
+<div id="tr_infantry_5" class="piece tr_infantry"></div>
+<div id="tr_infantry_6" class="piece tr_infantry"></div>
+<div id="tr_infantry_7" class="piece tr_infantry"></div>
+<div id="tr_infantry_8" class="piece tr_infantry"></div>
+<div id="tr_infantry_9" class="piece tr_infantry"></div>
+<div id="tr_infantry_10" class="piece tr_infantry"></div>
+<div id="tr_infantry_11" class="piece tr_infantry"></div>
+<div id="tr_infantry_12" class="piece tr_infantry"></div>
+<div id="tr_infantry_13" class="piece tr_infantry"></div>
+<div id="tr_infantry_14" class="piece tr_infantry"></div>
+<div id="tr_infantry_15" class="piece tr_infantry"></div>
+<div id="tr_infantry_16" class="piece tr_infantry"></div>
+<div id="tr_infantry_17" class="piece tr_infantry"></div>
+<div id="tr_infantry_18" class="piece tr_infantry"></div>
+<div id="tr_infantry_19" class="piece tr_infantry"></div>
+<div id="tr_infantry_20" class="piece tr_infantry"></div>
+</div>
+</div>
+</div>
 
 <div id="hand_cards" class="hand">
 <div id="tr_card_4" class="card tr_card_4"></div>

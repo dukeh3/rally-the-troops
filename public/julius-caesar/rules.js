@@ -98,11 +98,11 @@ function print_turn_log(verb) {
 }
 
 function is_active_player(current) {
-	return (current == game.active) || (game.active == "All" && (current == CAESAR || current == POMPEIUS));
+	return (current == game.active) || (game.active == "Both" && (current == CAESAR || current == POMPEIUS));
 }
 
 function is_inactive_player(current) {
-	return current == "Observer" || (game.active != current && game.active != "All");
+	return current == "Observer" || (game.active != current && game.active != "Both");
 }
 
 function remove_from_array(array, item) {
@@ -692,7 +692,7 @@ function start_year() {
 	game.p_card = 0;
 	game.c_discard = 0;
 	game.p_discard = 0;
-	game.active = "All";
+	game.active = "Both";
 	game.state = 'discard_and_play_card';
 	game.show_cards = false;
 }
@@ -705,7 +705,7 @@ function resume_discard_and_play_card() {
 	else if (game.p_card)
 		game.active = CAESAR;
 	else
-		game.active = "All";
+		game.active = "Both";
 }
 
 states.discard_and_play_card = {
@@ -806,7 +806,7 @@ function start_turn() {
 	game.reserves = [];
 	game.c_card = 0;
 	game.p_card = 0;
-	game.active = "All";
+	game.active = "Both";
 	game.state = 'play_card';
 	game.show_cards = false;
 	log("");
@@ -821,7 +821,7 @@ function resume_play_card() {
 	else if (game.p_card)
 		game.active = CAESAR;
 	else
-		game.active = "All";
+		game.active = "Both";
 }
 
 states.play_card = {

@@ -2569,7 +2569,7 @@ function can_play_merchant_ship_converted(merchants) {
 }
 
 function can_play_happy_hunting() {
-	return (game.where == TRIPOLI) && is_not_removed(HAPPY_HUNTING);
+	return (game.where == TRIPOLI) && (count_tripolitan_corsairs(TRIPOLI) > 0) && is_not_removed(HAPPY_HUNTING);
 }
 
 function can_play_the_guns_of_tripoli() {

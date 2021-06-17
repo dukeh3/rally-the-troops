@@ -80,11 +80,11 @@
 #tooltip.card {
 	position: absolute;
 	z-index: 100;
-	left: 50%;
+	right: 270px;
 	top: 60px;
 	margin-left: -250px;
-	width: 500px;
-	height: 700px;
+	width: 375px;
+	height: 525px;
 }
 
 /* CARD ACTION POPUP MENU */
@@ -108,6 +108,7 @@
 
 .map.greek, .map.greek > div {
 	transform: rotate(180deg);
+	transform-origin: center;
 }
 
 .map {
@@ -252,7 +253,6 @@
 			</div>
 		</div>
 
-		<div class="image_button" onclick="toggle_markers()"><img src="/images/earth-africa-europe.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 

@@ -44,10 +44,7 @@ const CITIES = {
         "Thebai":{"x":671,"y":221,"w":84,"h":81}
 };
 
-let game;
-
 let ui = {
-	player: null,
 	cards: {},
 	backs: {},
 	cities: {},
@@ -89,8 +86,8 @@ function on_click_bridge(evt) {
 }
 
 function on_click_army(evt) {
-	if (game.land_movement && ui.player) {
-		let here = (ui.player == PERSIA ? ui.persian_army : ui.greek_army)[game.land_movement];
+	if (game.land_movement && player) {
+		let here = (player == PERSIA ? ui.persian_army : ui.greek_army)[game.land_movement];
 		if (here.includes(evt.target)) {
 			if (ui.selected_armies && ui.selected_armies.includes(evt.target))
 				remove_from_array(ui.selected_armies, evt.target);
@@ -99,8 +96,8 @@ function on_click_army(evt) {
 		}
 		update_ui();
 	}
-	if (game.naval_transport && ui.player) {
-		let here = (ui.player == PERSIA ? ui.persian_army : ui.greek_army)[game.naval_movement];
+	if (game.naval_transport && player) {
+		let here = (player == PERSIA ? ui.persian_army : ui.greek_army)[game.naval_movement];
 		if (here.includes(evt.target)) {
 			if (ui.selected_armies && ui.selected_armies.includes(evt.target)) {
 				remove_from_array(ui.selected_armies, evt.target);
@@ -114,8 +111,8 @@ function on_click_army(evt) {
 }
 
 function on_click_fleet(evt) {
-	if (game.naval_movement && ui.player) {
-		let here = (ui.player == PERSIA ? ui.persian_fleet : ui.greek_fleet)[game.naval_movement];
+	if (game.naval_movement && player) {
+		let here = (player == PERSIA ? ui.persian_fleet : ui.greek_fleet)[game.naval_movement];
 		if (here.includes(evt.target)) {
 			if (ui.selected_fleets && ui.selected_fleets.includes(evt.target)) {
 				remove_from_array(ui.selected_fleets, evt.target);
@@ -267,10 +264,7 @@ function show_marker(id, class_name, show = 1, enabled = 0) {
 	elt.className = class_name;
 }
 
-function on_update(state, player) {
-	game = state;
-	ui.player = player;
-
+function on_update() {
 	document.getElementById("greek_info").textContent = greek_info();
 	document.getElementById("persian_info").textContent = persian_info();
 
@@ -367,19 +361,19 @@ function on_update(state, player) {
 
 	ui.selected_armies = null;
 	if (game.land_movement) {
-		if (ui.player == PERSIA)
+		if (player == PERSIA)
 			ui.selected_armies = ui.persian_army[game.land_movement].slice();
-		if (ui.player == GREECE)
+		if (player == GREECE)
 			ui.selected_armies = ui.greek_army[game.land_movement].slice();
 	}
 
 	ui.selected_fleets = null;
 	if (game.naval_movement) {
-		if (ui.player == PERSIA) {
+		if (player == PERSIA) {
 			ui.selected_fleets = ui.persian_fleet[game.naval_movement].slice();
 			ui.selected_armies = [];
 		}
-		if (ui.player == GREECE) {
+		if (player == GREECE) {
 			ui.selected_fleets = ui.greek_fleet[game.naval_movement].slice();
 			ui.selected_armies = [];
 		}
@@ -455,7 +449,7 @@ function update_ui() {
 			}
 			let z = 50;
 			let i = 0;
-			if (ui.player == GREECE)
+			if (player == GREECE)
 				for (let row = nrow-1; row >= 0; --row)
 					for (let col = ncol-1; col >= 0 && i < list.length; --col)
 						layout_army(row, col, list[i++], z--);
@@ -497,7 +491,7 @@ function update_ui() {
 
 	function layout_transport(a, f) {
 		a.style.left = (parseInt(f.style.left) + 13 - 11) + "px";
-		if (ui.player == GREECE)
+		if (player == GREECE)
 			a.style.top = (parseInt(f.style.top) + 10 - 13 + 10) + "px";
 		else
 			a.style.top = (parseInt(f.style.top) + 10 - 13 - 10) + "px";
@@ -597,8 +591,8 @@ function toggle_markers() {
 	document.querySelector(".map").classList.toggle("hide_markers");
 }
 
-ui.player = new URLSearchParams(window.location.search).get("role");
-if (ui.player == GREECE)
+player = new URLSearchParams(window.location.search).get("role");
+if (player == GREECE)
 	document.getElementById("map").classList.add("greek");
 
 build_ui();

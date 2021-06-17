@@ -38,7 +38,7 @@
 const CHEAP_PERSIAN_FLEETS = "Cheap Fleets";
 
 exports.scenarios = [
-	"Default",
+	"Standard",
 	CHEAP_PERSIAN_FLEETS,
 ];
 

@@ -248,6 +248,7 @@ function layout_space(location, s, x0, y0, size) {
 	for (let p = 0; p < PIECES.length; ++p) {
 		if (location[p] == s) {
 			let prefix = PIECES[p].substring(0,4);
+			if (location[p] == TRIPOLITAN_SUPPLY && prefix == 'tr_f') prefix = 'us_f';
 			if (prefix == 'se_f') prefix = 'us_f';
 			if (prefix == 'al_c') prefix = 'tr_c';
 			pps[prefix].push(p);

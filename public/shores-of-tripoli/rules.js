@@ -270,22 +270,27 @@ function logp(...args) {
 	game.log.push(game.active + " " + s);
 }
 
-function flush_summary(text, nothing="none") {
+function flush_summary(text, add_plural_s=false) {
 	game.summary.sort();
 	let last = game.summary[0];
 	let n = 0;
 	for (let entry of game.summary) {
 		if (entry != last) {
-			text += "\n" + n + " " + last;
+			if (add_plural_s && n > 1)
+				text += "\n" + n + " " + last + "s";
+			else
+				text += "\n" + n + " " + last;
 			n = 0;
 		}
 		++n;
 		last = entry;
 	}
-	if (n > 0)
+	if (add_plural_s && n > 1)
+		text += "\n" + n + " " + last + "s";
+	else if (n > 0)
 		text += "\n" + n + " " + last;
 	else
-		text += "\n" + nothing;
+		text += "\n" + "none";
 	log(text);
 	delete game.summary;
 }
@@ -1217,6 +1222,7 @@ function goto_naval_battle_round() {
 	log("United States scores " + game.n_tr_hits + (game.n_tr_hits == 1 ? " hit." : " hits."));
 	log("Tripolitania scores " + game.n_us_hits + (game.n_us_hits == 1 ? " hit." : " hits."));
 
+	game.summary = [];
 	if (game.save_active == US)
 		goto_allocate_american_hits();
 	else
@@ -1263,16 +1269,15 @@ states.allocate_us_hits = {
 		--game.n_us_hits;
 		if (US_FRIGATES.includes(p)) {
 			if (game.damaged.includes(p)) {
-				log("American frigate sinks.");
+				game.summary.push("American frigate sunk");
 				game.location[p] = TRIPOLITAN_SUPPLY;
 				remove_from_array(game.damaged, p);
 			} else {
-				log("American frigate is damaged.");
 				game.damaged.push(p);
 			}
 		}
 		if (US_GUNBOATS.includes(p)) {
-			log("American gunboat sinks.");
+			game.summary.push("American gunboat");
 			move_one_piece(US_GUNBOATS, game.where, UNITED_STATES_SUPPLY);
 		}
 	},
@@ -1315,20 +1320,19 @@ states.allocate_tr_hits = {
 		--game.n_tr_hits;
 		if (TR_FRIGATES.includes(p)) {
 			if (game.damaged.includes(p)) {
-				log("Tripolitan frigate sinks.");
+				game.summary.push("Tripolitan frigate sunk");
 				game.location[p] = TRIPOLITAN_SUPPLY;
 				remove_from_array(game.damaged, p);
 			} else {
-				log("Tripolitan frigate is damaged.");
 				game.damaged.push(p);
 			}
 		}
 		if (TR_CORSAIRS.includes(p)) {
-			log("Tripolitan corsair sinks.");
+			game.summary.push("Tripolitan corsair");
 			move_one_piece(TR_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
 		}
 		if (AL_CORSAIRS.includes(p)) {
-			log("Allied corsair sinks.");
+			game.summary.push("Allied corsair");
 			move_one_piece(AL_CORSAIRS, game.where, TRIPOLITAN_SUPPLY);
 		}
 	},
@@ -1351,17 +1355,25 @@ function move_damaged_frigate_to_year_track(p, supply) {
 }
 
 function remove_damaged_frigates() {
-	for (let p of US_FRIGATES)
-		if (game.damaged.includes(p))
+	for (let p of US_FRIGATES) {
+		if (game.damaged.includes(p)) {
+			game.summary.push("American frigate");
 			move_damaged_frigate_to_year_track(p, UNITED_STATES_SUPPLY);
-	for (let p of TR_FRIGATES)
-		if (game.damaged.includes(p))
+		}
+	}
+	for (let p of TR_FRIGATES) {
+		if (game.damaged.includes(p)) {
+			game.summary.push("Tripolitan frigate");
 			move_damaged_frigate_to_year_track(p, TRIPOLITAN_SUPPLY);
+		}
+	}
 }
 
 function resume_naval_battle() {
 	delete game.the_guns_of_tripoli;
 	delete game.prebles_boys_take_aim;
+
+	flush_summary("Ships sunk:", true)
 
 	if (game.active_card == ASSAULT_ON_TRIPOLI) {
 		let n_tr = count_tripolitan_frigates(game.where) + count_tripolitan_corsairs(game.where);
@@ -1381,7 +1393,9 @@ function resume_naval_battle() {
 
 	delete game.save_active;
 
+	game.summary = [];
 	remove_damaged_frigates();
+	flush_summary("Ships damaged:", true)
 
 	move_all_pieces(US_FRIGATES, game.where, MALTA);
 	move_all_pieces(US_GUNBOATS, game.where, MALTA);

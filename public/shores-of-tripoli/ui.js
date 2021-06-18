@@ -60,6 +60,7 @@ let map = document.getElementById("svgmap");
 let ui = {
 	spaces: {},
 	pieces: {},
+	gold: [],
 	cards: {},
 }
 
@@ -107,6 +108,9 @@ function build_map() {
 			e.piece = i;
 			ui.pieces[i] = e;
 		}
+	}
+	for (let i = 1; i <= 12; ++i) {
+		ui.gold.push(document.getElementById("gold_" + i));
 	}
 	for (let i = 1; i <= 27; ++i) {
 		let e = ui.cards[i] = document.getElementById("us_card_"+i);
@@ -167,7 +171,6 @@ function tr_info() {
 	text += "Hand: " + game.tr.hand + "\n";
 	text += "Draw: " + game.tr.draw + "\n";
 	text += "Discard: " + game.tr.discard + "\n";
-	text += "Gold: " + game.tr.gold + "\n";
 	return text;
 }
 
@@ -202,6 +205,7 @@ function on_update() {
 
 	update_year_marker(game.year);
 	update_season_marker(game.season);
+	update_gold();
 	update_pieces();
 	update_cards();
 	update_spaces();
@@ -221,6 +225,12 @@ function update_season_marker(season) {
 
 function set_piece_xy(p, x, y) {
 	let e = ui.pieces[p];
+	e.style.left = Math.round(x - e.offsetWidth/2) + "px";
+	e.style.top = Math.round(y - e.offsetHeight/2) + "px";
+}
+
+function set_gold_xy(i, x, y) {
+	let e = ui.gold[i];
 	e.style.left = Math.round(x - e.offsetWidth/2) + "px";
 	e.style.top = Math.round(y - e.offsetHeight/2) + "px";
 }
@@ -315,6 +325,23 @@ function update_pieces() {
 			ui.pieces[p].classList.add("highlight");
 		else
 			ui.pieces[p].classList.remove("highlight");
+	}
+}
+
+function update_gold() {
+	let split = 12 - game.tr.gold;
+	let x, y;
+	x = 690;
+	y = 50;
+	for (let i = 0; i < split; ++i) {
+		set_gold_xy(i, x, y);
+		x += 50;
+	}
+	x = 2250;
+	y = 750;
+	for (let i = 11; i >= split; --i) {
+		set_gold_xy(i, x, y);
+		x -= 50;
 	}
 }
 

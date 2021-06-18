@@ -532,7 +532,7 @@ function is_benghazi_captured() {
 
 function is_naval_battle_location(space) {
 	let n_us = count_american_frigates(space);
-	let n_tr = count_corsairs(space);
+	let n_tr = count_tripolitan_frigates(space) + count_corsairs(space);
 	return (n_us > 0 && n_tr > 0);
 }
 

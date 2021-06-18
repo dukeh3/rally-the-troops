@@ -1,5 +1,7 @@
 "use strict";
 
+// TODO: auto-allocate corsair hits?
+
 const US = "United States";
 const TR = "Tripolitania";
 
@@ -1380,6 +1382,8 @@ function resume_naval_battle() {
 		let n_us = count_american_frigates(game.where) + count_american_gunboats(game.where);
 		if (n_tr == 0) {
 			log("The Tripolitan fleet has been eliminated.");
+			move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
+			move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
 			return goto_land_battle();
 		}
 		if (n_us == 0) {
@@ -1595,13 +1599,13 @@ function goto_land_battle_round() {
 	let n_us_hits = roll_many_dice("Tripolitan infantry: ", n_tr_inf);
 
 	game.flash = apply_tr_hits(n_tr_hits) + apply_us_hits(n_us_hits);
-	log("Losses: " + game.flash);
+	log("Losses: " + game.flash + ".");
 	game.state = 'land_battle_results';
 }
 
 states.land_battle_results = {
 	prompt: function (view, current) {
-		view.prompt = "United States: Land Battle Round in " + SPACES[game.where] + ": " + game.flash;
+		view.prompt = "Land Battle in " + SPACES[game.where] + " \u2014 " + game.flash + " lost.";
 		if (is_inactive_player(current))
 			return;
 		gen_action(view, 'next');
@@ -1636,9 +1640,9 @@ function apply_us_hits(total) {
 	for (let i = 0; i < n; ++i)
 		move_one_piece(US_MARINES, game.where, UNITED_STATES_SUPPLY);
 	if (n == 1)
-		return msg + "\n" + n + " American marine."
+		return msg + "\n" + n + " American marine"
 	else
-		return msg + "\n" + n + " American marines."
+		return msg + "\n" + n + " American marines"
 }
 
 // TRIPOLITAN EVENTS
@@ -2171,9 +2175,6 @@ function can_play_assault_on_tripoli() {
 }
 
 function play_assault_on_tripoli() {
-	// TODO: force play of SEND_IN_THE_MARINES if no hamet's army in benghazi
-	move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
-	move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
 	move_all_pieces(US_GUNBOATS, MALTA, TRIPOLI);
 	for (let space of FRIGATE_SPACES)
 		if (space != TRIPOLI)

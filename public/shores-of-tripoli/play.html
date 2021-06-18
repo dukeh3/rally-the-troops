@@ -96,7 +96,7 @@ svg image {
 
 svg circle, .piece {
 	transition-property: x, y, cx, cy, top, left;
-	transition-duration: 700ms;
+	transition-duration: 1s;
 	transition-timing-function: ease;
 }
 
@@ -104,7 +104,7 @@ svg circle, .piece {
 	position: absolute;
 	pointer-events: none;
 	background-size: cover;
-	background-repeat: none;
+	background-repeat: no-repeat;
 	filter: drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
 }
 
@@ -128,6 +128,7 @@ svg circle, .piece {
 .piece.ar_infantry { width: 21px; height: 21px; background-image: url("icons/ar_infantry.svg"); }
 .piece.tr_infantry { width: 21px; height: 21px; background-image: url("icons/tr_infantry.svg"); }
 .piece.gold { width: 40px; height: 40px; background-image: url("icons/gold.png"); }
+.piece.marker { width: 50px; height: 50px; border-radius: 50%; background-color: #444; border: 2px solid black; }
 
 .harbor {
 	fill-opacity: 0;
@@ -332,10 +333,6 @@ svg circle, .piece {
 <circle class="harbor" id="benghazi" r="92" cy="583" cx="1877"/>
 <circle class="harbor" id="alexandria" r="92" cy="454.5" cx="2335.5"/>
 <circle class="harbor" id="tripoli" r="128" cy="604.5" cx="1416"/>
-<g id="markers" fill="#444" stroke="black" stroke-width="2">
-<circle id="year" r="26" cx="175" cy="728"/>
-<circle id="season" r="26" cx="893" cy="728"/>
-</g>
 </svg>
 <div id="pieces">
 <div id="us_frigate_1" class="piece us_frigate"></div>
@@ -417,6 +414,8 @@ svg circle, .piece {
 <div id="gold_10" class="piece gold"></div>
 <div id="gold_11" class="piece gold"></div>
 <div id="gold_12" class="piece gold"></div>
+<div id="year" class="piece marker"></div>
+<div id="season" class="piece marker"></div>
 </div>
 </div>
 </div>

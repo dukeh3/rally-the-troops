@@ -55,8 +55,6 @@ const TRACK_1804 = get_space_id("1804");
 const TRACK_1805 = get_space_id("1805");
 const TRACK_1806 = get_space_id("1806");
 
-let map = document.getElementById("svgmap");
-
 let ui = {
 	spaces: {},
 	pieces: {},
@@ -86,6 +84,7 @@ function on_click_space(evt) { send_action('space', evt.target.space); }
 function on_click_piece(evt) { send_action('piece', evt.target.piece); }
 
 function build_map() {
+	let map = document.getElementById("svgmap");
 	for (let i = 0; i < SPACES.length; ++i) {
 		let space = SPACES[i];
 		let id = space.replace(/ /g, "_").toLowerCase();
@@ -212,15 +211,16 @@ function on_update() {
 }
 
 function update_year_marker(year) {
-	let e = map.getElementById("year");
-	e.setAttribute("cx", YEAR_X[year]);
-	e.setAttribute("cy", YEAR_Y);
+	let e = document.getElementById("year");
+	console.log("year", e);
+	e.style.left = Math.round(YEAR_X[year] - 27) + "px";
+	e.style.top = Math.round(YEAR_Y - 27) + "px";
 }
 
 function update_season_marker(season) {
-	let e = map.getElementById("season");
-	e.setAttribute("cx", SEASON_X[season]);
-	e.setAttribute("cy", YEAR_Y);
+	let e = document.getElementById("season");
+	e.style.left = Math.round(SEASON_X[season] - 27) + "px";
+	e.style.top = Math.round(YEAR_Y - 27) + "px";
 }
 
 function set_piece_xy(p, x, y) {

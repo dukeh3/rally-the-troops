@@ -166,19 +166,23 @@ svg circle, .piece {
 /* CARD ACTION POPUP MENU */
 
 #popup {
-	position: absolute;
+	position: fixed;
 	user-select: none;
-	background-color: #ddd;
+	background-color: gainsboro;
 	left: 10px;
 	top: 100px;
 	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
 	z-index: 200;
 	min-width: 20ex;
 	white-space: nowrap;
+	display: none;
 }
-#popup div { padding: 3pt 8pt; display: none; }
-#popup div.enabled { padding: 3pt 8pt; display: block; }
-#popup div:hover { background-color: teal; color: white; }
+#popup div { padding: 3pt 8pt; color: gray; display: none; }
+#popup div.enabled { color: black; display: block; }
+#popup div.enabled:hover { background-color: teal; color: white; }
+#popup div.always { display: block; }
+.Tripolitania ~ .grid_center > #popup > .tr_always { display: block; }
+.United_States ~ .grid_center > #popup > .us_always { display: block; }
 
 /* CARD IMAGES */
 
@@ -481,12 +485,12 @@ svg circle, .piece {
 </div>
 
 <div id="popup" onmouseleave="hide_popup_menu()">
-<div id="menu_card_event" onclick="on_card_event()">Play Event</div>
+<div id="menu_card_event" class="always" onclick="on_card_event()">Play Event</div>
+<div id="menu_card_move_frigates" class="us_always" onclick="on_card_move_frigates()">Discard to move two frigates</div>
+<div id="menu_card_build_gunboat" class="us_always" onclick="on_card_build_gunboat()">Discard to build a gunboat</div>
+<div id="menu_card_pirate_raid" class="tr_always" onclick="on_card_pirate_raid()">Discard to pirate raid</div>
+<div id="menu_card_build_corsair" class="tr_always" onclick="on_card_build_corsair()">Discard to build a corsair</div>
 <div id="menu_card_take" onclick="on_card_take()">Place in hand</div>
-<div id="menu_card_move_frigates" onclick="on_card_move_frigates()">Discard to move two frigates</div>
-<div id="menu_card_pirate_raid" onclick="on_card_pirate_raid()">Discard to pirate raid</div>
-<div id="menu_card_build_gunboat" onclick="on_card_build_gunboat()">Discard to build a gunboat</div>
-<div id="menu_card_build_corsair" onclick="on_card_build_corsair()">Discard to build a corsair</div>
 </div>
 
 	</div>

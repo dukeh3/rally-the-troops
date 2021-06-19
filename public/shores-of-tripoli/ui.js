@@ -212,7 +212,6 @@ function on_update() {
 
 function update_year_marker(year) {
 	let e = document.getElementById("year");
-	console.log("year", e);
 	e.style.left = Math.round(YEAR_X[year] - 27) + "px";
 	e.style.top = Math.round(YEAR_Y - 27) + "px";
 }
@@ -388,33 +387,33 @@ function hide_popup_menu() {
 }
 
 function on_card_event() {
-	send_action('card_event', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_event', current_popup_card))
+		hide_popup_menu();
 }
 
 function on_card_take() {
-	send_action('card_take', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_take', current_popup_card))
+		hide_popup_menu();
 }
 
 function on_card_move_frigates() {
-	send_action('card_move_frigates', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_move_frigates', current_popup_card))
+		hide_popup_menu();
 }
 
 function on_card_pirate_raid() {
-	send_action('card_pirate_raid', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_pirate_raid', current_popup_card))
+		hide_popup_menu();
 }
 
 function on_card_build_gunboat() {
-	send_action('card_build_gunboat', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_build_gunboat', current_popup_card))
+		hide_popup_menu();
 }
 
 function on_card_build_corsair() {
-	send_action('card_build_corsair', current_popup_card);
-	hide_popup_menu();
+	if (send_action('card_build_corsair', current_popup_card))
+		hide_popup_menu();
 }
 
 function is_card_action(action, card) {

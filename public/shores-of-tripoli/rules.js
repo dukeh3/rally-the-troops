@@ -997,7 +997,10 @@ states.move_us_frigate_from = {
 	},
 	next: function () {
 		flush_summary("Frigates moved:");
-		if (count_naval_battle_or_bombardment_locations() > 0)
+		let n = count_naval_battle_or_bombardment_locations();
+		if (n == 1)
+			auto_allocate_gunboats();
+		else if (n > 1)
 			goto_allocate_gunboats();
 		else
 			end_american_play();
@@ -1035,6 +1038,19 @@ states.move_us_frigate_to = {
 			end_american_play();
 	},
 	undo: pop_undo
+}
+
+function auto_allocate_gunboats() {
+	for (let space of BATTLE_SPACES) {
+		if (is_naval_battle_location(space)) {
+			move_all_pieces(US_GUNBOATS, MALTA, space);
+			return goto_naval_battle(space);
+		}
+		if (is_naval_bombardment_location(space)) {
+			move_all_pieces(US_GUNBOATS, MALTA, space);
+			return goto_naval_bombardment(space);
+		}
+	}
 }
 
 function goto_allocate_gunboats() {
@@ -1103,7 +1119,7 @@ states.select_battle = {
 function goto_naval_bombardment(space) {
 	game.where = space;
 	naval_bombardment_round();
-	end_naval_bombardment();
+	game.state = 'naval_bombardment_results';
 }
 
 function naval_bombardment_round() {
@@ -1118,9 +1134,23 @@ function naval_bombardment_round() {
 		if (n_hits > n_infantry)
 			n_hits = n_infantry;
 		log("Infantry eliminated: " + n_hits + ".");
+		game.flash = n_hits + " infantry eliminated."
 		for (let i = 0; i < n_hits; ++i)
 			move_one_piece(TR_INFANTRY, game.where, TRIPOLITAN_SUPPLY);
 	}
+}
+
+states.naval_bombardment_results = {
+	prompt: function (view, current) {
+		view.prompt = "Naval Bombardment in " + SPACES[game.where] + " \u2014 " + game.flash;
+		if (is_inactive_player(current))
+			return;
+		gen_action(view, 'next');
+	},
+	next: function (card) {
+		delete game.flash;
+		end_naval_bombardment();
+	},
 }
 
 function end_naval_bombardment() {
@@ -1448,20 +1478,29 @@ states.land_battle_move_frigates = {
 		let n = count_american_frigates(game.where);
 		log(n + " American frigates move to " + SPACES[game.where] + ".");
 		move_all_pieces(US_GUNBOATS, MALTA, game.where);
-		goto_land_battle();
+		naval_bombardment_round();
+		game.state = 'land_battle_bombardment_results';
 	},
 	undo: pop_undo
 }
 
-function goto_land_battle() {
-	naval_bombardment_round();
+states.land_battle_bombardment_results = {
+	prompt: function (view, current) {
+		view.prompt = "Naval Bombardment in " + SPACES[game.where] + " \u2014 " + game.flash;
+		if (is_inactive_player(current))
+			return;
+		gen_action(view, 'next');
+	},
+	next: function (card) {
+		delete game.flash;
 
-	move_all_pieces(US_FRIGATES, game.where, MALTA);
-	move_all_pieces(US_GUNBOATS, game.where, MALTA);
+		move_all_pieces(US_FRIGATES, game.where, MALTA);
+		move_all_pieces(US_GUNBOATS, game.where, MALTA);
 
-	log("Land Battle in " + SPACES[game.where] + ".");
+		log("Land Battle in " + SPACES[game.where] + ".");
 
-	goto_land_battle_american_card();
+		goto_land_battle_american_card();
+	},
 }
 
 function goto_land_battle_american_card() {

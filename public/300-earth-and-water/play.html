@@ -16,8 +16,8 @@
 .grid_role { background-color: gainsboro; }
 .grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
-.grid_top.Persia.your_turn { background-color: skyblue; }
-.grid_top.Greece.your_turn { background-color: salmon; }
+.Persia .grid_top.your_turn { background-color: skyblue; }
+.Greece .grid_top.your_turn { background-color: salmon; }
 .grid_top.disconnected { background-color: red; }
 .role_info { background-color: silver; }
 .one .role_name { background-color: salmon; }
@@ -78,11 +78,10 @@
 }
 
 #tooltip.card {
-	position: absolute;
+	position: fixed;
 	z-index: 100;
 	right: 270px;
 	top: 60px;
-	margin-left: -250px;
 	width: 375px;
 	height: 525px;
 }
@@ -118,6 +117,8 @@
 	height: 878px;
 	background-image: url("map.jpg");
 	background-size: cover;
+	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
+	margin: 0 auto;
 }
 
 .map.hide_markers > div {
@@ -248,17 +249,16 @@
 				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
 				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
 				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="confirm_resign()">Resign</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="send_save()">&#x1F41E; Save</div>
-				<div class="menu_item" onclick="send_restore()">&#x1F41E; Restore</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="send_restart('Historical')">&#x26a0; Restart</div>
+				<div class="resign menu_separator"></div>
+				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
+				<div class="debug menu_separator"></div>
+				<div class="debug menu_item" onclick="send_save()">&#x1F41E; Save</div>
+				<div class="debug menu_item" onclick="send_restore()">&#x1F41E; Restore</div>
+				<div class="debug menu_separator"></div>
+				<div class="debug menu_item" onclick="send_restart('Historical')">&#x26a0; Restart</div>
 			</div>
 		</div>
 
-		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
 		<div id="prompt" class="prompt">Connecting...</div>
@@ -276,12 +276,12 @@
 	<div class="grid_role">
 
 		<div class="role one">
-			<div class="role_name">Greece (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">Greece &#x2013; <span class="role_user">$USER</span></div>
 			<div class="role_info" id="greek_info">0 cards in hand</div>
 		</div>
 
 		<div class="role two">
-			<div class="role_name">Persia (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">Persia &#x2013; <span class="role_user">$USER</span></div>
 			<div class="role_info" id="persian_info">0 cards in hand</div>
 		</div>
 

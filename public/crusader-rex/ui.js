@@ -69,14 +69,13 @@ function on_blur_town(evt) {
 
 function on_click_town(evt) {
 	let where = evt.target.town;
-	if (game.actions && game.actions.town && game.actions.town.includes(where))
-		socket.emit('action', 'town', where);
+	send_action('town', where);
 }
 
 const STEP_TEXT = [ 0, "I", "II", "III", "IIII" ];
 const HEIR_TEXT = [ 0, '\u00b9', '\u00b2', '\u00b3', '\u2074', '\u2075' ];
 
-function block_name(who) { return BLOCKS[who].name; }
+function block_name(who) { return who; }
 function block_home(who) { return BLOCKS[who].home; }
 function block_owner(who) { return BLOCKS[who].owner; }
 
@@ -96,7 +95,7 @@ function on_click_secret_block(evt) {
 function on_focus_map_block(evt) {
 	let b = evt.target.block;
 	let s = game.known[b][1];
-	let text = block_name(b) + " (" + block_home(b) + ") ";
+	let text = block_name(b) + " ";
 	if (BLOCKS[b].move)
 		text += BLOCKS[b].move + "-";
 	text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
@@ -109,8 +108,8 @@ function on_blur_map_block(evt) {
 
 function on_click_map_block(evt) {
 	let b = evt.target.block;
-	if (game.actions && game.actions.block && game.actions.block.includes(b))
-		socket.emit('action', 'block', b);
+	if (!game.battle)
+		send_action('block', b);
 }
 
 function is_battle_reserve(who, list) {
@@ -144,8 +143,7 @@ function on_blur_battle_block(evt) {
 
 function on_click_battle_block(evt) {
 	let b = evt.target.block;
-	if (game.actions && game.actions.block && game.actions.block.includes(b))
-		socket.emit('action', 'block', b);
+	send_action('block', b);
 }
 
 function on_focus_battle_fire(evt) {
@@ -177,16 +175,15 @@ function on_blur_battle_button(evt) {
 	document.getElementById("status").textContent = "";
 }
 
-function on_click_battle_hit(evt) { socket.emit('action', 'battle_hit', evt.target.block); }
-function on_click_battle_fire(evt) { socket.emit('action', 'battle_fire', evt.target.block); }
-function on_click_battle_retreat(evt) { socket.emit('action', 'battle_retreat', evt.target.block); }
-function on_click_battle_charge(evt) { socket.emit('action', 'battle_charge', evt.target.block); }
-function on_click_battle_harry(evt) { socket.emit('action', 'battle_harry', evt.target.block); }
+function on_click_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
+function on_click_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
+function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
+function on_click_battle_charge(evt) { send_action('battle_charge', evt.target.block); }
+function on_click_battle_harry(evt) { send_action('battle_harry', evt.target.block); }
 
 function on_click_card(evt) {
 	let c = evt.target.id.split("+")[1] | 0;
-	if (game.actions && game.actions.play && game.actions.play.includes(c))
-		socket.emit('action', 'play', c);
+	send_action('play', c);
 }
 
 function on_button_undo(evt) { send_action('undo'); }
@@ -277,41 +274,32 @@ function build_secret_block(b, block, secret_index) {
 	return element;
 }
 
-/*
-let MAP_OFFSET_X = 30;
-let MAP_OFFSET_Y = 30;
-let MAP_HEIGHT = 1215;
-*/
-let MAP_OFFSET_X = 0;
-let MAP_OFFSET_Y = 0;
-let MAP_HEIGHT = 1275;
-
 function town_x(t) {
 	if (map_orientation == 'tall')
-		return TOWNS[t].x - MAP_OFFSET_X;
+		return TOWNS[t].x;
 	else
-		return TOWNS[t].y - MAP_OFFSET_Y;
+		return TOWNS[t].y;
 }
 
 function town_y(t) {
 	if (map_orientation == 'tall')
-		return TOWNS[t].y - MAP_OFFSET_Y;
+		return TOWNS[t].y;
 	else
-		return MAP_HEIGHT - TOWNS[t].x + MAP_OFFSET_X;
+		return 1275 - TOWNS[t].x;
 }
 
 function flip_x(x, y) {
 	if (map_orientation == 'tall')
-		return x - MAP_OFFSET_X;
+		return x;
 	else
-		return y - MAP_OFFSET_Y;
+		return y;
 }
 
 function flip_y(x, y) {
 	if (map_orientation == 'tall')
-		return y - MAP_OFFSET_Y;
+		return y;
 	else
-		return MAP_HEIGHT - x + MAP_OFFSET_X;
+		return 1275 - x;
 }
 
 function build_town(t, town) {
@@ -465,11 +453,11 @@ function position_block_stacked(location, i, c, k, element) {
 	let block_size = 60+6;
 	let x, y;
 	if (map_orientation == 'tall') {
-		x = space.x + (i - c) * 12 + k * 12;
-		y = space.y + (i - c) * 16 - k * 8;
+		x = space.x + (i - c) * 16 + k * 12;
+		y = space.y + (i - c) * 16 - k * 12;
 	} else {
-		x = space.x - (i - c) * 12 + k * 12;
-		y = space.y + (i - c) * 16 + k * 8;
+		x = space.x - (i - c) * 16 + k * 12;
+		y = space.y + (i - c) * 16 + k * 12;
 	}
 	element.style.left = ((flip_x(x,y) - block_size/2)|0)+"px";
 	element.style.top = ((flip_y(x,y) - block_size/2)|0)+"px";
@@ -597,14 +585,14 @@ function update_map() {
 	for (let where in TOWNS) {
 		if (ui.towns[where]) {
 			ui.towns[where].classList.remove('highlight');
-			ui.towns[where].classList.remove('where');
+			ui.towns[where].classList.remove('muster');
 		}
 	}
 	if (game.actions && game.actions.town)
 		for (let where of game.actions.town)
 			ui.towns[where].classList.add('highlight');
-	if (game.where)
-		ui.towns[game.where].classList.add('where');
+	if (game.muster)
+		ui.towns[game.where].classList.add('muster');
 
 	for (let b in BLOCKS) {
 		ui.known[b].classList.remove('highlight');

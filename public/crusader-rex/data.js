@@ -127,7 +127,7 @@ const PORTS = [];
 		if (order == 'Nomads')
 			id += " " + nomads[name]++;
 		if (name == 'Reynald' || name == 'Raymond')
-			id += " " + home;
+			id += " (" + home + ")";
 		if (id in BLOCKS)
 			throw Error("Name clash: " + id + " order:"+order + " " + JSON.stringify(nomads));
 		BLOCKS[id] = {

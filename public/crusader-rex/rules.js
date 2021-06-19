@@ -22,8 +22,9 @@ const DEAD = "Dead";
 const F_POOL = "F. Pool";
 const S_POOL = "S. Pool";
 
-const HIT_TEXT = "\u2605";
-const MISS_TEXT = "\u2606";
+// serif cirled numbers
+const DIE_HIT = [ 0, '\u2776', '\u2777', '\u2778', '\u2779', '\u277A', '\u277B' ];
+const DIE_MISS = [ 0, '\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u2465' ];
 
 const ATTACK_MARK = "*";
 const RESERVE_MARK_1 = "\u2020";
@@ -180,7 +181,7 @@ function deal_cards(deck, n) {
 }
 
 function block_name(who) {
-	return BLOCKS[who].name;
+	return who; // BLOCKS[who].name;
 }
 
 function block_type(who) {
@@ -414,6 +415,16 @@ function can_block_retreat_to(who, to) {
 	return false;
 }
 
+function can_block_retreat(who) {
+	if (block_owner(who) == game.active) {
+		let from = game.location[who];
+		for (let to of TOWNS[from].exits)
+			if (can_block_retreat_to(who, to))
+				return true;
+	}
+	return false;
+}
+
 function can_block_regroup_to(who, to) {
 	if (is_friendly_town(to) || is_vacant_town(to)) {
 		let from = game.location[who];
@@ -533,20 +544,6 @@ function reduce_block(who) {
 	} else {
 		--game.steps[who];
 	}
-}
-
-function filter_battle_blocks(ci, is_candidate) {
-	let output = null;
-	for (let b in BLOCKS) {
-		if (is_candidate(b) && !game.moved[b]) {
-			if (block_initiative(b) == ci) {
-				if (!output)
-					output = [];
-				output.push(b);
-			}
-		}
-	}
-	return output;
 }
 
 function count_attackers() {
@@ -987,6 +984,7 @@ states.muster_who = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
 		view.prompt = "Muster: Move blocks to " + game.where + ".";
+		view.muster = game.where;
 		gen_action_undo(view);
 		gen_action(view, 'end_muster');
 		for (let b in BLOCKS)
@@ -1010,6 +1008,7 @@ states.muster_move_1 = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		view.muster = game.where;
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
@@ -1050,6 +1049,7 @@ states.muster_move_2 = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		view.muster = game.where;
 		gen_action_undo(view);
 		let from = game.location[game.who];
 		let muster = game.where;
@@ -1087,6 +1087,7 @@ states.muster_move_3 = {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		view.muster = game.where;
 		gen_action_undo(view);
 		let from = game.location[game.who];
 		let muster = game.where;
@@ -1156,9 +1157,9 @@ function start_battle(where) {
 }
 
 function resume_battle() {
+	game.who = null;
 	if (game.victory)
 		return goto_game_over();
-	game.who = null;
 	game.state = 'battle_round';
 	pump_battle_round();
 }
@@ -1220,20 +1221,34 @@ function start_battle_round() {
 }
 
 function pump_battle_round() {
+	function filter_battle_blocks(ci, is_candidate) {
+		let output = null;
+		for (let b in BLOCKS) {
+			if (is_candidate(b) && !game.moved[b]) {
+				if (block_initiative(b) == ci) {
+					if (!output)
+						output = [];
+					output.push(b);
+				}
+			}
+		}
+		return output;
+	}
+
+	function battle_step(active, initiative, candidate) {
+		game.battle_list = filter_battle_blocks(initiative, candidate);
+		if (game.battle_list) {
+			game.active = active;
+			return true;
+		}
+		return false;
+	}
+
 	if (is_friendly_town(game.where) || is_enemy_town(game.where)) {
 		end_battle();
 	} else if (count_attackers() == 0 || count_defenders() == 0) {
 		start_battle_round();
 	} else {
-		function battle_step(active, initiative, candidate) {
-			game.battle_list = filter_battle_blocks(initiative, candidate);
-			if (game.battle_list) {
-				game.active = active;
-				return true;
-			}
-			return false;
-		}
-
 		let attacker = game.attacker[game.where];
 		let defender = ENEMY[attacker];
 
@@ -1253,34 +1268,39 @@ function retreat_with_block(b) {
 	game.state = 'retreat_in_battle';
 }
 
-function roll_attack(verb, b) {
+function roll_attack(active, b, verb) {
 	game.hits = 0;
 	let fire = block_fire_power(b, game.where);
 	let printed_fire = block_printed_fire_power(b);
 	let rolls = [];
-	let results = [];
 	let steps = game.steps[b];
+	let name = block_name(b) + " " + BLOCKS[b].combat;
+	if (fire > printed_fire)
+		name += "+" + (fire - printed_fire);
 	for (let i = 0; i < steps; ++i) {
 		let die = roll_d6();
-		rolls.push(die);
 		if (die <= fire) {
-			results.push(HIT_TEXT);
+			rolls.push(DIE_HIT[die]);
 			++game.hits;
 		} else {
-			results.push(MISS_TEXT);
+			rolls.push(DIE_MISS[die]);
 		}
 	}
-	game.flash += block_name(b) + " " + BLOCKS[b].combat;
-	if (fire > printed_fire)
-		game.flash += "+" + (fire - printed_fire);
-	game.flash += " " + verb + "\n" + rolls.join(" ") + " = " + results.join(" ");
+
+	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
+	if (game.hits == 0)
+		game.flash += "and misses.";
+	else if (game.hits == 1)
+		game.flash += "and scores 1 hit.";
+	else
+		game.flash += "and scores " + game.hits + " hits.";
+
+	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
 }
 
 function fire_with_block(b) {
 	game.moved[b] = true;
-	game.flash = "";
-	roll_attack("fires", b);
-	log(game.flash);
+	roll_attack(game.active, b, "fires");
 	if (game.hits > 0) {
 		game.active = ENEMY[game.active];
 		goto_battle_hits();
@@ -1334,17 +1354,17 @@ function goto_battle_hits() {
 
 function apply_hit(who) {
 	game.flash = block_name(who) + " takes a hit.";
-	log(game.flash);
 	reduce_block(who, 'combat');
 	game.hits--;
-	if (game.hits == 1)
-		game.flash += " 1 hit left.";
-	else if (game.hits > 1)
-		game.flash += " " + game.hits + " hits left.";
 	if (game.hits == 0)
 		resume_battle();
-	else
-		goto_battle_hits();
+	else {
+		game.battle_list = list_victims(game.active);
+		if (game.battle_list.length == 0)
+			resume_battle();
+		else
+			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
+	}
 }
 
 function list_victims(p) {
@@ -1468,6 +1488,7 @@ states.retreat_in_battle = {
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
+		game.flash = block_name(game.who) + " retreats.";
 		logp("retreats to " + to + ".");
 		game.location[game.who] = to;
 		resume_battle();
@@ -1488,7 +1509,6 @@ function goto_regroup() {
 	game.active = game.attacker[game.where];
 	if (is_enemy_town(game.where))
 		game.active = ENEMY[game.active];
-	log(game.active + " wins the battle in " + game.where + ".");
 	game.state = 'regroup';
 	game.turn_log = [];
 }
@@ -1533,6 +1553,7 @@ states.regroup_to = {
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
+		let from = game.where;
 		game.turn_log.push([from, to]);
 		move_block(game.who, game.where, to);
 		game.who = null;

@@ -1517,8 +1517,15 @@ states.land_battle_bombardment_results = {
 
 		log("Land Battle in " + SPACES[game.where] + ".");
 
-		goto_land_battle_american_card();
+		goto_land_battle();
 	},
+}
+
+function goto_land_battle() {
+	// No opposition left -- skip card play and go to end.
+	if (count_tripolitan_infantry(game.where) == 0)
+		return goto_land_battle_round();
+	goto_land_battle_american_card();
 }
 
 function goto_land_battle_american_card() {

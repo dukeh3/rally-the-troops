@@ -65,13 +65,19 @@
 	border-radius: 5px;
 }
 
-.card_info .card:hover {
-	transform: scale(2) translateY(-30px);
-}
-
 .role_info {
 	padding: 5px 20px;
 	white-space: pre-wrap;
+}
+
+#tooltip.card {
+	position: fixed;
+	z-index: 100;
+	right: 240px;
+	top: 60px;
+}
+#tooltip.show {
+	display: block;
 }
 
 /* MAP */
@@ -263,6 +269,7 @@ svg circle, .piece {
 <body>
 
 <div class="status" id="status"></div>
+<div id="tooltip" class="card"></div>
 
 <div class="chat_window">
 <div class="chat_header">Chat</div>
@@ -313,7 +320,7 @@ svg circle, .piece {
 			<div class="role_name">United States (<span class="role_user">$USER</span>)</div>
 			<div class="role_info" id="us_info">0 cards in hand</div>
 		</div>
-		<div class="role_info card_info"><div id="active_card" class="card show tr_card_back"></div></div>
+		<div class="role_info card_info"><div id="active_card" class="card show blank"></div></div>
 	</div>
 
 	<div class="grid_log">

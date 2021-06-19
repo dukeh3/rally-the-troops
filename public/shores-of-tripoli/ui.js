@@ -83,6 +83,19 @@ function on_next() { if (game.actions) { send_action('next', null); } }
 function on_click_space(evt) { send_action('space', evt.target.space); }
 function on_click_piece(evt) { send_action('piece', evt.target.piece); }
 
+function on_focus_active_card(evt) {
+	if (typeof game.card == 'number') {
+		if (game.card < 27)
+			document.getElementById("tooltip").className = "card show us_card_" + game.card;
+		else
+			document.getElementById("tooltip").className = "card show tr_card_" + (game.card-27);
+	}
+}
+
+function on_blur_active_card(evt) {
+	document.getElementById("tooltip").classList = "card";
+}
+
 function build_map() {
 	let map = document.getElementById("svgmap");
 	for (let i = 0; i < SPACES.length; ++i) {
@@ -121,6 +134,8 @@ function build_map() {
 		e.addEventListener("click", on_click_card);
 		e.card = i;
 	}
+	document.getElementById("active_card").addEventListener("mouseenter", on_focus_active_card);
+	document.getElementById("active_card").addEventListener("mouseleave", on_blur_active_card);
 }
 
 const CARD_ACTIONS = [

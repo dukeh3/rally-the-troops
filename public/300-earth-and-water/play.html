@@ -90,19 +90,20 @@
 /* CARD ACTION POPUP MENU */
 
 #popup {
-	position: absolute;
+	position: fixed;
 	user-select: none;
-	background-color: #ddd;
+	background-color: gainsboro;
 	left: 10px;
 	top: 100px;
 	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
 	z-index: 200;
 	min-width: 20ex;
 	white-space: nowrap;
+	display: none;
 }
-#popup div { padding: 3pt 8pt; display: none; }
-#popup div.enabled { padding: 3pt 8pt; display: block; }
-#popup div:hover { background-color: teal; color: white; }
+#popup div { padding: 3pt 8pt; color: gray; }
+#popup div.enabled { color: black; }
+#popup div.enabled:hover { background-color: teal; color: white; }
 
 /* MAP WITH ARMIES, FLEETS, AND MARKERS */
 
@@ -408,12 +409,8 @@
 		</div>
 
 		<div id="popup" onmouseleave="hide_popup_menu()">
-			<div id="menu_card_move" onclick="on_card_move()">
-				Play for Movement
-			</div>
-			<div id="menu_card_event" onclick="on_card_event()">
-				Play Event
-			</div>
+			<div id="menu_card_event" onclick="on_card_event()">Play Event</div>
+			<div id="menu_card_move" onclick="on_card_move()">Play for Movement</div>
 		</div>
 
 	</div>

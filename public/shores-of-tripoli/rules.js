@@ -8,7 +8,7 @@ const TR = "Tripolitania";
 const { SPACES, PIECES, SEASONS } = require('./data');
 
 exports.scenarios = [
-	"Standard",
+	"Tournament",
 ];
 
 function get_piece_id(name) {
@@ -2766,7 +2766,7 @@ exports.setup = function (scenario, players) {
 		undo: [],
 	};
 
-	if (scenario && scenario != "Standard")
+	if (typeof scenario == 'number')
 		game.year = scenario;
 
 	game.tr.core.push(YUSUF_QARAMANLI);

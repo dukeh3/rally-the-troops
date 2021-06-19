@@ -437,12 +437,8 @@ function can_block_muster_with_3_moves(n0, muster) {
 				if (can_block_use_road_to_muster(n1, n2)) {
 					if (n2 == muster)
 						return true;
-					for (let n3 of TOWNS[n2].exits) {
-						if (can_block_use_road_to_muster(n2, n3)) {
-							if (n3 == muster)
-								return true;
-						}
-					}
+					if (TOWNS[n2].exits.includes(muster))
+						return can_block_use_road_to_muster(n2, muster);
 				}
 			}
 		}
@@ -455,24 +451,16 @@ function can_block_muster_with_2_moves(n0, muster) {
 		if (can_block_use_road_to_muster(n0, n1)) {
 			if (n1 == muster)
 				return true;
-			for (let n2 of TOWNS[n1].exits) {
-				if (can_block_use_road_to_muster(n1, n2)) {
-					if (n2 == muster)
-						return true;
-				}
-			}
+			if (TOWNS[n1].exits.includes(muster))
+				return can_block_use_road_to_muster(n1, muster);
 		}
 	}
 	return false;
 }
 
 function can_block_muster_with_1_move(n0, muster) {
-	for (let n1 of TOWNS[n0].exits) {
-		if (can_block_use_road_to_muster(n0, n1)) {
-			if (n1 == muster)
-				return true;
-		}
-	}
+	if (TOWNS[n0].exits.includes(muster))
+		return can_block_use_road_to_muster(n0, muster);
 	return false;
 }
 

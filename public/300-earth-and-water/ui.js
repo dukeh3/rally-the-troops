@@ -82,7 +82,10 @@ function on_focus_port(evt) { document.getElementById("status").textContent = ev
 function on_blur(evt) { document.getElementById("status").textContent = ""; }
 
 function on_click_bridge(evt) {
-	send_action('destroy');
+	if (game.actions && game.actions.destroy)
+		send_action('destroy');
+	else if (game.actions && game.actions.build)
+		send_action('build');
 }
 
 function on_click_army(evt) {
@@ -284,7 +287,15 @@ function on_update() {
 	show_action_button("#button_pass", "pass");
 	show_action_button("#button_undo", "undo");
 
-	show_marker("bridge", "bridge", game.trigger.hellespont, game.actions && game.actions.destroy);
+	if (game.actions && game.actions.destroy)
+		document.getElementById("bridge").className = "show destroy";
+	else if (game.actions && game.actions.build)
+		document.getElementById("bridge").className = "show build"
+	else if (game.trigger.hellespont)
+		document.getElementById("bridge").className = "show";
+	else
+		document.getElementById("bridge").className = "";
+
 	show_marker("darius", "persian_army", game.trigger.darius);
 	show_marker("xerxes", "persian_army", game.trigger.xerxes);
 	show_marker("artemisia", "persian_fleet", game.trigger.artemisia);
@@ -292,6 +303,7 @@ function on_update() {
 	show_marker("themistocles", "greek_army", game.trigger.themistocles);
 	show_marker("leonidas", "greek_army", game.trigger.leonidas);
 	show_marker("campaign", "marker campaign_" + game.campaign);
+
 	if (game.vp < 0)
 		show_marker("vp", "marker vp_g" + (-game.vp));
 	else if (game.vp > 0)

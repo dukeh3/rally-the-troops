@@ -5,6 +5,21 @@ const SARACEN = "Saracen";
 const ASSASSINS = "Assassins";
 const ENEMY = { Saracen: "Frank", Frank: "Saracen" }
 const POOL = "Pool";
+const DEAD = "Dead";
+
+let label_layout = window.localStorage['crusader-rex/label-layout'] || 'spread';
+
+function set_spread_layout() {
+	label_layout = 'spread';
+	window.localStorage['crusader-rex/label-layout'] = label_layout;
+	update_map();
+}
+
+function set_stack_layout() {
+	label_layout = 'stack';
+	window.localStorage['crusader-rex/label-layout'] = label_layout;
+	update_map();
+}
 
 function toggle_blocks() {
 	document.getElementById("map").classList.toggle("hide_blocks");
@@ -249,8 +264,9 @@ function build_known_block(b, block) {
 	return element;
 }
 
-function build_secret_block(b, block) {
+function build_secret_block(b, block, secret_index) {
 	let element = document.createElement("div");
+	element.secret_index = secret_index;
 	element.classList.add("block");
 	element.classList.add("secret");
 	element.classList.add(BLOCKS[b].owner);
@@ -344,7 +360,8 @@ function build_map() {
 		let block = BLOCKS[b];
 		build_battle_block(b, block);
 		ui.known[b] = build_known_block(b, block);
-		ui.secret[BLOCKS[b].owner].offmap.push(build_secret_block(b, block));
+		let e = build_secret_block(b, block, ui.secret[BLOCKS[b].owner].offmap.length);
+		ui.secret[BLOCKS[b].owner].offmap.push(e);
 	}
 
 	update_map_layout();
@@ -357,7 +374,14 @@ function update_steps(b, steps, element) {
 	element.classList.add("r"+(BLOCKS[b].steps - steps));
 }
 
-function layout_blocks(town, secret, known) {
+function layout_blocks(location, secret, known) {
+	if (label_layout == 'spread' || (location == POOL || location == DEAD))
+		layout_blocks_spread(location, secret, known);
+	else
+		layout_blocks_stacked(location, secret, known);
+}
+
+function layout_blocks_spread(town, secret, known) {
 	let wrap = TOWNS[town].wrap;
 	let s = secret.length;
 	let k = known.length;
@@ -420,6 +444,33 @@ function position_block(town, row, n_rows, col, n_cols, element) {
 		x += row * offset;
 	}
 
+	element.style.left = ((flip_x(x,y) - block_size/2)|0)+"px";
+	element.style.top = ((flip_y(x,y) - block_size/2)|0)+"px";
+}
+
+function layout_blocks_stacked(location, secret, known) {
+	let s = secret.length;
+	let k = known.length;
+	let both = secret.length > 0 && known.length > 0;
+	let i = 0;
+	while (secret.length > 0)
+		position_block_stacked(location, i++, (s-1)/2, both ? 1 : 0, secret.shift());
+	i = 0;
+	while (known.length > 0)
+		position_block_stacked(location, i++, (k-1)/2, 0, known.shift());
+}
+
+function position_block_stacked(location, i, c, k, element) {
+	let space = TOWNS[location];
+	let block_size = 60+6;
+	let x, y;
+	if (map_orientation == 'tall') {
+		x = space.x + (i - c) * 12 + k * 12;
+		y = space.y + (i - c) * 16 - k * 8;
+	} else {
+		x = space.x - (i - c) * 12 + k * 12;
+		y = space.y + (i - c) * 16 + k * 8;
+	}
 	element.style.left = ((flip_x(x,y) - block_size/2)|0)+"px";
 	element.style.top = ((flip_y(x,y) - block_size/2)|0)+"px";
 }
@@ -507,6 +558,9 @@ function update_map() {
 				n = game.secret[color][town][0];
 				m = game.secret[color][town][1];
 			}
+			// Preserve block stacking order, but lets the user track block identities...
+			if (label_layout == 'stack')
+				ui.secret[color][town].sort((a,b) => b.secret_index - a.secret_index);
 			for (let element of ui.secret[color][town]) {
 				if (i++ < n - m)
 					element.classList.remove("moved");

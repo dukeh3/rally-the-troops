@@ -3,6 +3,9 @@
 // TODO: frank seat adjustment at setup
 // TODO: saladin seat adjustment at setup
 
+// TODO: optional rule - iron bridge
+// TODO: optional rule - force marches
+
 exports.scenarios = [
 	"Third Crusade"
 ];
@@ -15,6 +18,7 @@ const ASSASSINS = "Assassins";
 const ENEMY = { Frank: "Saracen", Saracen: "Frank" };
 const OBSERVER = "Observer";
 const BOTH = "Both";
+const DEAD = "Dead";
 const F_POOL = "F. Pool";
 const S_POOL = "S. Pool";
 
@@ -185,6 +189,7 @@ function block_type(who) {
 
 function block_home(who) {
 	let home = BLOCKS[who].home;
+	if (home == "Normandy") return "England";
 	if (home == "Aquitaine") return "England";
 	if (home == "Bourgogne") return "France";
 	if (home == "Flanders") return "France";
@@ -222,8 +227,13 @@ function block_max_steps(who) {
 	return BLOCKS[who].steps;
 }
 
+function is_saladin_family(who) {
+	return who == "Saladin" || who == "Al Adil" || who == "Al Aziz" || who == "Al Afdal" || who == "Al Zahir";
+}
+
 function is_block_on_map(who) {
-	return game.location[who] && game.location[who] != F_POOL && game.location[who] != S_POOL;
+	let location = game.location[who];
+	return location && location != DEAD && location != F_POOL && location != S_POOL;
 }
 
 function can_activate(who) {
@@ -273,7 +283,7 @@ function count_enemy_excluding_reserves(where) {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == p)
-			if (!game.reserves.includes(b))
+			if (!is_battle_reserve(b))
 				++count;
 	return count;
 }
@@ -312,7 +322,7 @@ function count_pinned(where) {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == game.active)
-			if (!game.reserves.includes(b))
+			if (!is_battle_reserve(b))
 				++count;
 	return count;
 }
@@ -487,18 +497,18 @@ function can_muster_to(muster) {
 }
 
 function is_battle_reserve(who) {
-	return game.reserves.includes(who);
+	return game.reserves1.includes(who) || game.reserves2.includes(who);
 }
 
 function is_attacker(who) {
 	if (game.location[who] == game.where && block_owner(who) == game.attacker[game.where])
-		return !game.reserves.includes(who);
+		return !is_battle_reserve(who);
 	return false;
 }
 
 function is_defender(who) {
 	if (game.location[who] == game.where && block_owner(who) != game.attacker[game.where])
-		return !game.reserves.includes(who);
+		return !is_battle_reserve(who);
 	return false;
 }
 
@@ -510,7 +520,10 @@ function disband(who) {
 
 function eliminate_block(who) {
 	log(block_name(who) + " is eliminated.");
-	game.location[who] = null;
+	if (is_saladin_family(who) || block_type(who) == 'crusaders' || block_type(who) == 'military_orders')
+		game.location[who] = null; // permanently eliminated
+	else
+		game.location[who] = DEAD; // into to the pool next year
 	game.steps[who] = block_max_steps(who);
 }
 
@@ -570,7 +583,8 @@ function start_game_turn() {
 	reset_road_limits();
 	game.last_used = {};
 	game.attacker = {};
-	game.reserves = [];
+	game.reserves1 = [];
+	game.reserves2 = [];
 	game.moved = {};
 
 	goto_card_phase();
@@ -708,7 +722,7 @@ function goto_event_card(event) {
 	end_player_turn();
 }
 
-// ACTION PHASE
+// MOVE PHASE
 
 function move_block(who, from, to) {
 	game.location[who] = to;
@@ -724,7 +738,7 @@ function move_block(who, from, to) {
 			// Attacker main attack or reinforcements
 			if (game.attacker[to] == game.active) {
 				if (game.main_road[to] != from) {
-					game.reserves.push(who);
+					game.reserves1.push(who);
 					return RESERVE_MARK_1;
 				}
 				return ATTACK_MARK;
@@ -735,10 +749,10 @@ function move_block(who, from, to) {
 				game.main_road[to] = from;
 
 			if (game.main_road[to] == from) {
-				game.reserves.push(who);
+				game.reserves1.push(who);
 				return RESERVE_MARK_1;
 			} else {
-				game.reserves.push(who);
+				game.reserves2.push(who);
 				return RESERVE_MARK_2;
 			}
 		}
@@ -843,6 +857,23 @@ states.group_move_to = {
 			end_move();
 	},
 	undo: pop_undo
+}
+
+function end_move() {
+	if (game.distance > 0) {
+		let to = game.location[game.who];
+		if (!game.activated.includes(game.origin)) {
+			logp("activates " + game.origin + ".");
+			game.activated.push(game.origin);
+			game.moves --;
+		}
+		game.moved[game.who] = true;
+	}
+	log_move_end();
+	game.who = null;
+	game.distance = 0;
+	game.origin = null;
+	game.state = 'group_move';
 }
 
 function can_sea_move_anywhere() {
@@ -974,19 +1005,6 @@ states.muster_who = {
 	undo: pop_undo,
 }
 
-function end_muster_move() {
-	let muster = game.where;
-	log_move_end();
-	game.moved[game.who] = true;
-	game.who = null;
-	game.state = 'muster_who';
-	if (!game.mustered.includes(muster)) {
-		logp("musters to " + muster + ".");
-		game.mustered.push(muster);
-		--game.moves;
-	}
-}
-
 states.muster_move_1 = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
@@ -1088,26 +1106,23 @@ states.muster_move_3 = {
 	undo: pop_undo,
 }
 
-function end_move() {
-	if (game.distance > 0) {
-		let to = game.location[game.who];
-		if (!game.activated.includes(game.origin)) {
-			logp("activates " + game.origin + ".");
-			game.activated.push(game.origin);
-			game.moves --;
-		}
-		game.moved[game.who] = true;
-	}
+function end_muster_move() {
+	let muster = game.where;
 	log_move_end();
+	game.moved[game.who] = true;
 	game.who = null;
-	game.distance = 0;
-	game.origin = null;
-	game.state = 'group_move';
+	game.state = 'muster_who';
+	if (!game.mustered.includes(muster)) {
+		logp("musters to " + muster + ".");
+		game.mustered.push(muster);
+		--game.moves;
+	}
 }
 
 // BATTLE PHASE
 
 function goto_battle_phase() {
+	game.moved = {};
 	if (have_contested_towns()) {
 		game.active = game.p1;
 		game.state = 'battle_phase';
@@ -1166,10 +1181,12 @@ function end_battle() {
 }
 
 function bring_on_reserves(round) {
-	// TODO: defender reserves in round 3...
 	for (let b in BLOCKS) {
 		if (game.location[b] == game.where) {
-			remove_from_array(game.reserves, b);
+			if (round == 2)
+				remove_from_array(game.reserves1, b);
+			else if (round == 3)
+				remove_from_array(game.reserves2, b);
 		}
 	}
 }
@@ -1631,7 +1648,8 @@ exports.setup = function (scenario, players) {
 		moved: {},
 		moves: 0,
 		prompt: null,
-		reserves: [],
+		reserves1: [],
+		reserves2: [],
 		show_cards: false,
 		steps: {},
 		who: null,
@@ -1696,6 +1714,8 @@ exports.view = function(state, current) {
 	for (let b in BLOCKS) {
 		let a = game.location[b];
 		if (!a)
+			continue;
+		if (a == DEAD)
 			continue;
 		if (a == F_POOL) // && current != FRANK)
 			continue;

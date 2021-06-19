@@ -133,7 +133,7 @@ body.shift .block.known:hover {
 .map .block { position: absolute; z-index: 2; }
 .map .block.highlight { z-index: 3; }
 .map .block.selected { z-index: 4; }
-.map .block:hover { z-index: 5; }
+.map .block.known:hover { z-index: 5; }
 
 .block.highlight { cursor: pointer; box-shadow: 0px 0px 4px 1px white; }
 
@@ -303,8 +303,12 @@ body.shift .block.known:hover {
 			<div class="menu_title"><img src="/images/cog.svg"></div>
 			<div class="menu_popup">
 				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+				<div class="menu_separator"></div>
 				<div class="menu_item" onclick="wide_map()">Wide Map</div>
 				<div class="menu_item" onclick="tall_map()">Tall Map</div>
+				<div class="menu_separator"></div>
+				<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
+				<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
 				<div class="menu_separator"></div>
 				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
 				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>

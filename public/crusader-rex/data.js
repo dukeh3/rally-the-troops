@@ -154,7 +154,7 @@ const PORTS = [];
 	frank(33, "Leopold",		"Germania",	2,	3,	"B3",	"Crusaders");
 
 	frank(11, "Richard",		"England",	3,	4,	"B4",	"Crusaders");
-	frank(21, "Robert",		"England",	2,	3,	"B3",	"Crusaders");
+	frank(21, "Robert",		"Normandy",	2,	3,	"B3",	"Crusaders");
 	frank(31, "Crossbows",		"Aquitaine",	2,	3,	"A2",	"Crusaders");
 
 	frank(12, "Philippe",		"France",	2,	4,	"B3",	"Crusaders");

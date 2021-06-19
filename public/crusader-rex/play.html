@@ -112,6 +112,14 @@
 	opacity: 0.8;
 	z-index: 9;
 }
+.town.where {
+	opacity: 0.8;
+	border-color: blue;
+	z-index: 9;
+}
+.town.where.highlight {
+	box-shadow: 0 0 2px 4px white;
+}
 
 /* BLOCKS */
 
@@ -319,9 +327,9 @@ body.shift .block.known:hover {
 
 		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
 		<button id="sea_move_button" class="hide" onclick="on_button_sea_move()">Sea Move</button>
-		<button id="group_move_button" class="hide" onclick="on_button_group_move()">Group Move</button>
 		<button id="muster_button" class="hide" onclick="on_button_muster()">Muster</button>
 		<button id="end_muster_button" class="hide" onclick="on_button_end_muster()">End muster</button>
+		<button id="end_sea_move_button" class="hide" onclick="on_button_end_sea_move()">End sea move</button>
 		<button id="end_retreat_button" class="hide" onclick="on_button_end_retreat()">End retreat</button>
 		<button id="end_regroup_button" class="hide" onclick="on_button_end_regroup()">End regroup</button>
 		<button id="end_move_phase_button" class="hide" onclick="on_button_end_move_phase()">End move phase</button>

@@ -32,8 +32,6 @@ function wide_map() {
 	zoom_map();
 }
 
-let game = null;
-
 let ui = {
 	cards: {},
 	towns: {},
@@ -179,9 +177,9 @@ function on_click_card(evt) {
 function on_button_undo(evt) { send_action('undo'); }
 function on_button_pass(evt) { send_action('pass'); }
 function on_button_sea_move(evt) { send_action('sea_move'); }
-function on_button_group_move(evt) { send_action('group_move'); }
 function on_button_muster(evt) { send_action('muster'); }
 function on_button_end_muster(evt) { send_action('end_muster'); }
+function on_button_end_sea_move(evt) { send_action('end_sea_move'); }
 function on_button_end_move_phase(evt) { send_action('end_move_phase'); }
 function on_button_end_regroup(evt) { send_action('end_regroup'); }
 function on_button_end_retreat(evt) { send_action('end_retreat'); }
@@ -656,7 +654,7 @@ function update_battle() {
 		}
 	}
 
-	if (ui.player == FRANK) {
+	if (player == FRANK) {
 		fill_cell("FR", game.battle.FR, true);
 		fill_cell("FA", game.battle.FA, false);
 		fill_cell("FB", game.battle.FB, false);
@@ -677,15 +675,13 @@ function update_battle() {
 	}
 }
 
-function on_update(state, player) {
-	game = state;
-
+function on_update() {
 	show_action_button("#pass_button", "pass");
 	show_action_button("#undo_button", "undo");
-	show_action_button("#group_move_button", "group_move");
 	show_action_button("#sea_move_button", "sea_move");
 	show_action_button("#muster_button", "muster");
 	show_action_button("#end_muster_button", "end_muster");
+	show_action_button("#end_sea_move_button", "end_sea_move");
 	show_action_button("#end_move_phase_button", "end_move_phase");
 	show_action_button("#end_regroup_button", "end_regroup");
 	show_action_button("#end_retreat_button", "end_retreat");
@@ -701,7 +697,7 @@ function on_update(state, player) {
 		document.querySelector(".battle_header").textContent = game.battle.title;
 		document.querySelector(".battle_message").textContent = game.battle.flash;
 		document.querySelector(".battle").classList.add("show");
-		update_battle(player);
+		update_battle();
 	} else {
 		document.querySelector(".battle").classList.remove("show");
 	}

@@ -4,7 +4,7 @@
 // TODO: saladin seat adjustment at setup
 
 exports.scenarios = [
-	"Rules 2.0",
+	"Third Crusade"
 ];
 
 const { CARDS, BLOCKS, TOWNS, PORTS, ROADS } = require('./data');
@@ -74,7 +74,7 @@ function print_turn_log_no_count(text) {
 
 function print_turn_log(text) {
 	function print_move(last) {
-		return "\n" + n + " " + last.join(" \u2192 ");
+		return "\n" + n + " - " + last.join(" \u2192 ");
 	}
 	game.turn_log.sort();
 	let last = game.turn_log[0];
@@ -325,7 +325,7 @@ function is_pinned(who, from) {
 	return false;
 }
 
-function can_block_use_road(who, from, to) {
+function can_block_use_road(from, to) {
 	switch (road_type(from, to)) {
 	case 'major': return road_limit(from, to) < 4;
 	case 'minor': return road_limit(from, to) < 2;
@@ -334,7 +334,7 @@ function can_block_use_road(who, from, to) {
 }
 
 function can_block_land_move_to(who, from, to) {
-	if (can_block_use_road(who, from, to)) {
+	if (can_block_use_road(from, to)) {
 		if (count_pinning(from) > 0)
 			if (road_was_last_used_by_enemy(from, to))
 				return false;
@@ -395,7 +395,7 @@ function can_block_continue(who, from, to) {
 function can_block_retreat_to(who, to) {
 	if (is_friendly_town(to) || is_vacant_town(to)) {
 		let from = game.location[who];
-		if (can_block_use_road(who, from, to)) {
+		if (can_block_use_road(from, to)) {
 			if (road_was_last_used_by_enemy(from, to))
 				return false;
 			return true;
@@ -407,7 +407,7 @@ function can_block_retreat_to(who, to) {
 function can_block_regroup_to(who, to) {
 	if (is_friendly_town(to) || is_vacant_town(to)) {
 		let from = game.location[who];
-		if (can_block_use_road(who, from, to))
+		if (can_block_use_road(from, to))
 			return true;
 	}
 	return false;
@@ -423,16 +423,57 @@ function can_block_regroup(who) {
 	return false;
 }
 
-function can_block_muster_via(who, from, next, muster) {
-	if (can_block_land_move_to(who, from, next) && is_friendly_or_vacant_town(next)) {
-		if (next == muster)
-			return true;
-		if (road_type(from, next) != 'minor') {
-			if (TOWNS[next].exits.includes(muster))
-				if (can_block_land_move_to(who, next, muster))
-					return true;
+function can_block_use_road_to_muster(from, to) {
+	return can_block_use_road(from, to) && is_friendly_or_vacant_town(to);
+}
+
+function can_block_muster_with_3_moves(n0, muster) {
+	for (let n1 of TOWNS[n0].exits) {
+		if (can_block_use_road_to_muster(n0, n1)) {
+			if (n1 == muster)
+				return true;
+			for (let n2 of TOWNS[n1].exits) {
+				if (n2 == n0) continue; // don't backtrack!
+				if (can_block_use_road_to_muster(n1, n2)) {
+					if (n2 == muster)
+						return true;
+					for (let n3 of TOWNS[n2].exits) {
+						if (can_block_use_road_to_muster(n2, n3)) {
+							if (n3 == muster)
+								return true;
+						}
+					}
+				}
+			}
 		}
 	}
+	return false;
+}
+
+function can_block_muster_with_2_moves(n0, muster) {
+	for (let n1 of TOWNS[n0].exits) {
+		if (can_block_use_road_to_muster(n0, n1)) {
+			if (n1 == muster)
+				return true;
+			for (let n2 of TOWNS[n1].exits) {
+				if (can_block_use_road_to_muster(n1, n2)) {
+					if (n2 == muster)
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+function can_block_muster_with_1_move(n0, muster) {
+	for (let n1 of TOWNS[n0].exits) {
+		if (can_block_use_road_to_muster(n0, n1)) {
+			if (n1 == muster)
+				return true;
+		}
+	}
+	return false;
 }
 
 function can_block_muster(who, muster) {
@@ -442,9 +483,10 @@ function can_block_muster(who, muster) {
 	if (can_activate(who)) {
 		if (is_pinned(who, from))
 			return false;
-		for (let next of TOWNS[from].exits)
-			if (can_block_muster_via(who, from, next, muster))
-				return true;
+		if (block_move(who) == 3)
+			return can_block_muster_with_3_moves(from, muster);
+		else
+			return can_block_muster_with_2_moves(from, muster);
 	}
 	return false;
 }
@@ -661,6 +703,7 @@ function start_player_turn() {
 function end_player_turn() {
 	game.moves = 0;
 	game.activated = null;
+	game.mustered = null;
 	game.main_road = null;
 
 	if (game.active == game.p2) {
@@ -719,6 +762,7 @@ function goto_move_phase(moves) {
 	game.state = 'group_move';
 	game.moves = moves;
 	game.activated = [];
+	game.mustered = [];
 	game.main_road = {};
 	game.turn_log = [];
 }
@@ -737,9 +781,11 @@ states.group_move = {
 		view.prompt = "Group Move: Choose a block to group move. " + game.moves + "AP left.";
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
-		if (game.moves > 0) {
-			gen_action(view, 'sea_move');
+		if (can_muster_anywhere())
 			gen_action(view, 'muster');
+		if (can_sea_move_anywhere())
+			gen_action(view, 'sea_move');
+		if (game.moves > 0) {
 			for (let b in BLOCKS)
 				if (can_block_land_move(b))
 					gen_action(view, 'block', b);
@@ -760,9 +806,11 @@ states.group_move = {
 		game.state = 'group_move_to';
 	},
 	sea_move: function () {
+		push_undo();
 		game.state = 'sea_move';
 	},
 	muster: function () {
+		push_undo();
 		game.state = 'muster';
 	},
 	end_move_phase: end_move_phase,
@@ -809,36 +857,32 @@ states.group_move_to = {
 	undo: pop_undo
 }
 
+function can_sea_move_anywhere() {
+	if (game.moves > 0) {
+		for (let b in BLOCKS)
+			if (can_block_sea_move(b))
+				return true;
+	}
+	return false;
+}
+
 states.sea_move = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Sea Move: Choose a block to sea move. " + game.moves + "AP left.";
 		gen_action_undo(view);
-		gen_action(view, 'end_move_phase');
-		gen_action(view, 'group_move');
 		if (game.moves > 0) {
-			gen_action(view, 'muster');
-			for (let b in BLOCKS) {
-				let from = game.location[b];
-				if (can_block_sea_move(b)) {
+			for (let b in BLOCKS)
+				if (can_block_sea_move(b))
 					gen_action(view, 'block', b);
-				}
-			}
 		}
-	},
-	group_move: function () {
-		game.state = 'group_move';
-	},
-	muster: function () {
-		game.state = 'muster';
 	},
 	block: function (who) {
 		push_undo();
 		game.who = who;
 		game.state = 'sea_move_to';
 	},
-	end_move_phase: end_move_phase,
 	undo: pop_undo
 }
 
@@ -871,39 +915,51 @@ states.sea_move_to = {
 			log_move_continue(to);
 		}
 
-		game.state = 'sea_move';
+		game.state = 'group_move';
 		game.who = null;
 	},
 	block: pop_undo,
 	undo: pop_undo
 }
 
+function can_muster_anywhere() {
+	if (game.moves > 0)
+		return true;
+	for (let where of game.mustered) {
+		if (is_friendly_town(where))
+			if (can_muster_to(where))
+				return true;
+	}
+	return false;
+}
+
 states.muster = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
-		view.prompt = "Muster: Choose one friendly or vacant muster area.";
+		view.prompt = "Muster: Choose one friendly or vacant muster town. " + game.moves + "AP left.";
 		gen_action_undo(view);
-		gen_action(view, 'group_move');
-		gen_action(view, 'sea_move');
-		gen_action_undo(view);
-		gen_action(view, 'end_action_phase');
-		for (let where in TOWNS) {
-			if (is_friendly_or_vacant_town(where))
-				if (can_muster_to(where))
-					gen_action(view, 'town', where);
+		gen_action(view, 'end_muster');
+		if (game.moves > 0) {
+			for (let where in TOWNS) {
+				if (is_friendly_town(where))
+					if (can_muster_to(where))
+						gen_action(view, 'town', where);
+			}
+		} else {
+			for (let where of game.mustered) {
+				if (is_friendly_town(where))
+					if (can_muster_to(where))
+						gen_action(view, 'town', where);
+			}
 		}
 	},
-	area: function (where) {
+	town: function (where) {
 		push_undo();
 		game.where = where;
 		game.state = 'muster_who';
 	},
-	end_action_phase: function () {
-		clear_undo();
-		print_turn_log(game.active + " musters:");
-		end_player_turn();
-	},
+	end_muster: pop_undo,
 	undo: pop_undo,
 }
 
@@ -911,9 +967,9 @@ states.muster_who = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
-		view.prompt = "Muster: Move blocks to the designated muster area.";
+		view.prompt = "Muster: Move blocks to " + game.where + ".";
 		gen_action_undo(view);
-		gen_action(view, 'end_action_phase');
+		gen_action(view, 'end_muster');
 		for (let b in BLOCKS)
 			if (can_block_muster(b, game.where))
 				gen_action(view, 'block', b);
@@ -923,11 +979,123 @@ states.muster_who = {
 		game.who = who;
 		game.state = 'muster_move_1';
 	},
-	end_action_phase: function () {
+	end_muster: function () {
 		game.where = null;
-		clear_undo();
-		print_turn_log(game.active + " musters:");
-		end_player_turn();
+		game.state = 'group_move';
+	},
+	undo: pop_undo,
+}
+
+function end_muster_move() {
+	let muster = game.where;
+	log_move_end();
+	game.moved[game.who] = true;
+	game.who = null;
+	game.state = 'muster_who';
+	if (!game.mustered.includes(muster)) {
+		logp("musters to " + muster + ".");
+		game.mustered.push(muster);
+		--game.moves;
+	}
+}
+
+states.muster_move_1 = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to move.";
+		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		let from = game.location[game.who];
+		let muster = game.where;
+		if (block_move(game.who) == 3) {
+			for (let to of TOWNS[from].exits) {
+				if (can_block_use_road_to_muster(from, to)) {
+					if (to == muster || can_block_muster_with_2_moves(to, muster))
+						gen_action(view, 'town', to);
+				}
+			}
+		} else {
+			for (let to of TOWNS[from].exits) {
+				if (can_block_use_road_to_muster(from, to)) {
+					if (to == muster || can_block_muster_with_1_move(to, muster))
+						gen_action(view, 'town', to);
+				}
+			}
+		}
+	},
+	town: function (to) {
+		let from = game.location[game.who];
+		log_move_start(from);
+		log_move_continue(to);
+		move_block(game.who, from, to);
+		if (to == game.where) {
+			end_muster_move();
+		} else {
+			game.state = 'muster_move_2';
+		}
+	},
+	block: pop_undo,
+	undo: pop_undo,
+}
+
+states.muster_move_2 = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to move.";
+		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		gen_action_undo(view);
+		let from = game.location[game.who];
+		let muster = game.where;
+		if (block_move(game.who) == 3) {
+			for (let to of TOWNS[from].exits) {
+				if (can_block_use_road_to_muster(from, to)) {
+					if (to == muster || can_block_muster_with_1_move(to, muster))
+						gen_action(view, 'town', to);
+				}
+			}
+		} else {
+			for (let to of TOWNS[from].exits) {
+				if (can_block_use_road_to_muster(from, to)) {
+					if (to == muster)
+						gen_action(view, 'town', to);
+				}
+			}
+		}
+	},
+	town: function (to) {
+		let from = game.location[game.who];
+		log_move_continue(to);
+		move_block(game.who, from, to);
+		if (to == game.where) {
+			end_muster_move();
+		} else {
+			game.state = 'muster_move_3';
+		}
+	},
+	undo: pop_undo,
+}
+
+states.muster_move_3 = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to move.";
+		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
+		gen_action_undo(view);
+		let from = game.location[game.who];
+		let muster = game.where;
+		for (let to of TOWNS[from].exits) {
+			if (can_block_use_road_to_muster(from, to)) {
+				if (to == muster)
+					gen_action(view, 'town', to);
+			}
+		}
+	},
+	town: function (to) {
+		let from = game.location[game.who];
+		log_move_continue(to);
+		move_block(game.who, from, to);
+		end_muster_move();
 	},
 	undo: pop_undo,
 }
@@ -1254,20 +1422,20 @@ states.retreat_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
-		view.prompt = "Retreat: Move the army to a friendly or neutral area.";
+		view.prompt = "Retreat: Move the army to a friendly or neutral town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let can_retreat = false;
-		for (let to of AREAS[game.where].exits) {
+		for (let to of TOWNS[game.where].exits) {
 			if (can_block_retreat_to(game.who, to)) {
-				gen_action(view, 'area', to);
+				gen_action(view, 'town', to);
 				can_retreat = true;
 			}
 		}
 		if (!can_retreat)
 			gen_action(view, 'eliminate');
 	},
-	area: function (to) {
+	town: function (to) {
 		let from = game.where;
 		game.turn_log.push([from, to]);
 		move_block(game.who, game.where, to);
@@ -1289,7 +1457,7 @@ states.retreat_in_battle = {
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
-		view.prompt = "Retreat: Move the army to a friendly or vacant area.";
+		view.prompt = "Retreat: Move the army to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
 				gen_action(view, 'town', to);
@@ -1352,7 +1520,7 @@ states.regroup_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to regroup.";
-		view.prompt = "Regroup: Move the army to a friendly or vacant area.";
+		view.prompt = "Regroup: Move the army to a friendly or vacant town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		for (let to of TOWNS[game.where].exits)

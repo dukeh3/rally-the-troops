@@ -1598,9 +1598,23 @@ states.land_battle_tripolitan_card = {
 		for (let i = 0; i < n; ++i)
 			move_one_piece(AR_INFANTRY, game.where, UNITED_STATES_SUPPLY);
 		log("Deserters: " + n + " Arab infantry.");
-		goto_land_battle_round();
+		game.flash = n + " Arab infantry deserted.";
+		game.state = 'mercenaries_desert_results';
 	},
 	next: function (card) {
+		goto_land_battle_round();
+	},
+}
+
+states.mercenaries_desert_results = {
+	prompt: function (view, current) {
+		view.prompt = "Mercenaries Desert in " + SPACES[game.where] + " \u2014 " + game.flash;
+		if (is_inactive_player(current))
+			return;
+		gen_action(view, 'next');
+	},
+	next: function (card) {
+		delete game.flash;
 		goto_land_battle_round();
 	},
 }

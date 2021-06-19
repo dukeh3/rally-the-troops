@@ -1803,7 +1803,6 @@ states.retreat = {
 			if (game.location[b] == game.where && block_owner(b) == game.active)
 				eliminate_block(b, 'retreat');
 		print_turn_log("retreats");
-		clear_undo();
 		goto_regroup();
 	},
 	block: function (who) {
@@ -1855,6 +1854,7 @@ states.retreat_to = {
 	},
 	eliminate: function () {
 		eliminate_block(game.who, 'retreat');
+		game.who = null;
 		game.state = 'retreat';
 	},
 	block: pop_undo,

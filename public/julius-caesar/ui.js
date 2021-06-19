@@ -181,7 +181,7 @@ function build_map() {
 		element.classList.add("block_"+block.label);
 		element.addEventListener("mouseenter", on_focus_block);
 		element.addEventListener("mouseleave", on_blur_block);
-		element.addEventListener("click", select_block);
+		element.addEventListener("click", on_click_map_block);
 		document.getElementById("known_blocks").appendChild(element);
 		element.style.visibility = 'hidden';
 		element.block = b;
@@ -222,7 +222,7 @@ function build_map() {
 		element.classList.add("block_"+block.label);
 		element.addEventListener("mouseenter", on_focus_battle_block);
 		element.addEventListener("mouseleave", on_blur_battle_block);
-		element.addEventListener("click", select_block);
+		element.addEventListener("click", on_click_battle_block);
 		element.block = b;
 		ui.battle_block[b] = element;
 
@@ -732,8 +732,13 @@ function select_space(evt) {
 	send_action('space', evt.target.space);
 }
 
-function select_block(evt) {
+function on_click_battle_block(evt) {
 	send_action('block', evt.target.block);
+}
+
+function on_click_map_block(evt) {
+	if (!game.battle)
+		send_action('block', evt.target.block);
 }
 
 function select_secret_block(evt) {

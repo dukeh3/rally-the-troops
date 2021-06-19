@@ -132,7 +132,8 @@ function on_blur_map_block(evt) {
 
 function on_click_map_block(evt) {
 	let b = evt.target.block;
-	send_action('block', b);
+	if (!game.battle)
+		send_action('block', b);
 }
 
 function is_battle_reserve(who, list) {

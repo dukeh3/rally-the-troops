@@ -872,6 +872,7 @@ function can_block_muster_via(who, from, next, muster) {
 					return true;
 		}
 	}
+	return false;
 }
 
 function can_block_muster(who, muster) {

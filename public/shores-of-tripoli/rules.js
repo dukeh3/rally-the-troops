@@ -307,7 +307,7 @@ function you_may_play(current, list) {
 		list = list.map(c => "\u201c" + CARD_NAMES[c] + "\u201d");
 		if (list.length == 1)
 			msg += list[0] + ".";
-		else if (list.length)
+		else if (list.length == 2)
 			msg += list[0] + " or " + list[1] + ".";
 		else {
 			for (let i = 0; i < list.length-1; ++i)
@@ -558,7 +558,7 @@ function is_naval_battle_location(space) {
 }
 
 function is_naval_bombardment_location(space) {
-	let n_us = count_american_frigates(space);
+	let n_us = count_american_frigates(space) + count_american_gunboats(space);
 	let n_tr = count_tripolitan_infantry(space);
 	return (n_us > 0 && n_tr > 0);
 }
@@ -1050,7 +1050,10 @@ states.move_us_frigate_to = {
 	},
 	next: function () {
 		flush_summary("Frigates moved:");
-		if (count_naval_battle_or_bombardment_locations() > 0)
+		let n = count_naval_battle_or_bombardment_locations();
+		if (n == 1)
+			auto_allocate_gunboats();
+		else if (n > 1)
 			goto_allocate_gunboats();
 		else
 			end_american_play();
@@ -1432,8 +1435,12 @@ function resume_naval_battle() {
 			log("The Tripolitan fleet has been eliminated.");
 			move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
 			move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
-			naval_bombardment_round();
-			game.state = 'land_battle_bombardment_results';
+			if (is_naval_bombardment_location(game.where)) {
+				naval_bombardment_round();
+				game.state = 'land_battle_bombardment_results';
+			} else {
+				goto_land_battle();
+			}
 			return;
 		}
 		if (n_us == 0) {
@@ -1497,9 +1504,13 @@ states.land_battle_move_frigates = {
 	next: function () {
 		let n = count_american_frigates(game.where);
 		log(n + " American frigates move to " + SPACES[game.where] + ".");
-		move_all_pieces(US_GUNBOATS, MALTA, game.where);
-		naval_bombardment_round();
-		game.state = 'land_battle_bombardment_results';
+		if (is_naval_bombardment_location(game.where)) {
+			move_all_pieces(US_GUNBOATS, MALTA, game.where);
+			naval_bombardment_round();
+			game.state = 'land_battle_bombardment_results';
+		} else {
+			goto_land_battle();
+		}
 	},
 	undo: pop_undo
 }

@@ -103,14 +103,12 @@ const TOWNS = {
 	"England1":{"x":139,"y":873},
 	"England2":{"x":140,"y":961},
 	"England3":{"x":138,"y":1047},
-	"F. Pool":{"x":120,"y":2150},
-	"S. Pool":{"x":120,"y":2150},
+	"FP":{"x":120,"y":2150},
+	"SP":{"x":120,"y":2150},
 	*/
 	"Germania":{"x":139,"y":273},
 	"France":{"x":140,"y":573},
 	"England":{"x":139,"y":873},
-	"F. Pool":{"x":120,"y":2150},
-	"S. Pool":{"x":120,"y":2150},
 };
 
 const PORTS = [];
@@ -120,7 +118,7 @@ const PORTS = [];
 
 	let nomads = { Arabs: 1, Turks: 1, Kurds: 1 }
 
-	function army(rc, owner, name, home, move, steps, combat, order) {
+	function army(rc, owner, name, home, move, steps, combat, order, plural) {
 		let id = name;
 		if (order == 'Military Orders' || order == 'Pilgrims' || order == 'Turcopoles')
 			id = home + " " + name;
@@ -133,6 +131,7 @@ const PORTS = [];
 		BLOCKS[id] = {
 			owner: owner,
 			name: name,
+			plural: plural,
 			type: order.toLowerCase().replace(/ /g, "_"),
 			home: home,
 			move: move,
@@ -142,90 +141,90 @@ const PORTS = [];
 		}
 	}
 
-	function frank(rc, name, home, move, steps, combat, order) {
-		army(rc, "Frank", name, home, move, steps, combat, order);
+	function frank(rc, name, home, move, steps, combat, order, plural) {
+		army(rc, "Frank", name, home, move, steps, combat, order, plural);
 	}
-	function saracen(rc, name, home, move, steps, combat, order) {
-		army(rc, "Saracen", name, home, move, steps, combat, order);
+	function saracen(rc, name, home, move, steps, combat, order, plural) {
+		army(rc, "Saracen", name, home, move, steps, combat, order, plural);
 	}
 
-	frank(13, "Barbarossa",		"Germania",	2,	4,	"B3",	"Crusaders");
-	frank(23, "Frederik",		"Germania",	2,	3,	"B2",	"Crusaders");
-	frank(33, "Leopold",		"Germania",	2,	3,	"B3",	"Crusaders");
+	frank(13, "Barbarossa",		"Germania",	2,	4,	"B3",	"Crusaders", 0);
+	frank(23, "Frederik",		"Germania",	2,	3,	"B2",	"Crusaders", 0);
+	frank(33, "Leopold",		"Germania",	2,	3,	"B3",	"Crusaders", 0);
 
-	frank(11, "Richard",		"England",	3,	4,	"B4",	"Crusaders");
-	frank(21, "Robert",		"Normandy",	2,	3,	"B3",	"Crusaders");
-	frank(31, "Crossbows",		"Aquitaine",	2,	3,	"A2",	"Crusaders");
+	frank(11, "Richard",		"England",	3,	4,	"B4",	"Crusaders", 0);
+	frank(21, "Robert",		"Normandy",	2,	3,	"B3",	"Crusaders", 0);
+	frank(31, "Crossbows",		"Aquitaine",	2,	3,	"A2",	"Crusaders", 1);
 
-	frank(12, "Philippe",		"France",	2,	4,	"B3",	"Crusaders");
-	frank(22, "Hugues",		"Bourgogne",	2,	4,	"B2",	"Crusaders");
-	frank(32, "Fileps",		"Flanders",	2,	3,	"B3",	"Crusaders");
+	frank(12, "Philippe",		"France",	2,	4,	"B3",	"Crusaders", 0);
+	frank(22, "Hugues",		"Bourgogne",	2,	4,	"B2",	"Crusaders", 0);
+	frank(32, "Fileps",		"Flanders",	2,	3,	"B3",	"Crusaders", 0);
 
-	frank(42, "Pilgrims",		"Genoa",	2,	4,	"C2",	"Pilgrims");
-	frank(43, "Pilgrims",		"Sicily",	2,	3,	"C2",	"Pilgrims");
-	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims");
+	frank(42, "Pilgrims",		"Genoa",	2,	4,	"C2",	"Pilgrims", 1);
+	frank(43, "Pilgrims",		"Sicily",	2,	3,	"C2",	"Pilgrims", 1);
+	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims", 1);
 
-	frank(14, "Templars",		"Jerusalem",	3,	3,	"B3",	"Military Orders");
-	frank(15, "Templars",		"Antioch",	3,	3,	"B3",	"Military Orders");
-	frank(16, "Templars",		"Gaza",		3,	3,	"B3",	"Military Orders");
-	frank(17, "Templars",		"Tartus",	3,	3,	"B3",	"Military Orders");
-	frank(24, "Hospitallers",	"Jerusalem",	3,	4,	"B3",	"Military Orders");
-	frank(25, "Hospitallers",	"Acre",		3,	3,	"B3",	"Military Orders");
-	frank(26, "Hospitallers",	"Krak", 	3,	2,	"B3",	"Military Orders");
+	frank(14, "Templars",		"Jerusalem",	3,	3,	"B3",	"Military Orders", 1);
+	frank(15, "Templars",		"Antioch",	3,	3,	"B3",	"Military Orders", 1);
+	frank(16, "Templars",		"Gaza",		3,	3,	"B3",	"Military Orders", 1);
+	frank(17, "Templars",		"Tartus",	3,	3,	"B3",	"Military Orders", 1);
+	frank(24, "Hospitallers",	"Jerusalem",	3,	4,	"B3",	"Military Orders", 1);
+	frank(25, "Hospitallers",	"Acre",		3,	3,	"B3",	"Military Orders", 1);
+	frank(26, "Hospitallers",	"Krak", 	3,	2,	"B3",	"Military Orders", 1);
 
-	frank(27, "Reynald",		"Sidon",	2,	3,	"B2",	"Outremers");
-	frank(34, "Conrad",		"Tyre",		2,	4,	"B3",	"Outremers");
-	frank(35, "Balian",		"Nablus",	2,	3,	"B2",	"Outremers");
-	frank(36, "Walter",		"Caesarea",	2,	3,	"B2",	"Outremers");
-	frank(37, "Raymond",		"Tiberias",	2,	3,	"B2",	"Outremers");
-	frank(44, "King Guy",		"Jerusalem",	2,	4,	"B2",	"Outremers");
-	frank(45, "Reynald",		"Kerak",	3,	2,	"B3",	"Outremers");
-	frank(46, "Bohemond",		"Antioch",	2,	4,	"B2",	"Outremers");
-	frank(47, "Raymond",		"Tripoli",	2,	4,	"B2",	"Outremers");
-	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers");
+	frank(27, "Reynald",		"Sidon",	2,	3,	"B2",	"Outremers", 0);
+	frank(34, "Conrad",		"Tyre",		2,	4,	"B3",	"Outremers", 0);
+	frank(35, "Balian",		"Nablus",	2,	3,	"B2",	"Outremers", 0);
+	frank(36, "Walter",		"Caesarea",	2,	3,	"B2",	"Outremers", 0);
+	frank(37, "Raymond",		"Tiberias",	2,	3,	"B2",	"Outremers", 0);
+	frank(44, "King Guy",		"Jerusalem",	2,	4,	"B2",	"Outremers", 0);
+	frank(45, "Reynald",		"Kerak",	3,	2,	"B3",	"Outremers", 0);
+	frank(46, "Bohemond",		"Antioch",	2,	4,	"B2",	"Outremers", 0);
+	frank(47, "Raymond",		"Tripoli",	2,	4,	"B2",	"Outremers", 0);
+	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers", 0);
 
-	frank(41, "Turcopole",		"Antioch",	3,	3,	"A2",	"Turcopoles");
-	frank(51, "Turcopole",		"Beirut",	3,	3,	"A2",	"Turcopoles");
+	frank(41, "Turcopole",		"Antioch",	3,	3,	"A2",	"Turcopoles", 0);
+	frank(51, "Turcopole",		"Beirut",	3,	3,	"A2",	"Turcopoles", 0);
 
-	army(54, "Assassins", "Assassins", "Masyaf",	0,	3,	"A3",	"Assassins");
+	army(54, "Assassins", "Assassins", "Masyaf",	0,	3,	"A3",	"Assassins", 1);
 
-	saracen(55, "Qara-Qush",	"Egypt",	3,	3,	"B3",	"Emirs");
-	saracen(56, "Zangi",		"Aleppo",	3,	3,	"B2",	"Emirs");
-	saracen(57, "Sanjar",		"Aleppo",	3,	3,	"B2",	"Emirs");
+	saracen(55, "Qara-Qush",	"Egypt",	3,	3,	"B3",	"Emirs", 0);
+	saracen(56, "Zangi",		"Aleppo",	3,	3,	"B2",	"Emirs", 0);
+	saracen(57, "Sanjar",		"Aleppo",	3,	3,	"B2",	"Emirs", 0);
 
-	saracen(61, "Yazkuj",		"Ashtera",	3,	2,	"B2",	"Emirs");
-	saracen(62, "Sulaiman",		"Artah",	3,	2,	"B2",	"Emirs");
-	saracen(63, "Keukburi",		"Damascus",	3,	3,	"B3",	"Emirs");
-	saracen(64, "Shirkuh",		"Homs",		3,	3,	"B2",	"Emirs");
-	saracen(65, "Jurdik",		"Zerdana",	3,	3,	"B2",	"Emirs");
-	saracen(66, "Bahram",		"Baalbek",	3,	3,	"B2",	"Emirs");
-	saracen(67, "Tuman",		"Homs",		3,	3,	"B3",	"Emirs");
+	saracen(61, "Yazkuj",		"Ashtera",	3,	2,	"B2",	"Emirs", 0);
+	saracen(62, "Sulaiman",		"Artah",	3,	2,	"B2",	"Emirs", 0);
+	saracen(63, "Keukburi",		"Damascus",	3,	3,	"B3",	"Emirs", 0);
+	saracen(64, "Shirkuh",		"Homs",		3,	3,	"B2",	"Emirs", 0);
+	saracen(65, "Jurdik",		"Zerdana",	3,	3,	"B2",	"Emirs", 0);
+	saracen(66, "Bahram",		"Baalbek",	3,	3,	"B2",	"Emirs", 0);
+	saracen(67, "Tuman",		"Homs",		3,	3,	"B3",	"Emirs", 0);
 
-	saracen(71, "Taqi al Din",	"Hama",		3,	4,	"A2",	"Emirs");
-	saracen(72, "Al Mashtub",	"Damascus",	3,	4,	"B3",	"Emirs");
-	saracen(73, "Al Adil",		"Egypt",	3,	4,	"A2",	"Emirs");
-	saracen(74, "Saladin",		"Damascus",	3,	4,	"A3",	"Emirs");
-	saracen(75, "Al Aziz",		"Egypt",	3,	3,	"B2",	"Emirs");
-	saracen(76, "Al Afdal",		"Damascus",	3,	3,	"B3",	"Emirs");
-	saracen(77, "Al Zahir",		"Aleppo",	3,	3,	"A2",	"Emirs");
+	saracen(71, "Taqi al Din",	"Hama",		3,	4,	"A2",	"Emirs", 0);
+	saracen(72, "Al Mashtub",	"Damascus",	3,	4,	"B3",	"Emirs", 0);
+	saracen(73, "Al Adil",		"Egypt",	3,	4,	"A2",	"Emirs", 0);
+	saracen(74, "Saladin",		"Damascus",	3,	4,	"A3",	"Emirs", 0);
+	saracen(75, "Al Aziz",		"Egypt",	3,	3,	"B2",	"Emirs", 0);
+	saracen(76, "Al Afdal",		"Damascus",	3,	3,	"B3",	"Emirs", 0);
+	saracen(77, "Al Zahir",		"Aleppo",	3,	3,	"A2",	"Emirs", 0);
 
-	saracen(81, "Yuzpah",		"Egypt",	3,	4,	"B2",	"Emirs");
-	saracen(82, "Qaimaz",		"Banyas",	3,	3,	"B2",	"Emirs");
+	saracen(81, "Yuzpah",		"Egypt",	3,	4,	"B2",	"Emirs", 0);
+	saracen(82, "Qaimaz",		"Banyas",	3,	3,	"B2",	"Emirs", 0);
 
-	saracen(83, "Kurds",		"Damascus",	3,	4,	"C1",	"Nomads");
-	saracen(84, "Kurds",		"Damascus",	3,	4,	"C1",	"Nomads");
-	saracen(85, "Kurds",		"Damascus",	3,	3,	"C2",	"Nomads");
-	saracen(86, "Kurds",		"Damascus",	3,	3,	"C2",	"Nomads");
+	saracen(83, "Kurds",		"Damascus",	3,	4,	"C1",	"Nomads", 1);
+	saracen(84, "Kurds",		"Damascus",	3,	4,	"C1",	"Nomads", 1);
+	saracen(85, "Kurds",		"Damascus",	3,	3,	"C2",	"Nomads", 1);
+	saracen(86, "Kurds",		"Damascus",	3,	3,	"C2",	"Nomads", 1);
 
-	saracen(91, "Turks",		"Aleppo",	3,	3,	"A2",	"Nomads");
-	saracen(92, "Turks",		"Aleppo",	3,	3,	"A2",	"Nomads");
-	saracen(93, "Turks",		"Aleppo",	3,	4,	"A1",	"Nomads");
-	saracen(94, "Turks",		"Aleppo",	3,	4,	"A1",	"Nomads");
+	saracen(91, "Turks",		"Aleppo",	3,	3,	"A2",	"Nomads", 1);
+	saracen(92, "Turks",		"Aleppo",	3,	3,	"A2",	"Nomads", 1);
+	saracen(93, "Turks",		"Aleppo",	3,	4,	"A1",	"Nomads", 1);
+	saracen(94, "Turks",		"Aleppo",	3,	4,	"A1",	"Nomads", 1);
 
-	saracen(95, "Arabs",		"Egypt",	3,	3,	"B2",	"Nomads");
-	saracen(96, "Arabs",		"Egypt",	3,	3,	"B2",	"Nomads");
-	saracen(97, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads");
-	saracen(87, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads");
+	saracen(95, "Arabs",		"Egypt",	3,	3,	"B2",	"Nomads", 1);
+	saracen(96, "Arabs",		"Egypt",	3,	3,	"B2",	"Nomads", 1);
+	saracen(97, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads", 1);
+	saracen(87, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads", 1);
 
 	function town(axis, major, minor, wrap, region, name, rating, type) {
 		TOWNS[name].region = region;
@@ -238,9 +237,9 @@ const PORTS = [];
 			PORTS.push(name);
 		TOWNS[name].exits = [];
 		TOWNS[name].layout_axis = axis;
-		TOWNS[name].layout_major = (1 - major) / 2;
-		TOWNS[name].layout_minor = (1 - minor) / 2;
-		TOWNS[name].wrap = wrap ? wrap : Math.max(2, rating);
+		TOWNS[name].layout_major = 1-major;
+		TOWNS[name].layout_minor = 1-minor;
+		TOWNS[name].wrap = wrap;
 	}
 
 /*
@@ -253,72 +252,73 @@ const PORTS = [];
 	town('X', 0, 0, 0,	"Staging", "Germania1", 0, "staging");
 	town('X', 0, 0, 0,	"Staging", "Germania2", 0, "staging");
 	town('X', 0, 0, 0,	"Staging", "Germania3", 0, "staging");
+	town('X', 0, 0, 0,	"Pool", "FP", 0, "pool", "N", 12);
+	town('X', 0, 0, 0,	"Pool", "SP", 0, "pool", "N", 12);
 */
-	town('X', 0, 0, 0,	"Staging", "England", 0, "staging", "S", 3);
-	town('X', 0, 0, 0,	"Staging", "France", 0, "staging", "S", 3);
-	town('X', 0, 0, 0,	"Staging", "Germania", 0, "staging", "S", 3);
 
-	town('X', 0, 0, 0,	"Pool", "F. Pool", 0, "pool", "N", 12);
-	town('X', 0, 0, 0,	"Pool", "S. Pool", 0, "pool", "N", 12);
+	town('X', 0.5, 0.5, 3,	"Staging", 		"England", 	0, "staging");
+	town('X', 0.5, 0.5, 3,	"Staging", 		"France", 	0, "staging");
+	town('X', 0.5, 0.5, 3,	"Staging", 		"Germania", 	0, "staging");
 
-	town('X', 1, 0, 0,	"Syria",		"Aleppo",	3, "town", "E");
-	town('Y', 0, 0, 0,	"Syria",		"Artah",	1, "town", "V");
-	town('X', 1, 0, 0,	"Syria",		"Zerdana",	1, "town", "E");
-	town('X', 1, 0, 0,	"Syria",		"Hama",		1, "town", "E");
-	town('X', 1, 0, 0,	"Syria",		"Homs",		2, "town", "E");
-	town('X', 0, 0, 0,	"Syria",		"Lacum",	0, "town", "H");
-	town('X', 0, 0, 0,	"Syria",		"Qaddas",	0, "town", "H");
-	town('X', 0, 0, 0,	"Syria",		"Baalbek",	1, "town", "H");
-	town('X', 0, 0, 0,	"Syria",		"Anjar",	0, "town", "H");
-	town('X', 0, 0, 0,	"Syria",		"Damascus",	4, "town", "H");
-	town('X', 1, 0, 0,	"Syria",		"Banyas",	1, "town", "E");
-	town('X', 1, 0, 0,	"Syria",		"Ashtera",	1, "town", "E");
-	town('X', 1, 0, 0,	"Syria",		"Ajlun",	0, "town", "E");
 
-	town('X', 0, 0, 0,	"Antioch",		"St. Simeon",	0, "port", "W");
-	town('Y', 0, 0, 0,	"Antioch",		"Antioch",	3, "town", "V");
-	town('Y', 1, 0, 0,	"Antioch",		"Harim",	0, "town", "S");
-	town('X', 0, 0, 0,	"Antioch",		"Kassab",	0, "town", "H");
-	town('X', 0, 0, 0,	"Antioch",		"Shughur",	0, "town", "H");
-	town('X', -1, 0, 0,	"Antioch",		"Latakia",	1, "port", "W");
-	town('X', 0, 0, 0,	"Antioch",		"Saone",	1, "town", "H");
-	town('Y', 0, 0, 0,	"Antioch",		"Albara",	0, "town", "V");
-	town('X', -1, 0, 0,	"Antioch",		"Margat",	1, "port", "W");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Aleppo",	3, "town");
+	town('Y', 0.5, 0.5, 3,	"Syria",		"Artah",	1, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Zerdana",	1, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Hama",		1, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Homs",		2, "town");
+	town('X', 0.5, 0.5, 3,	"Syria",		"Lacum",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Syria",		"Qaddas",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Syria",		"Baalbek",	1, "town");
+	town('X', 0.5, 0.5, 3,	"Syria",		"Anjar",	0, "town");
+	town('X', 0.5, 0.5, 4,	"Syria",		"Damascus",	4, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Banyas",	1, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Ashtera",	1, "town");
+	town('X', 1.0, 0.5, 3,	"Syria",		"Ajlun",	0, "town");
 
-	town('X', 0, 0, 0,	"Masyaf",		"Masyaf",	1, "town", "H");
+	town('X', 0.5, 0.5, 3,	"Antioch",		"St. Simeon",	0, "port");
+	town('Y', 0.5, 0.5, 3,	"Antioch",		"Antioch",	3, "town");
+	town('Y', 1.0, 0.5, 3,	"Antioch",		"Harim",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Antioch",		"Kassab",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Antioch",		"Shughur",	0, "town");
+	town('X', 0.0, 0.5, 3,	"Antioch",		"Latakia",	1, "port");
+	town('X', 0.5, 0.5, 3,	"Antioch",		"Saone",	1, "town");
+	town('Y', 0.5, 0.5, 3,	"Antioch",		"Albara",	0, "town");
+	town('X', 0.0, 0.5, 3,	"Antioch",		"Margat",	1, "port");
 
-	town('Y', 0, 0, 0,	"Tripoli",		"Monterrand",	0, "town", "V");
-	town('X', -1, 0, 0,	"Tripoli",		"Tartus",	1, "port", "W");
-	town('X', 1, 0, 0,	"Tripoli",		"Krak",		1, "town", "E");
-	town('X', -1, 0, 0,	"Tripoli",		"Tripoli",	2, "fortified-port", "W");
-	town('X', -1, 0, 0,	"Tripoli",		"Botron",	0, "town", "W");
+	town('X', 0.5, 0.5, 1,	"Masyaf",		"Masyaf",	1, "town");
 
-	town('X', -1, 0, 0,	"Jerusalem",	"Beirut",	2, "port", "W");
-	town('X', -1, 0, 0,	"Jerusalem",	"Sidon",	1, "port", "W");
-	town('X', -1, 0, 0,	"Jerusalem",	"Tyre",		2, "fortified-port", "W");
-	town('Y', 0, 0, 0,	"Jerusalem",	"Beaufort",	1, "town", "V");
-	town('X', -1, 0, 0,	"Jerusalem",	"Acre",		3, "port", "W");
-	town('X', 1, 0, 0,	"Jerusalem",	"Tiberias",	2, "town", "E");
-	town('Y', 1, 0, 0,	"Jerusalem",	"Legio",	0, "town", "N");
-	town('X', 1, 0, 0,	"Jerusalem",	"Baisan",	1, "town", "E");
-	town('X', -1, 0, 0,	"Jerusalem",	"Caesarea",	1, "port", "W");
-	town('X', 0, 0, 0,	"Jerusalem",	"Nablus",	1, "town", "H");
-	town('X', 0, 0, 0,	"Jerusalem",	"Damiya",	0, "town", "H");
-	town('X', 0, 0, 0,	"Jerusalem",	"Amman",	1, "town", "H");
-	town('X', -1, 0, 0,	"Jerusalem",	"Jaffa",	1, "port", "W");
-	town('Y', 0, 0, 0,	"Jerusalem",	"Ramallah",	0, "town", "V");
-	town('X', 0, 0, 0,	"Jerusalem",	"Jerusalem",	3, "town", "H");
-	town('Y', 0, 0, 0,	"Jerusalem",	"Jericho",	0, "town", "V");
-	town('X', -1, 0, 0,	"Jerusalem",	"Ascalon",	2, "port", "W");
-	town('Y', 0, 0, 0,	"Jerusalem",	"Lachish",	0, "town", "V");
-	town('X', 0, 0, 0,	"Jerusalem",	"Hebron",	1, "town", "H");
-	town('X', 1, 0, 0,	"Jerusalem",	"Kerak",	1, "town", "E");
-	town('X', 0, 0, 0,	"Jerusalem",	"Gaza",		1, "town", "H");
-	town('Y', 0, 0, 0,	"Jerusalem",	"Beersheba",	0, "town", "V");
-	town('X', 0, 0, 0,	"Jerusalem",	"Dimona",	0, "town", "H");
-	town('X', 1, 0, 0,	"Jerusalem",	"Zoar",		0, "town", "E");
+	town('Y', 0.5, 0.5, 3,	"Tripoli",		"Monterrand",	0, "town");
+	town('X', 0.0, 0.5, 3,	"Tripoli",		"Tartus",	1, "port");
+	town('X', 1.0, 0.5, 3,	"Tripoli",		"Krak",		1, "town");
+	town('X', 0.0, 0.5, 3,	"Tripoli",		"Tripoli",	2, "fortified-port");
+	town('X', 0.0, 0.5, 3,	"Tripoli",		"Botron",	0, "town");
 
-	town('X', 0, 0, 0,	"Egypt",		"Egypt",	4, "port", "H");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Beirut",	2, "port");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Sidon",	1, "port");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Tyre",		2, "fortified-port");
+	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Beaufort",	1, "town");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Acre",		3, "port");
+	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Tiberias",	2, "town");
+	town('Y', 1.0, 0.5, 3,	"Jerusalem",	"Legio",	0, "town");
+	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Baisan",	1, "town");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Caesarea",	1, "port");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Nablus",	1, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Damiya",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Amman",	1, "town");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Jaffa",	1, "port");
+	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Ramallah",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Jerusalem",	3, "town");
+	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Jericho",	0, "town");
+	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Ascalon",	2, "port");
+	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Lachish",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Hebron",	1, "town");
+	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Kerak",	1, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Gaza",		1, "town");
+	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Beersheba",	0, "town");
+	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Dimona",	0, "town");
+	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Zoar",		0, "town");
+
+	town('X', 0.5, 0.5, 4,	"Egypt",	"Egypt",	4, "port");
 
 	function road(A,B,type) {
 		let id = (A < B) ? (A + "/" + B) : (B + "/" + A);

@@ -4,8 +4,9 @@ const FRANK = "Frank";
 const SARACEN = "Saracen";
 const ASSASSINS = "Assassins";
 const ENEMY = { Saracen: "Frank", Frank: "Saracen" }
-const POOL = "Pool";
 const DEAD = "Dead";
+const F_POOL = "FP";
+const S_POOL = "SP";
 
 let label_layout = window.localStorage['crusader-rex/label-layout'] || 'spread';
 
@@ -331,13 +332,43 @@ function update_steps(b, steps, element) {
 }
 
 function layout_blocks(location, secret, known) {
-	if (label_layout == 'spread' || (location == POOL || location == DEAD))
+	if (label_layout == 'spread' || (location == S_POOL || location == F_POOL || location == DEAD))
 		layout_blocks_spread(location, secret, known);
 	else
 		layout_blocks_stacked(location, secret, known);
 }
 
-function layout_blocks_spread(town, secret, known) {
+// function position_block(town, row, n_rows, col, n_cols, element) {
+
+function layout_blocks_spread(town, north, south) {
+	let wrap = TOWNS[town].wrap;
+	let rows = [];
+
+	if (north.length + south.length > wrap * 3) {
+		north = north.concat(south);
+		south = [];
+	}
+
+	function wrap_row(input) {
+		while (input.length > wrap) {
+			rows.push(input.slice(0, wrap));
+			input = input.slice(wrap);
+		}
+		if (input.length > 0)
+			rows.push(input);
+	}
+
+	wrap_row(north);
+	wrap_row(south);
+
+	for (let r = 0; r < rows.length; ++r) {
+		let cols = rows[r];
+		for (let c = 0; c < cols.length; ++c)
+			position_block(town, r, rows.length, c, cols.length, cols[c]);
+	}
+}
+
+function layout_blocks_spread_old(town, secret, known) {
 	let wrap = TOWNS[town].wrap;
 	let s = secret.length;
 	let k = known.length;
@@ -465,6 +496,8 @@ function update_map() {
 		let town = game.location[b];
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
+			let castle = game.castle[b] ? " castle" : "";
+			// TODO: show besieging blocks too!
 			if (info.owner == player || info.owner == ASSASSINS) {
 				let image = " known block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
@@ -493,7 +526,7 @@ function update_map() {
 		for (let where of game.actions.town)
 			ui.towns[where].classList.add('highlight');
 	if (game.muster)
-		ui.towns[game.where].classList.add('muster');
+		ui.towns[game.muster].classList.add('muster');
 
 	if (!game.battle) {
 		if (game.actions && game.actions.block)

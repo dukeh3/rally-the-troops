@@ -19,12 +19,12 @@
 .grid_log { background-color: ghostwhite; }
 .grid_top { background-color: gainsboro; }
 .grid_top.your_turn { background-color: orange; }
-.grid_top.Frank.your_turn { background-color: khaki; }
+.grid_top.Frank.your_turn { background-color: gold; }
 .grid_top.Saracen.your_turn { background-color: lightgreen; }
 .grid_top.disconnected { background-color: red; }
 .role_info { background-color: silver; }
 .one .role_name { background-color: khaki; }
-.two .role_name { background-color: lightgreen; }
+.two .role_name { background-color: darkseagreen; }
 
 #turn {
 	padding: 8px 0px 8px 8px;
@@ -136,8 +136,6 @@ body.shift .block.known:hover {
 .map .block.known { z-index: 5; }
 .map .block.known:hover { z-index: 6; }
 
-.block.highlight { cursor: pointer; box-shadow: 0px 0px 4px 1px white; }
-
 .block {
 	background-size: cover;
 	background-repeat: no-repeat;
@@ -147,25 +145,32 @@ body.shift .block.known:hover {
 	box-shadow: 0px 0px 4px 0px black;
 }
 
-.block.Frank { border: 3px solid orange; background-color: orange; }
-.block.Saracen { border: 3px solid green; background-color: green; }
-.block.Assassins { border: 3px solid purple; background-color: purple; }
+.block.Frank { border: 3px solid darkkhaki; background-color: khaki; }
+.block.Saracen { border: 3px solid seagreen; background-color: darkseagreen; }
+.block.Assassins { border: 3px solid rebeccapurple; background-color: rebeccapurple; }
 
 .block.Frank.highlight { border-color: white; }
 .block.Saracen.highlight { border-color: white; }
 .block.Assassins.highlight { border-color: white; }
 
-.block.Frank.selected { border-color: yellow; }
-.block.Saracen.selected { border-color: yellow; }
-.block.Assassins.selected { border-color: yellow; }
+.block.Frank.selected { border-color: gold; }
+.block.Saracen.selected { border-color: lightgreen; }
+.block.Assassins.selected { border-color: hotpink; }
 
-.block.selected { box-shadow: 0 0 4px 1px yellow; }
-.block.moved { filter: brightness(85%) grayscale(50%); }
-.block.highlight.moved { filter: brightness(95%) grayscale(60%); }
+.block.highlight { cursor: pointer; }
+.block.highlight { box-shadow: 0px 0px 4px 1px white; }
+.block.selected { box-shadow: 0 0 4px 1px white; }
+.block.moved { filter: brightness(80%) grayscale(40%); }
+.block.highlight.moved { filter: brightness(95%) grayscale(40%); }
 
+.block.r0 { transform: rotate(0deg); }
 .block.r1 { transform: rotate(-90deg); }
 .block.r2 { transform: rotate(-180deg); }
 .block.r3 { transform: rotate(-270deg); }
+.block.r0hh { transform: rotate(-30deg); }
+.block.r1hh { transform: rotate(-120deg); }
+.block.r2hh { transform: rotate(-210deg); }
+.block.r3hh { transform: rotate(-300deg); }
 
 .block {
 	transition-property: top, left, transform;
@@ -305,8 +310,8 @@ body.shift .block.known:hover {
 			<div class="menu_popup">
 				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
 				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="wide_map()">Wide Map</div>
 				<div class="menu_item" onclick="tall_map()">Tall Map</div>
+				<div class="menu_item" onclick="wide_map()">Wide Map</div>
 				<div class="menu_separator"></div>
 				<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
 				<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>

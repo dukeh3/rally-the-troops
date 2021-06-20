@@ -19,8 +19,8 @@ const ENEMY = { Frank: "Saracen", Saracen: "Frank" };
 const OBSERVER = "Observer";
 const BOTH = "Both";
 const DEAD = "Dead";
-const F_POOL = "F. Pool";
-const S_POOL = "S. Pool";
+const F_POOL = "FP";
+const S_POOL = "SP";
 
 // serif cirled numbers
 const DIE_HIT = [ 0, '\u2776', '\u2777', '\u2778', '\u2779', '\u277A', '\u277B' ];
@@ -178,6 +178,10 @@ function deal_cards(deck, n) {
 		deck.splice(k, 1);
 	}
 	return hand;
+}
+
+function block_plural(who) {
+	return BLOCKS[who].plural;
 }
 
 function block_name(who) {
@@ -467,8 +471,10 @@ function can_block_muster_with_3_moves(n0, muster) {
 	return false;
 }
 
-function can_block_muster_with_2_moves(n0, muster) {
+function can_block_muster_with_2_moves(n0, muster, avoid) {
 	for (let n1 of TOWNS[n0].exits) {
+		if (n1 == avoid)
+			continue;
 		if (can_block_use_road_to_muster(n0, n1)) {
 			if (n1 == muster)
 				return true;
@@ -495,7 +501,7 @@ function can_block_muster(who, muster) {
 		if (block_move(who) == 3)
 			return can_block_muster_with_3_moves(from, muster);
 		else
-			return can_block_muster_with_2_moves(from, muster);
+			return can_block_muster_with_2_moves(from, muster, null);
 	}
 	return false;
 }
@@ -524,13 +530,19 @@ function is_defender(who) {
 }
 
 function disband(who) {
-	log(block_name(who) + " disbands.");
+	if (block_plural(who))
+		log(block_name(who) + " disband.");
+	else
+		log(block_name(who) + " disbands.");
 	game.location[who] = block_pool(who);
 	game.steps[who] = block_max_steps(who);
 }
 
 function eliminate_block(who) {
-	log(block_name(who) + " is eliminated.");
+	if (block_plural(who))
+		log(block_name(who) + " are eliminated.");
+	else
+		log(block_name(who) + " is eliminated.");
 	if (is_saladin_family(who) || block_type(who) == 'crusaders' || block_type(who) == 'military_orders')
 		game.location[who] = null; // permanently eliminated
 	else
@@ -802,6 +814,7 @@ states.group_move = {
 		game.who = who;
 		game.origin = game.location[who];
 		game.distance = 0;
+		game.last_from = null;
 		game.state = 'group_move_to';
 	},
 	sea_move: function () {
@@ -827,7 +840,7 @@ states.group_move_to = {
 		if (game.distance > 0)
 			gen_action(view, 'town', from);
 		for (let to of TOWNS[from].exits) {
-			if (can_block_land_move_to(game.who, from, to))
+			if (to != game.last_from && can_block_land_move_to(game.who, from, to))
 				gen_action(view, 'town', to);
 		}
 	},
@@ -844,6 +857,7 @@ states.group_move_to = {
 			log_move_continue(to + mark);
 		else
 			log_move_continue(to);
+		game.last_from = from;
 		if (!can_block_continue(game.who, from, to))
 			end_move();
 	},
@@ -1016,7 +1030,7 @@ states.muster_move_1 = {
 		if (block_move(game.who) == 3) {
 			for (let to of TOWNS[from].exits) {
 				if (can_block_use_road_to_muster(from, to)) {
-					if (to == muster || can_block_muster_with_2_moves(to, muster))
+					if (to == muster || can_block_muster_with_2_moves(to, muster, from))
 						gen_action(view, 'town', to);
 				}
 			}
@@ -1288,19 +1302,32 @@ function roll_attack(active, b, verb) {
 	}
 
 	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
-	if (game.hits == 0)
-		game.flash += "and misses.";
-	else if (game.hits == 1)
-		game.flash += "and scores 1 hit.";
-	else
-		game.flash += "and scores " + game.hits + " hits.";
+	if (block_plural(b)) {
+		if (game.hits == 0)
+			game.flash += "and miss.";
+		else if (game.hits == 1)
+			game.flash += "and score 1 hit.";
+		else
+			game.flash += "and score " + game.hits + " hits.";
+	} else {
+		if (game.hits == 0)
+			game.flash += "and misses.";
+		else if (game.hits == 1)
+			game.flash += "and scores 1 hit.";
+		else
+			game.flash += "and scores " + game.hits + " hits.";
+	}
 
 	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
 }
 
 function fire_with_block(b) {
 	game.moved[b] = true;
-	roll_attack(game.active, b, "fires");
+	console.log ("fire", block_plural(b));
+	if (block_plural(b))
+		roll_attack(game.active, b, "fire");
+	else
+		roll_attack(game.active, b, "fires");
 	if (game.hits > 0) {
 		game.active = ENEMY[game.active];
 		goto_battle_hits();
@@ -1353,7 +1380,10 @@ function goto_battle_hits() {
 }
 
 function apply_hit(who) {
-	game.flash = block_name(who) + " takes a hit.";
+	if (block_plural(who))
+		game.flash = block_name(who) + " take a hit.";
+	else
+		game.flash = block_name(who) + " takes a hit.";
 	reduce_block(who, 'combat');
 	game.hits--;
 	if (game.hits == 0)
@@ -1488,7 +1518,10 @@ states.retreat_in_battle = {
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
-		game.flash = block_name(game.who) + " retreats.";
+		if (block_plural(game.who))
+			game.flash = block_name(game.who) + " retreat.";
+		else
+			game.flash = block_name(game.who) + " retreats.";
 		logp("retreats to " + to + ".");
 		game.location[game.who] = to;
 		resume_battle();
@@ -1664,6 +1697,7 @@ exports.setup = function (scenario, players) {
 		road_limit: {},
 		last_used: {},
 		location: {},
+		castle: {},
 		log: [],
 		main_road: {},
 		moved: {},
@@ -1720,6 +1754,7 @@ exports.view = function(state, current) {
 		hand: (current == FRANK) ? game.f_hand : (current == SARACEN) ? game.s_hand : [],
 		who: (game.active == current) ? game.who : null,
 		location: game.location,
+		castle: game.castle,
 		steps: game.steps,
 		reserves: game.reserves1.concat(game.reserves2),
 		moved: game.moved,

@@ -1,6 +1,7 @@
 "use strict";
 
 // TODO: auto-allocate corsair hits?
+// TODO: don't auto-allocate gunboats?
 
 const US = "United States";
 const TR = "Tripolitania";
@@ -91,7 +92,6 @@ const FRIGATE_SPACES = [
 ];
 
 const BATTLE_SPACES = [
-	ALEXANDRIA,
 	ALGIERS,
 	BENGHAZI,
 	DERNE,

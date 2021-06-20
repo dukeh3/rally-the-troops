@@ -1432,7 +1432,9 @@ function resume_naval_battle() {
 			log("The Tripolitan fleet has been eliminated.");
 			move_all_pieces(US_MARINES, BENGHAZI, TRIPOLI);
 			move_all_pieces(AR_INFANTRY, BENGHAZI, TRIPOLI);
-			return goto_land_battle();
+			naval_bombardment_round();
+			game.state = 'land_battle_bombardment_results';
+			return;
 		}
 		if (n_us == 0) {
 			log("The American fleet has been eliminated.");

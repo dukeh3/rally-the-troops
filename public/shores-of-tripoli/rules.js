@@ -526,6 +526,12 @@ function count_american_troops(where) {
 	return count_american_marines(where) + count_arab_infantry(where);
 }
 
+function count_tripolitan_pieces(where) {
+	return count_tripolitan_frigates(where) +
+		count_tripolitan_corsairs(where) +
+		count_tripolitan_infantry(where);
+}
+
 function is_fall_of_1805_or_later() {
 	return ((game.year == 1805 && game.season >= FALL) || (game.year > 1805));
 }
@@ -1031,8 +1037,12 @@ states.move_us_frigate_to = {
 		if (is_inactive_player(current))
 			return view.prompt = "United States: Naval Movement.";
 		view.prompt = "United States: Naval Movement" + format_moves_left();
-		for (let space of FRIGATE_SPACES)
+		for (let space of FRIGATE_SPACES) {
+			if (space == TRIPOLI || space == BENGHAZI || space == DERNE)
+				if (count_tripolitan_pieces(space) == 0)
+					continue; // nothing to do here...
 			gen_action(view, 'space', space);
+		}
 		gen_action(view, 'next');
 		gen_action_undo(view);
 	},

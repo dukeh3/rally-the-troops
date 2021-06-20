@@ -50,8 +50,7 @@ function wide_map() {
 let ui = {
 	cards: {},
 	towns: {},
-	known: {},
-	secret: { Frank: {}, Saracen: {}, Assassins: {} },
+	blocks: {},
 	battle_menu: {},
 	battle_block: {},
 	present: new Set(),
@@ -79,27 +78,17 @@ function block_name(who) { return who; }
 function block_home(who) { return BLOCKS[who].home; }
 function block_owner(who) { return BLOCKS[who].owner; }
 
-function on_focus_secret_block(evt) {
-	let owner = evt.target.owner;
-	let text = owner;
-	document.getElementById("status").textContent = text;
-}
-
-function on_blur_secret_block(evt) {
-	document.getElementById("status").textContent = "";
-}
-
-function on_click_secret_block(evt) {
-}
-
 function on_focus_map_block(evt) {
-	let b = evt.target.block;
-	let s = game.known[b][1];
-	let text = block_name(b) + " ";
-	if (BLOCKS[b].move)
-		text += BLOCKS[b].move + "-";
-	text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
-	document.getElementById("status").textContent = text;
+	let info = BLOCKS[evt.target.block];
+	if (info.owner == player || info.owner == ASSASSINS) {
+		let text = info.name + " ";
+		if (info.move)
+			text += info.move + "-";
+		text += STEP_TEXT[info.steps] + "-" + info.combat;
+		document.getElementById("status").textContent = text;
+	} else {
+		document.getElementById("status").textContent = info.owner;
+	}
 }
 
 function on_blur_map_block(evt) {
@@ -248,7 +237,7 @@ function build_battle_block(b, block) {
 	ui.battle_menu[b] = menu;
 }
 
-function build_known_block(b, block) {
+function build_map_block(b, block) {
 	let element = document.createElement("div");
 	element.classList.add("block");
 	element.classList.add("known");
@@ -258,19 +247,6 @@ function build_known_block(b, block) {
 	element.addEventListener("mouseleave", on_blur_map_block);
 	element.addEventListener("click", on_click_map_block);
 	element.block = b;
-	return element;
-}
-
-function build_secret_block(b, block, secret_index) {
-	let element = document.createElement("div");
-	element.secret_index = secret_index;
-	element.classList.add("block");
-	element.classList.add("secret");
-	element.classList.add(BLOCKS[b].owner);
-	element.addEventListener("mouseenter", on_focus_secret_block);
-	element.addEventListener("mouseleave", on_blur_secret_block);
-	element.addEventListener("click", on_click_secret_block);
-	element.owner = BLOCKS[b].owner;
 	return element;
 }
 
@@ -336,20 +312,12 @@ function build_map() {
 	for (let name in TOWNS) {
 		let town = TOWNS[name];
 		ui.towns[name] = build_town(name, town);
-		ui.secret.Frank[name] = [];
-		ui.secret.Saracen[name] = [];
-		ui.secret.Assassins[name] = [];
 	}
-	ui.secret.Frank.offmap = [];
-	ui.secret.Saracen.offmap = [];
-	ui.secret.Assassins.offmap = [];
 
 	for (let b in BLOCKS) {
 		let block = BLOCKS[b];
+		ui.blocks[b] = build_map_block(b, block);
 		build_battle_block(b, block);
-		ui.known[b] = build_known_block(b, block);
-		let e = build_secret_block(b, block, ui.secret[BLOCKS[b].owner].offmap.length);
-		ui.secret[BLOCKS[b].owner].offmap.push(e);
 	}
 
 	update_map_layout();
@@ -484,103 +452,36 @@ function hide_block(element) {
 }
 
 function update_map() {
-	let overflow = { Frank: [], Saracen: [], Assassins: [] };
 	let layout = {};
 
 	document.getElementById("turn").textContent = "Year " + game.year + " (" + (game.year-1186) + "/6)" ;
 
 	for (let town in TOWNS)
-		layout[town] = { secret: [], known: [] };
+		layout[town] = { north: [], south: [] };
 
-	// Move secret blocks to overflow queue if there are too many in a town
-	for (let town in TOWNS) {
-		for (let color of [FRANK, SARACEN, ASSASSINS]) {
-			if (game.secret[color]) {
-				let max = game.secret[color][town] ? game.secret[color][town][0] : 0;
-				while (ui.secret[color][town].length > max) {
-					overflow[color].push(ui.secret[color][town].pop());
-				}
+	for (let b in game.location) {
+		let info = BLOCKS[b];
+		let element = ui.blocks[b];
+		let town = game.location[b];
+		if (town in TOWNS) {
+			let moved = game.moved[b] ? " moved" : "";
+			if (info.owner == player || info.owner == ASSASSINS) {
+				let image = " known block_" + info.image;
+				let steps = " r" + (info.steps - game.steps[b]);
+				element.classList = info.owner + " block" + image + steps + moved;
+				layout[town].south.push(element);
+			} else {
+				element.classList = info.owner + " block" + moved;
+				layout[town].north.push(element);
 			}
-		}
-	}
-
-	// Add secret blocks if there are too few in a location
-	for (let town in TOWNS) {
-		for (let color of [FRANK, SARACEN, ASSASSINS]) {
-			if (game.secret[color]) {
-				let max = game.secret[color][town] ? game.secret[color][town][0] : 0;
-				while (ui.secret[color][town].length < max) {
-					if (overflow[color].length > 0) {
-						ui.secret[color][town].push(overflow[color].pop());
-					} else {
-						let element = ui.secret[color].offmap.pop();
-						show_block(element);
-						ui.secret[color][town].push(element);
-					}
-				}
-			}
-		}
-	}
-
-	// Remove any blocks left in the overflow queue
-	for (let color of [FRANK, SARACEN, ASSASSINS]) {
-		while (overflow[color].length > 0) {
-			let element = overflow[color].pop();
-			hide_block(element);
-			ui.secret[color].offmap.push(element);
-		}
-	}
-
-	// Hide formerly known blocks
-	for (let b in BLOCKS) {
-		if (!(b in game.known)) {
-			hide_block(ui.known[b]);
-		}
-	}
-
-	// Add secret blocks to layout
-	for (let town in TOWNS) {
-		for (let color of [FRANK, SARACEN, ASSASSINS]) {
-			let i = 0, n = 0, m = 0;
-			if (game.secret[color] && game.secret[color][town]) {
-				n = game.secret[color][town][0];
-				m = game.secret[color][town][1];
-			}
-			// Preserve block stacking order, but lets the user track block identities...
-			if (label_layout == 'stack')
-				ui.secret[color][town].sort((a,b) => b.secret_index - a.secret_index);
-			for (let element of ui.secret[color][town]) {
-				if (i++ < n - m)
-					element.classList.remove("moved");
-				else
-					element.classList.add("moved");
-				layout[town].secret.push(element);
-			}
-		}
-	}
-
-	// Add known blocks to layout
-	for (let b in game.known) {
-		let town = game.known[b][0];
-		if (town) {
-			let steps = game.known[b][1];
-			let moved = game.known[b][2];
-			let element = ui.known[b];
-
 			show_block(element);
-			layout[town].known.push(element);
-			update_steps(b, steps, element);
-
-			if (moved)
-				element.classList.add("moved");
-			else
-				element.classList.remove("moved");
+		} else {
+			hide_block(element);
 		}
 	}
 
-	// Layout blocks on map
 	for (let town in TOWNS)
-		layout_blocks(town, layout[town].secret, layout[town].known);
+		layout_blocks(town, layout[town].north, layout[town].south);
 
 	for (let where in TOWNS) {
 		if (ui.towns[where]) {
@@ -594,16 +495,12 @@ function update_map() {
 	if (game.muster)
 		ui.towns[game.where].classList.add('muster');
 
-	for (let b in BLOCKS) {
-		ui.known[b].classList.remove('highlight');
-		ui.known[b].classList.remove('selected');
-	}
 	if (!game.battle) {
 		if (game.actions && game.actions.block)
 			for (let b of game.actions.block)
-				ui.known[b].classList.add('highlight');
+				ui.blocks[b].classList.add('highlight');
 		if (game.who)
-			ui.known[game.who].classList.add('selected');
+			ui.blocks[game.who].classList.add('selected');
 	}
 }
 

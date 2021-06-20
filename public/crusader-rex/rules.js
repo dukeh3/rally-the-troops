@@ -1719,9 +1719,10 @@ exports.view = function(state, current) {
 		s_card: (game.show_cards || current == SARACEN) ? game.s_card : 0,
 		hand: (current == FRANK) ? game.f_hand : (current == SARACEN) ? game.s_hand : [],
 		who: (game.active == current) ? game.who : null,
-		where: game.where,
-		known: {},
-		secret: { Frank: {}, Saracen: {}, Assassins: {} },
+		location: game.location,
+		steps: game.steps,
+		reserves: game.reserves1.concat(game.reserves2),
+		moved: game.moved,
 		battle: null,
 		prompt: null,
 		actions: null,
@@ -1731,37 +1732,6 @@ exports.view = function(state, current) {
 
 	if (states[game.state].show_battle)
 		view.battle = make_battle_view();
-
-	for (let b in BLOCKS) {
-		let a = game.location[b];
-		if (!a)
-			continue;
-		if (a == DEAD)
-			continue;
-		if (a == F_POOL) // && current != FRANK)
-			continue;
-		if (a == S_POOL) // && current != SARACEN)
-			continue;
-		if (a == F_POOL || a == S_POOL)
-			a = "Pool";
-
-		let is_known = false;
-		if (current == block_owner(b))
-			is_known = true;
-		if (b == ASSASSINS)
-			is_known = true;
-
-		if (is_known) {
-			view.known[b] = [a, game.steps[b], game.moved[b] ? 1 : 0];
-		} else {
-			let list = view.secret[BLOCKS[b].owner];
-			if (!(a in list))
-				list[a] = [0, 0];
-			list[a][0]++;
-			if (game.moved[b])
-				list[a][1]++;
-		}
-	}
 
 	return view;
 }

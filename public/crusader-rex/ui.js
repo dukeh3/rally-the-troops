@@ -156,6 +156,11 @@ function on_focus_battle_charge(evt) {
 		"Charge with " + block_name(evt.target.block);
 }
 
+function on_focus_battle_withdraw(evt) {
+	document.getElementById("status").textContent =
+		"Withdraw with " + block_name(evt.target.block);
+}
+
 function on_focus_battle_hit(evt) {
 	document.getElementById("status").textContent =
 		"Take hit on " + block_name(evt.target.block);
@@ -170,14 +175,16 @@ function on_click_battle_fire(evt) { send_action('battle_fire', evt.target.block
 function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
 function on_click_battle_charge(evt) { send_action('battle_charge', evt.target.block); }
 function on_click_battle_harry(evt) { send_action('battle_harry', evt.target.block); }
+function on_click_battle_withdraw(evt) { send_action('battle_withdraw', evt.target.block); }
 
 function on_click_card(evt) {
 	let c = evt.target.id.split("+")[1] | 0;
 	send_action('play', c);
 }
 
-function on_button_undo(evt) { send_action('undo'); }
+function on_button_next(evt) { send_action('next'); }
 function on_button_pass(evt) { send_action('pass'); }
+function on_button_undo(evt) { send_action('undo'); }
 function on_button_sea_move(evt) { send_action('sea_move'); }
 function on_button_muster(evt) { send_action('muster'); }
 function on_button_end_muster(evt) { send_action('end_muster'); }
@@ -230,6 +237,9 @@ function build_battle_block(b, block) {
 	build_battle_button(menu_list, b, "retreat",
 		on_click_battle_retreat, on_focus_battle_retreat,
 		"/images/flying-flag.svg");
+	build_battle_button(menu_list, b, "withdraw",
+		on_click_battle_withdraw, on_focus_battle_withdraw,
+		"/images/stone-tower.svg");
 
 	let menu = document.createElement("div");
 	menu.classList.add("battle_menu");
@@ -535,6 +545,10 @@ function update_map() {
 		if (game.who)
 			ui.blocks[game.who].classList.add('selected');
 	}
+	for (let b of game.castle) {
+		ui.blocks[b].classList.add('castle');
+		ui.battle_block[b].classList.add('castle');
+	}
 }
 
 function update_cards() {
@@ -581,6 +595,7 @@ function update_battle() {
 			ui.battle_menu[block].classList.remove('charge');
 			ui.battle_menu[block].classList.remove('fire');
 			ui.battle_menu[block].classList.remove('harry');
+			ui.battle_menu[block].classList.remove('withdraw');
 			ui.battle_menu[block].classList.remove('retreat');
 
 			if (game.actions && game.actions.block && game.actions.block.includes(block))
@@ -593,6 +608,8 @@ function update_battle() {
 				ui.battle_menu[block].classList.add('harry');
 			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
 				ui.battle_menu[block].classList.add('charge');
+			if (game.actions && game.actions.battle_withdraw && game.actions.battle_withdraw.includes(block))
+				ui.battle_menu[block].classList.add('withdraw');
 			if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(block))
 				ui.battle_menu[block].classList.add('hit');
 			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
@@ -629,25 +646,22 @@ function update_battle() {
 	if (player == FRANK) {
 		fill_cell("FR", game.battle.FR, true);
 		fill_cell("FA", game.battle.FA, false);
-		fill_cell("FB", game.battle.FB, false);
 		fill_cell("FC", game.battle.FC, false);
 		fill_cell("EA", game.battle.SA, false);
-		fill_cell("EB", game.battle.SB, false);
 		fill_cell("EC", game.battle.SC, false);
 		fill_cell("ER", game.battle.SR, true);
 	} else {
 		fill_cell("ER", game.battle.FR, true);
 		fill_cell("EA", game.battle.FA, false);
-		fill_cell("EB", game.battle.FB, false);
 		fill_cell("EC", game.battle.FC, false);
 		fill_cell("FA", game.battle.SA, false);
-		fill_cell("FB", game.battle.SB, false);
 		fill_cell("FC", game.battle.SC, false);
 		fill_cell("FR", game.battle.SR, true);
 	}
 }
 
 function on_update() {
+	show_action_button("#next_button", "next");
 	show_action_button("#pass_button", "pass");
 	show_action_button("#undo_button", "undo");
 	show_action_button("#sea_move_button", "sea_move");

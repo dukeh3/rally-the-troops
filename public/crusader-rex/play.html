@@ -163,6 +163,8 @@ body.shift .block.known:hover {
 .block.moved { filter: brightness(80%) grayscale(40%); }
 .block.highlight.moved { filter: brightness(95%) grayscale(40%); }
 
+.map .block.castle { border-color: #444; }
+
 .block.r0 { transform: rotate(0deg); }
 .block.r1 { transform: rotate(-90deg); }
 .block.r2 { transform: rotate(-180deg); }
@@ -184,12 +186,13 @@ body.shift .block.known:hover {
 .battle .battle_message { background-color: gainsboro; }
 .battle .battle_header { background-color: #224467; color: white; font-weight: bold; }
 .battle .battle_separator { background-color: #224467; }
-
 .battle_line.enemy .battle_menu_list { min-height: 0; }
-.battle_reserves > td > div { height: 75px; padding: 5px; }
-.battle_a_cell > div { min-width: 270px; padding: 5px 5px; }
-.battle_b_cell > div { min-width: 270px; padding: 5px 5px; }
-.battle_c_cell > div { min-width: 270px; padding: 5px 5px; }
+.battle_line > td > div { min-width: 800px; }
+
+.battle td { border: none; }
+#FA, #FC, #FD, #FR, #EA, #EC, #ER { margin: 0px; }
+#FC, #EC { background-color: gray; }
+.battle .battle_menu { margin: 10px 5px; }
 
 /* CARD AND BLOCK IMAGES */
 
@@ -283,20 +286,12 @@ body.shift .block.known:hover {
 <table class="battle">
 <tr>
 <th class="battle_header" colspan=4></th>
-<tr class="battle_reserves enemy">
-<td colspan=4><div id="ER"></div></td>
-<tr class="battle_line enemy">
-<td class="battle_a_cell"><div id="EA"></div></td>
-<td class="battle_b_cell"><div id="EB"></div></td>
-<td class="battle_c_cell"><div id="EC"></div></td>
-<tr class="battle_separator">
-<td colspan=4>
-<tr class="battle_line friendly">
-<td class="battle_a_cell"><div id="FA"></div></td>
-<td class="battle_b_cell"><div id="FB"></div></td>
-<td class="battle_c_cell"><div id="FC"></div></td>
-<tr class="battle_reserves friendly">
-<td colspan=4><div id="FR"></div></td>
+<tr class="battle_reserves enemy"><td><div id="ER"></div></td>
+<tr class="battle_line enemy"><td><div id="EC"></div></td>
+<tr class="battle_line enemy"><td><div id="EA"></div></td>
+<tr class="battle_line friendly"><td><div id="FA"></div></td>
+<tr class="battle_line friendly"><td><div id="FC"></div></td>
+<tr class="battle_reserves friendly"><td><div id="FR"></div></td>
 <tr>
 <th class="battle_message" colspan=4></th>
 </table>
@@ -344,6 +339,7 @@ body.shift .block.known:hover {
 		<button id="end_regroup_button" class="hide" onclick="on_button_end_regroup()">End regroup</button>
 		<button id="end_move_phase_button" class="hide" onclick="on_button_end_move_phase()">End move phase</button>
 		<button id="pass_button" class="hide" onclick="on_button_pass()">Pass</button>
+		<button id="next_button" class="hide" onclick="on_button_next()">Next</button>
 		<button id="undo_button" class="hide" onclick="on_button_undo()">Undo</button>
 
 	</div>

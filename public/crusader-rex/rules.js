@@ -299,6 +299,10 @@ function is_vacant_town(where) { return count_friendly(where) == 0 && count_enem
 function is_contested_town(where) { return count_friendly(where) > 0 && count_enemy(where) > 0; }
 function is_friendly_or_vacant_town(where) { return is_friendly_town(where) || is_vacant_town(where); }
 
+function castle_limit(where) {
+	return TOWNS[where].rating;
+}
+
 function is_fortified_port(where) {
 	return TOWNS[where].fortified_port;
 }
@@ -1136,6 +1140,44 @@ function end_muster_move() {
 
 // BATTLE PHASE
 
+function is_siege_able(where) {
+	return castle_limit(where) > 0;
+}
+
+function count_blocks_in_castle(where) {
+	let n = 0;
+	for (let b in BLOCKS)
+		if (game.location[b] == where && game.castle.includes(b))
+			++n;
+	return n;
+}
+
+function count_enemies_in_field_and_reserve(where) {
+	let n = 0;
+	for (let b in BLOCKS)
+		if (block_owner(b) != game.active)
+			if (game.location[b] == where && !game.castle.includes(b))
+				++n;
+	return n;
+}
+
+function count_friends_in_field_and_reserve(where) {
+	let n = 0;
+	for (let b in BLOCKS)
+		if (block_owner(b) == game.active)
+			if (game.location[b] == where && !game.castle.includes(b))
+				++n;
+	return n;
+}
+
+function is_under_siege(where) {
+	return count_blocks_in_castle(where) > 0;
+}
+
+function is_block_in_castle(b) {
+	return game.castle.includes(b);
+}
+
 function goto_battle_phase() {
 	game.moved = {};
 	if (have_contested_towns()) {
@@ -1166,8 +1208,67 @@ function start_battle(where) {
 	log("Battle in " + where + ".");
 	game.where = where;
 	game.battle_round = 0;
-	game.state = 'battle_round';
-	start_battle_round();
+
+	if (is_siege_able(where)) {
+		if (!is_under_siege(where)) {
+			log("~ Combat Deployment ~");
+			game.active = ENEMY[game.attacker[game.where]];
+			game.state = 'combat_deployment';
+		} else {
+			log("Siege continues from previous turn.");
+			game.state = 'battle_round';
+			start_battle_round();
+		}
+	} else {
+		game.state = 'battle_round';
+		start_battle_round();
+	}
+}
+
+states.combat_deployment = {
+	show_battle: true,
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to deploy units.";
+		view.prompt = "Deploy blocks on the field and in the castle.";
+		let max = castle_limit(game.where);
+		let n = count_blocks_in_castle(game.where);
+		if (n < max) {
+			for (let b in BLOCKS) {
+				if (block_owner(b) == game.active && !is_battle_reserve(b)) {
+					if (game.location[b] == game.where && !game.castle.includes(b)) {
+						gen_action(view, 'battle_withdraw', b);
+						gen_action(view, 'block', b);
+					}
+				}
+			}
+		}
+		gen_action_undo(view);
+		gen_action(view, 'next');
+	},
+	battle_withdraw: function (who) {
+		push_undo();
+		game.castle.push(who);
+	},
+	block: function (who) {
+		push_undo();
+		game.castle.push(who);
+	},
+	next: function () {
+		clear_undo();
+		let n = count_blocks_in_castle(game.where);
+		if (n == 1)
+			log("1 unit withdraws.");
+		else
+			log(n + " units withdraw.");
+		game.active = game.attacker[game.where];
+		if (count_enemies_in_field_and_reserve(game.where) == 0) {
+			return goto_regroup();
+		}
+		game.state = 'battle_round';
+		start_battle_round();
+	},
+	undo: pop_undo
 }
 
 function resume_battle() {
@@ -1660,13 +1761,16 @@ function setup_game() {
 
 function make_battle_view() {
 	let battle = {
-		FA: [], FB: [], FC: [], FR: [],
-		SA: [], SB: [], SC: [], SR: [],
+		FA: [], FC: [], FR: [],
+		SA: [], SC: [], SR: [],
 		flash: game.flash
 	};
 
 	battle.title = game.attacker[game.where] + " attacks " + game.where;
-	battle.title += " \u2014 round " + game.battle_round + " of 3";
+	if (game.battle_round == 0) {
+		battle.title += " \u2014 combat deployment";
+	} else {
+	}
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)
@@ -1675,14 +1779,12 @@ function make_battle_view() {
 	}
 
 	fill_cell(battle.FR, FRANK, b => is_battle_reserve(b));
-	fill_cell(battle.FA, FRANK, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.FB, FRANK, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.FC, FRANK, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
+	fill_cell(battle.FA, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b));
+	fill_cell(battle.FC, FRANK, b => !is_battle_reserve(b) && is_block_in_castle(b));
 
 	fill_cell(battle.SR, SARACEN, b => is_battle_reserve(b));
-	fill_cell(battle.SA, SARACEN, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.SB, SARACEN, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.SC, SARACEN, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
+	fill_cell(battle.SA, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b));
+	fill_cell(battle.SC, SARACEN, b => !is_battle_reserve(b) && is_block_in_castle(b));
 
 	return battle;
 }
@@ -1697,7 +1799,7 @@ exports.setup = function (scenario, players) {
 		road_limit: {},
 		last_used: {},
 		location: {},
-		castle: {},
+		castle: [],
 		log: [],
 		main_road: {},
 		moved: {},

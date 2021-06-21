@@ -896,10 +896,14 @@ function reveal_cards() {
 		return;
 	}
 
-	if (game.c_card == APOLLO)
+	if (game.c_card == APOLLO) {
 		game.c_card = game.prior_p_card;
-	if (game.p_card == APOLLO)
+		log("Apollo copies " + CARDS[game.c_card].name + ".");
+	}
+	if (game.p_card == APOLLO) {
 		game.p_card = game.prior_c_card;
+		log("Apollo copies " + CARDS[game.p_card].name + ".");
+	}
 
 	game.prior_c_card = game.c_card;
 	game.prior_p_card = game.p_card;

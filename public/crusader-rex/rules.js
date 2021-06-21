@@ -7,6 +7,7 @@
 // TODO: optional rule - force marches
 
 // TODO: strict move order for group moves?
+// Move Phase -> Group Move / Muster / Sea Move -> Move Phase
 
 exports.scenarios = [
 	"Third Crusade"
@@ -595,6 +596,9 @@ function disband(who) {
 }
 
 function eliminate_block(who) {
+	remove_from_array(game.castle, who);
+	if (game.sallying) remove_from_array(game.sallying, who);
+	if (game.storming) remove_from_array(game.storming, who);
 	if (block_plural(who))
 		log(block_name(who) + " are eliminated.");
 	else
@@ -1606,9 +1610,9 @@ states.declare_sally = {
 		if (n == 0)
 			log(game.active + " declines to sally.");
 		else if (n == 1)
-			log(game.active + " sallies " + n + "block.");
+			log(game.active + " sallies with 1 block.");
 		else
-			log(game.active + " sallies " + n + "blocks.");
+			log(game.active + " sallies with " + n + " blocks.");
 		if (is_contested_battle_field()) {
 			if (!game.was_contested) {
 				log(game.active + " is now the attacker.");
@@ -1720,7 +1724,24 @@ states.retreat_to = {
 
 function goto_siege_attrition() {
 	console.log("SIEGE ATTRITION");
-	end_combat();
+	game.active = besieging_player(game.where);
+	for (let b in BLOCKS) {
+		if (is_block_in_castle_in(game.where)) {
+			let die = roll_d6();
+			if (die <= 3) {
+				log("Siege attrition: " + DIE_HIT[die] + ".");
+				reduce_block(b);
+			} else {
+				log("Siege attrition: " + DIE_MISS[die] + ".");
+			}
+		}
+	}
+	if (!is_under_siege(game.where)) {
+		log(game.where + " falls to siege attrition.");
+		goto_regroup();
+	} else {
+		end_combat();
+	}
 }
 
 // FIELD BATTLE
@@ -1751,14 +1772,14 @@ function resume_field_battle() {
 
 	if (is_friendly_field(game.where)) {
 		console.log("FIELD BATTLE WON BY", game.active);
-		log("Field battle won by", game.active);
+		log("Field battle won by " + game.active);
 		return goto_regroup();
 	}
 
 	if (is_enemy_field(game.where)) {
 		game.active = ENEMY[game.active];
 		console.log("FIELD BATTLE WON BY", game.active);
-		log("Field battle won by", game.active + ".");
+		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
@@ -1795,7 +1816,7 @@ states.field_battle = {
 			gen_action(view, 'battle_fire', b);
 			if (game.sallying.includes(b)) {
 				// Only sallying forces may withdraw into the castle
-				gen_action(view, 'battle_withdraw');
+				gen_action(view, 'battle_withdraw', b);
 			} else {
 				if (can_block_retreat(b)) {
 					gen_action(view, 'battle_retreat', b);
@@ -1966,7 +1987,10 @@ function charge_with_block(b) {
 }
 
 function field_withdraw_with_block(b) {
-	log(game.active[0] + ": " + b + " withdraws.");
+	if (block_plural(b))
+		log(game.active[0] + ": " + b + " withdraw.");
+	else
+		log(game.active[0] + ": " + b + " withdraws.");
 	game.moved[b] = true;
 	remove_from_array(game.sallying, b);
 	game.castle.push(b);
@@ -2115,6 +2139,12 @@ function setup_game() {
 
 // VIEW
 
+function compare_block_initiative(a, b) {
+	let aa = BLOCKS[a].combat;
+	let bb = BLOCKS[b].combat;
+	return (aa < bb) ? -1 : (aa > bb) ? 1 : 0;
+}
+
 function make_battle_view() {
 	let battle = {
 		FA: [], FC: [], FR: [],
@@ -2133,6 +2163,8 @@ function make_battle_view() {
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where & block_owner(b) == owner && fn(b))
 				cell.push([b, game.steps[b], game.moved[b]?1:0])
+		cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
+		console.log("CELL", cell);
 	}
 
 	fill_cell(battle.FR, FRANK, b => is_battle_reserve(b));

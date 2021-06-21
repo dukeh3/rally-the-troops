@@ -161,6 +161,16 @@ function on_focus_battle_withdraw(evt) {
 		"Withdraw with " + block_name(evt.target.block);
 }
 
+function on_focus_battle_storm(evt) {
+	document.getElementById("status").textContent =
+		"Storm with " + block_name(evt.target.block);
+}
+
+function on_focus_battle_sally(evt) {
+	document.getElementById("status").textContent =
+		"Sally with " + block_name(evt.target.block);
+}
+
 function on_focus_battle_hit(evt) {
 	document.getElementById("status").textContent =
 		"Take hit on " + block_name(evt.target.block);
@@ -176,6 +186,8 @@ function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target
 function on_click_battle_charge(evt) { send_action('battle_charge', evt.target.block); }
 function on_click_battle_harry(evt) { send_action('battle_harry', evt.target.block); }
 function on_click_battle_withdraw(evt) { send_action('battle_withdraw', evt.target.block); }
+function on_click_battle_storm(evt) { send_action('battle_storm', evt.target.block); }
+function on_click_battle_sally(evt) { send_action('battle_sally', evt.target.block); }
 
 function on_click_card(evt) {
 	let c = evt.target.id.split("+")[1] | 0;
@@ -185,10 +197,12 @@ function on_click_card(evt) {
 function on_button_next(evt) { send_action('next'); }
 function on_button_pass(evt) { send_action('pass'); }
 function on_button_undo(evt) { send_action('undo'); }
+function on_button_group_move(evt) { send_action('group_move'); }
+function on_button_end_group_move(evt) { send_action('end_group_move'); }
 function on_button_sea_move(evt) { send_action('sea_move'); }
+function on_button_end_sea_move(evt) { send_action('end_sea_move'); }
 function on_button_muster(evt) { send_action('muster'); }
 function on_button_end_muster(evt) { send_action('end_muster'); }
-function on_button_end_sea_move(evt) { send_action('end_sea_move'); }
 function on_button_end_move_phase(evt) { send_action('end_move_phase'); }
 function on_button_end_regroup(evt) { send_action('end_regroup'); }
 function on_button_end_retreat(evt) { send_action('end_retreat'); }
@@ -240,6 +254,12 @@ function build_battle_block(b, block) {
 	build_battle_button(menu_list, b, "withdraw",
 		on_click_battle_withdraw, on_focus_battle_withdraw,
 		"/images/stone-tower.svg");
+	build_battle_button(menu_list, b, "storm",
+		on_click_battle_storm, on_focus_battle_storm,
+		"/images/siege-tower.svg");
+	build_battle_button(menu_list, b, "sally",
+		on_click_battle_sally, on_focus_battle_sally,
+		"/images/doorway.svg");
 
 	let menu = document.createElement("div");
 	menu.classList.add("battle_menu");
@@ -585,6 +605,10 @@ function update_battle() {
 		for (let [block, steps, moved] of list) {
 			ui.present.add(block);
 
+			// TODO: insert in correct order!
+			if (!cell.contains(ui.battle_menu[block]))
+				cell.appendChild(ui.battle_menu[block]);
+
 			if (block == game.who)
 				ui.battle_block[block].classList.add("selected");
 			else
@@ -596,6 +620,8 @@ function update_battle() {
 			ui.battle_menu[block].classList.remove('fire');
 			ui.battle_menu[block].classList.remove('harry');
 			ui.battle_menu[block].classList.remove('withdraw');
+			ui.battle_menu[block].classList.remove('storm');
+			ui.battle_menu[block].classList.remove('sally');
 			ui.battle_menu[block].classList.remove('retreat');
 
 			if (game.actions && game.actions.block && game.actions.block.includes(block))
@@ -610,6 +636,10 @@ function update_battle() {
 				ui.battle_menu[block].classList.add('charge');
 			if (game.actions && game.actions.battle_withdraw && game.actions.battle_withdraw.includes(block))
 				ui.battle_menu[block].classList.add('withdraw');
+			if (game.actions && game.actions.battle_storm && game.actions.battle_storm.includes(block))
+				ui.battle_menu[block].classList.add('storm');
+			if (game.actions && game.actions.battle_sally && game.actions.battle_sally.includes(block))
+				ui.battle_menu[block].classList.add('sally');
 			if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(block))
 				ui.battle_menu[block].classList.add('hit');
 			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
@@ -633,10 +663,7 @@ function update_battle() {
 		}
 
 		for (let b in BLOCKS) {
-			if (ui.present.has(b)) {
-				if (!cell.contains(ui.battle_menu[b]))
-					cell.appendChild(ui.battle_menu[b]);
-			} else {
+			if (!ui.present.has(b)) {
 				if (cell.contains(ui.battle_menu[b]))
 					cell.removeChild(ui.battle_menu[b]);
 			}

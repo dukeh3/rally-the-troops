@@ -200,9 +200,13 @@ body.shift .block.known:hover {
 .battle_line > td > div { min-width: 800px; }
 
 .battle td { border: none; }
-#FA, #FC, #FD, #FR, #EA, #EC, #ER { margin: 0px; }
-#FC, #EC { background-color: gray; }
+#FA, #FB, #FC, #FD, #FR, #EA, #EB, #EC, #ER { margin: 0px; padding: 5px; }
 .battle .battle_menu { margin: 10px 5px; }
+
+#FR, #ER { background-color: mediumseagreen; }
+#FA, #EA { background-color: darkseagreen; }
+#FB, #EB { background-color: darkgray; }
+#FC, #EC { background-color: gray; }
 
 /* CARD AND BLOCK IMAGES */
 
@@ -298,8 +302,10 @@ body.shift .block.known:hover {
 <th class="battle_header" colspan=4></th>
 <tr class="battle_reserves enemy"><td><div id="ER"></div></td>
 <tr class="battle_line enemy"><td><div id="EC"></div></td>
+<tr class="battle_line enemy"><td><div id="EB"></div></td>
 <tr class="battle_line enemy"><td><div id="EA"></div></td>
 <tr class="battle_line friendly"><td><div id="FA"></div></td>
+<tr class="battle_line friendly"><td><div id="FB"></div></td>
 <tr class="battle_line friendly"><td><div id="FC"></div></td>
 <tr class="battle_reserves friendly"><td><div id="FR"></div></td>
 <tr>
@@ -350,6 +356,7 @@ body.shift .block.known:hover {
 		<button id="end_retreat_button" class="hide" onclick="on_button_end_retreat()">End retreat</button>
 		<button id="end_regroup_button" class="hide" onclick="on_button_end_regroup()">End regroup</button>
 		<button id="end_move_phase_button" class="hide" onclick="on_button_end_move_phase()">End move phase</button>
+		<button id="jihad_button" class="hide" onclick="on_button_jihad()">Jihad</button>
 		<button id="pass_button" class="hide" onclick="on_button_pass()">Pass</button>
 		<button id="next_button" class="hide" onclick="on_button_next()">Next</button>
 		<button id="undo_button" class="hide" onclick="on_button_undo()">Undo</button>

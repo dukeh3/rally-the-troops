@@ -6,8 +6,18 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: strict move order for group moves?
-// Move Phase -> Group Move / Muster / Sea Move -> Move Phase
+// TODO: hide blocks in battle deployment and sallying etc
+// TODO: battle dialog messages
+// TODO: nicer looking battle dialog
+// TODO: battle dialog block order
+
+// TODO: event cards
+
+// TODO: draw phase
+// TODO: winter turn
+// TODO: winter campaign
+
+// TODO: crusader arrival movement
 
 exports.scenarios = [
 	"Third Crusade"
@@ -256,6 +266,12 @@ function can_activate(who) {
 		!game.moved[who];
 }
 
+function can_activate_for_sea_move(who) {
+	return block_owner(who) == game.active &&
+		is_block_on_map(who) &&
+		!game.moved[who];
+}
+
 function road_id(a, b) {
 	return (a < b) ? a + "/" + b : b + "/" + a;
 }
@@ -358,7 +374,6 @@ function is_port(where) {
 }
 
 function is_friendly_port(where) {
-	// TODO: Tripoli/Tyre are friendly to besieged defender!
 	return TOWNS[where].port && is_friendly_town(where);
 }
 
@@ -429,21 +444,47 @@ function can_use_richards_sea_legs(who, to) {
 	return false;
 }
 
-function can_block_sea_move_to(who, from, to) {
+function can_enter_besieged_port(where) {
+	// Tripoli and Tyre are friendly to besieged defender!
+	if (where == "Tripoli" || where == "Tyre")
+		if (besieged_player(where) == game.active)
+			return count_blocks_in_castle(where) < castle_limit(where);
+	return false;
+}
+
+function can_leave_besieged_port(where) {
+	// Tripoli and Tyre are friendly to besieged defender!
+	if (where == "Tripoli" || where == "Tyre")
+		if (besieged_player(where) == game.active)
+			return true;
+	return false;
+}
+
+function can_block_sea_move_to(who, to) {
 	if (is_port(to)) {
 		if (can_use_richards_sea_legs(who, to))
+			return true;
+		if (can_enter_besieged_port(to))
 			return true;
 		return is_friendly_port(to);
 	}
 	return false;
 }
 
+function can_block_sea_move_from(who, from) {
+	if (is_friendly_port(from))
+		return true;
+	if (can_leave_besieged_port(from))
+		return true;
+	return false;
+}
+
 function can_block_sea_move(who) {
-	if (can_activate(who)) {
+	if (can_activate_for_sea_move(who)) {
 		let from = game.location[who];
-		if (is_friendly_port(from)) {
+		if (can_block_sea_move_from(who, from)) {
 			for (let to of PORTS)
-				if (to != from && can_block_sea_move_to(who, from, to))
+				if (to != from && can_block_sea_move_to(who, to))
 					return true;
 		}
 	}
@@ -1033,7 +1074,6 @@ states.sea_move = {
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = format_moves("Sea Move: ", "Choose a block to sea move");
 		gen_action_undo(view);
-		// gen_action(view, 'end_sea_move');
 		for (let b in BLOCKS)
 			if (can_block_sea_move(b))
 				gen_action(view, 'block', b);
@@ -1060,7 +1100,7 @@ states.sea_move_to = {
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
 		for (let to of PORTS)
-			if (to != from && can_block_sea_move_to(game.who, from, to))
+			if (to != from && can_block_sea_move_to(game.who, to))
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
@@ -1072,13 +1112,22 @@ states.sea_move_to = {
 
 		lift_siege(from);
 
-		// English Crusaders attack!
-		if (!is_friendly_port(to)) {
+		remove_from_array(game.castle, game.who);
+
+		if (besieged_player(to) == game.active) {
+			// Move into besieged fortified port
+			game.castle.push(game.who);
+			log(game.active + " sea moves:\n" + from + " \u2192 " + to + " castle.");
+
+		} else if (!is_friendly_port(to)) {
+			// English Crusaders attack!
 			game.attacker[to] = FRANK;
 			game.main_road[to] = "England";
-			logp(game.active + " sea moves to " + to + ATTACK_MARK + ".");
+			log(game.active + " sea moves:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
+
 		} else {
-			logp(game.active + " sea moves to " + to + ".");
+			// Normal move.
+			log(game.active + " sea moves:\n" + from + " \u2192 " + to + ".");
 		}
 
 		game.who = null;
@@ -1395,7 +1444,7 @@ function start_combat(where) {
 		} else {
 			game.attacker[game.where] = besieging_player(game.where);
 			console.log("CONTINUE SIEGE");
-			log("Siege continues from previous turn.");
+			log("Existing siege continues.");
 			next_combat_round();
 		}
 	} else {
@@ -1691,6 +1740,7 @@ states.declare_sally = {
 		} else if (count_reserves(game.where) > 0) {
 			next_combat_round();
 		} else {
+			log("~ Combat Ends ~");
 			goto_siege_attrition();
 		}
 	},
@@ -1701,6 +1751,8 @@ states.declare_sally = {
 
 function goto_retreat_after_combat() {
 	console.log("RETREAT AFTER COMBAT");
+
+	log("~ Combat Ends ~");
 
 	// withdraw all sallying blocks to castle.
 	for (let b of game.sallying)
@@ -2346,8 +2398,8 @@ function compare_block_initiative(a, b) {
 
 function make_battle_view() {
 	let battle = {
-		FA: [], FC: [], FR: [],
-		SA: [], SC: [], SR: [],
+		FA: [], FB: [], FC: [], FR: [],
+		SA: [], SB: [], SC: [], SR: [],
 		storming: game.storming,
 		sallying: game.sallying,
 		halfhit: game.halfhit,
@@ -2364,16 +2416,17 @@ function make_battle_view() {
 			if (game.location[b] == game.where & block_owner(b) == owner && fn(b))
 				cell.push([b, game.steps[b], game.moved[b]?1:0])
 		cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
-		console.log("CELL", cell);
 	}
 
-	fill_cell(battle.FR, FRANK, b => is_battle_reserve(b));
-	fill_cell(battle.FA, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b));
+	fill_cell(battle.FA, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b) && game.storming.includes(b));
+	fill_cell(battle.FB, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b) && !game.storming.includes(b));
 	fill_cell(battle.FC, FRANK, b => !is_battle_reserve(b) && is_block_in_castle(b));
+	fill_cell(battle.FR, FRANK, b => is_battle_reserve(b));
 
-	fill_cell(battle.SR, SARACEN, b => is_battle_reserve(b));
-	fill_cell(battle.SA, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b));
+	fill_cell(battle.SA, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b) && game.storming.includes(b));
+	fill_cell(battle.SB, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b) && !game.storming.includes(b));
 	fill_cell(battle.SC, SARACEN, b => !is_battle_reserve(b) && is_block_in_castle(b));
+	fill_cell(battle.SR, SARACEN, b => is_battle_reserve(b));
 
 	return battle;
 }

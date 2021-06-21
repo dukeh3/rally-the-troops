@@ -362,6 +362,10 @@ function update_steps(b, steps, element) {
 }
 
 function layout_blocks(location, secret, known) {
+	if (label_layout == 'stack')
+		document.getElementById("map").classList.add("stack_layout");
+	else
+		document.getElementById("map").classList.remove("stack_layout");
 	if (label_layout == 'spread' || (location == S_POOL || location == F_POOL || location == DEAD))
 		layout_blocks_spread(location, secret, known);
 	else
@@ -677,15 +681,19 @@ function update_battle() {
 	if (player == FRANK) {
 		fill_cell("FR", game.battle.FR, true);
 		fill_cell("FA", game.battle.FA, false);
+		fill_cell("FB", game.battle.FB, false);
 		fill_cell("FC", game.battle.FC, false);
 		fill_cell("EA", game.battle.SA, false);
+		fill_cell("EB", game.battle.SB, false);
 		fill_cell("EC", game.battle.SC, false);
 		fill_cell("ER", game.battle.SR, true);
 	} else {
 		fill_cell("ER", game.battle.FR, true);
 		fill_cell("EA", game.battle.FA, false);
+		fill_cell("EB", game.battle.FB, false);
 		fill_cell("EC", game.battle.FC, false);
 		fill_cell("FA", game.battle.SA, false);
+		fill_cell("FB", game.battle.SB, false);
 		fill_cell("FC", game.battle.SC, false);
 		fill_cell("FR", game.battle.SR, true);
 	}

@@ -312,7 +312,7 @@ function you_may_play(current, list) {
 		else {
 			for (let i = 0; i < list.length-1; ++i)
 				msg += list[i] + ", ";
-			msg += "or " + list[i] + ".";
+			msg += "or " + list[list.length-1] + ".";
 		}
 	} else {
 		msg += "\u201c" + CARD_NAMES[list] + "\u201d.";

@@ -1542,9 +1542,6 @@ states.land_battle_bombardment_results = {
 }
 
 function goto_land_battle() {
-	// No opposition left -- skip card play and go to end.
-	if (count_tripolitan_infantry(game.where) == 0)
-		return goto_land_battle_round();
 	goto_land_battle_american_card();
 }
 
@@ -2683,6 +2680,8 @@ function can_play_the_guns_of_tripoli() {
 }
 
 function can_play_mercenaries_desert() {
+	if (count_tripolitan_infantry(game.where) == 0)
+		return false; // no opposition left
 	return (count_arab_infantry(game.where) > 0) && is_not_removed(MERCENARIES_DESERT);
 }
 
@@ -2706,10 +2705,14 @@ function can_play_send_in_the_marines() {
 }
 
 function can_play_lieutenant_obannon_leads_the_charge() {
+	if (count_tripolitan_infantry(game.where) == 0)
+		return false; // no opposition left
 	return (count_american_marines(game.where) > 0) && is_not_removed(LIEUTENANT_OBANNON_LEADS_THE_CHARGE);
 }
 
 function can_play_marine_sharpshooters() {
+	if (count_tripolitan_infantry(game.where) == 0)
+		return false; // no opposition left
 	return (count_american_marines(game.where) > 0) && is_not_removed(MARINE_SHARPSHOOTERS);
 }
 

@@ -283,6 +283,26 @@ function count_enemy(where) {
 	return count;
 }
 
+function count_friendly_in_field(where) {
+	let p = game.active;
+	let count = 0;
+	for (let b in BLOCKS)
+		if (game.location[b] == where && block_owner(b) == p)
+			if (!is_block_in_castle(b))
+				++count;
+	return count;
+}
+
+function count_enemy_in_field(where) {
+	let p = ENEMY[game.active];
+	let count = 0;
+	for (let b in BLOCKS)
+		if (game.location[b] == where && block_owner(b) == p)
+			if (!is_block_in_castle(b))
+				++count;
+	return count;
+}
+
 function count_enemy_excluding_reserves(where) {
 	let p = ENEMY[game.active];
 	let count = 0;
@@ -298,6 +318,11 @@ function is_enemy_town(where) { return count_friendly(where) == 0 && count_enemy
 function is_vacant_town(where) { return count_friendly(where) == 0 && count_enemy(where) == 0; }
 function is_contested_town(where) { return count_friendly(where) > 0 && count_enemy(where) > 0; }
 function is_friendly_or_vacant_town(where) { return is_friendly_town(where) || is_vacant_town(where); }
+
+function is_friendly_field(where) { return count_friendly_in_field(where) > 0 && count_enemy_in_field(where) == 0; }
+function is_enemy_field(where) { return count_friendly_in_field(where) == 0 && count_enemy_in_field(where) > 0; }
+function is_contested_field(where) { return count_friendly_in_field(where) > 0 && count_enemy_in_field(where) > 0; }
+function is_friendly_or_vacant_field(where) { return is_friendly_field(where) || is_vacant_town(where); }
 
 function castle_limit(where) {
 	return TOWNS[where].rating;
@@ -722,7 +747,7 @@ function end_player_turn() {
 	game.main_road = null;
 
 	if (game.active == game.p2) {
-		goto_battle_phase();
+		goto_combat_phase();
 	} else {
 		game.active = game.p2;
 		start_player_turn();
@@ -1138,9 +1163,9 @@ function end_muster_move() {
 	}
 }
 
-// BATTLE PHASE
+// COMBAT PHASE
 
-function is_siege_able(where) {
+function is_castle_town(where) {
 	return castle_limit(where) > 0;
 }
 
@@ -1170,6 +1195,15 @@ function count_friends_in_field_and_reserve(where) {
 	return n;
 }
 
+function count_reserves(where) {
+	let n = 0;
+	for (let b in BLOCKS)
+		if (block_owner(b) == game.active)
+			if (game.location[b] == where && is_battle_reserve(b))
+				++n;
+	return n;
+}
+
 function is_under_siege(where) {
 	return count_blocks_in_castle(where) > 0;
 }
@@ -1178,52 +1212,101 @@ function is_block_in_castle(b) {
 	return game.castle.includes(b);
 }
 
-function goto_battle_phase() {
+function is_block_in_castle_in(b, town) {
+	return game.location[b] == town && game.castle.includes(b);
+}
+
+function besieged_player(where) {
+	for (let b in BLOCKS)
+		if (is_block_in_castle_in(b, where))
+			return block_owner(b);
+	return null;
+}
+
+function besieging_player(where) {
+	return ENEMY[besieged_player(where)];
+}
+
+function goto_combat_phase() {
 	game.moved = {};
 	if (have_contested_towns()) {
 		game.active = game.p1;
-		game.state = 'battle_phase';
+		game.state = 'combat_phase';
 	} else {
 		goto_draw_phase();
 	}
 }
 
-states.battle_phase = {
+states.combat_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose a battle.";
-		view.prompt = "Choose the next battle to fight!";
+			return view.prompt = "Waiting for " + game.active + " to choose a battle or siege.";
+		view.prompt = "Choose the next battle or siege!";
 		for (let where in TOWNS)
 			if (is_contested_town(where))
 				gen_action(view, 'town', where);
 	},
 	town: function (where) {
-		start_battle(where);
+		start_combat(where);
 	},
 }
 
-function start_battle(where) {
+function start_combat(where) {
+	console.log("START COMBAT");
+
 	game.flash = "";
 	log("");
 	log("Battle in " + where + ".");
 	game.where = where;
-	game.battle_round = 0;
+	game.combat_round = 0;
+	game.storming = [];
+	game.sallying = [];
 
-	if (is_siege_able(where)) {
+	if (is_castle_town(where)) {
 		if (!is_under_siege(where)) {
+			console.log("START SIEGE");
 			log("~ Combat Deployment ~");
 			game.active = ENEMY[game.attacker[game.where]];
 			game.state = 'combat_deployment';
 		} else {
+			console.log("CONTINUE SIEGE");
 			log("Siege continues from previous turn.");
-			game.state = 'battle_round';
-			start_battle_round();
+			resume_combat();
 		}
 	} else {
-		game.state = 'battle_round';
-		start_battle_round();
+		console.log("START NON-SIEGE");
+		resume_combat();
 	}
 }
+
+function lift_siege(where) {
+	console.log("SIEGE LIFTED IN", where);
+	for (let b in BLOCKS)
+		if (is_block_in_castle_in(b, game.where))
+			remove_from_array(game.castle, b);
+}
+
+function end_combat() {
+	console.log("END COMBAT IN", game.where);
+
+	game.active = game.p1;
+	if (is_contested_town(game.where)) {
+		console.log("SIEGE CONTINUES NEXT TURN...");
+	} else {
+		lift_siege(game.where);
+	}
+
+	game.where = null;
+	game.flash = "";
+	game.battle_round = 0;
+	reset_road_limits();
+	game.moved = {};
+	delete game.storming;
+	delete game.sallying;
+	goto_combat_phase();
+}
+
+// COMBAT DEPLOYMENT
 
 states.combat_deployment = {
 	show_battle: true,
@@ -1262,14 +1345,269 @@ states.combat_deployment = {
 		else
 			log(n + " units withdraw.");
 		game.active = game.attacker[game.where];
-		if (count_enemies_in_field_and_reserve(game.where) == 0) {
+		if (count_enemies_in_field_and_reserve(game.where) == 0)  {
+			console.log("DEFENDER REFUSED FIELD BATTLE");
 			return goto_regroup();
 		}
-		game.state = 'battle_round';
-		start_battle_round();
+		resume_combat();
 	},
 	undo: pop_undo
 }
+
+// REGROUP AFTER FIELD BATTLE/SIEGE VICTORY
+
+function goto_regroup() {
+	console.log("REGROUP", game.active);
+	reset_road_limits();
+	game.state = 'regroup';
+	game.turn_log = [];
+}
+
+states.regroup = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to regroup.";
+		view.prompt = "Regroup: Choose an army to move.";
+		gen_action_undo(view);
+		gen_action(view, 'end_regroup');
+		for (let b in BLOCKS) {
+			if (game.location[b] == game.where) {
+				if (can_block_regroup(b))
+					gen_action(view, 'block', b);
+			}
+		}
+	},
+	block: function (who) {
+		push_undo();
+		game.who = who;
+		game.state = 'regroup_to';
+	},
+	end_regroup: function () {
+		clear_undo();
+		print_turn_log(game.active + " regroups:");
+		if (is_contested_town(game.where))
+			resume_combat();
+		else
+			end_combat();
+	},
+	undo: pop_undo
+}
+
+states.regroup_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to regroup.";
+		view.prompt = "Regroup: Move the army to a friendly or vacant town.";
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		for (let to of TOWNS[game.where].exits)
+			if (can_block_regroup_to(game.who, to))
+				gen_action(view, 'town', to);
+	},
+	town: function (to) {
+		let from = game.where;
+		game.turn_log.push([from, to]);
+		move_block(game.who, game.where, to);
+		game.who = null;
+		game.state = 'regroup';
+	},
+	block: pop_undo,
+	undo: pop_undo
+}
+
+// COMBAT ROUND
+
+function resume_combat() {
+	console.log("RESUME COMBAT");
+	switch (game.combat_round) {
+	case 0: return goto_combat_round(1);
+	case 1: return goto_combat_round(2);
+	case 2: return goto_combat_round(3);
+	case 3: return goto_retreat_after_combat();
+	}
+}
+
+function bring_on_reserves(reserves) {
+	for (let b in BLOCKS)
+		if (game.location[b] == game.where)
+			remove_from_array(reserves, b);
+}
+
+function goto_combat_round(combat_round) {
+	console.log("COMBAT ROUND", combat_round);
+	game.combat_round = combat_round;
+
+	let was_contested = is_contested_field(game.where);
+
+	if (combat_round == 2)
+		bring_on_reserves(game.reserves1);
+	if (combat_round == 3)
+		bring_on_reserves(game.reserves2);
+
+	if (is_contested_field(game.where)) {
+		if (is_under_siege(game.where)) {
+			if (!was_contested) {
+				log("Relief forces arrive!");
+				console.log("RELIEF FORCE ARRIVED");
+				if (game.storming.length > 0) {
+					log("Storming canceled by arriving relief force.");
+					console.log("STORMING CANCELED");
+					game.storming.length = 0;
+				}
+			}
+			let old_attacker = game.attacker[game.where];
+			game.attacker[game.where] = besieged_player(game.where);
+			console.log("NEW ATTACKER IS", game.attacker[game.where]);
+			if (old_attacker != game.attacker[game.where])
+				log(game.attacker[game.where] + " is now the attacker.");
+		}
+		return goto_field_battle();
+	}
+
+	goto_declare_storm();
+}
+
+function goto_declare_storm() {
+	if (game.storming.length == castle_limit(game.where))
+		return goto_storm_battle();
+	game.active = besieging_player(game.where);
+	game.state = 'declare_storm';
+}
+
+states.declare_storm = {
+	show_battle: true,
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to declare storming.";
+		view.prompt = "Storm: Declare which blocks should storm the castle.";
+		if (game.storming.length < castle_limit(game.where)) {
+			for (let b in BLOCKS) {
+				if (block_owner(b) == game.active && !is_battle_reserve(b)) {
+					if (game.location[b] == game.where && !game.storming.includes(b)) {
+						gen_action(view, 'battle_storm', b);
+						gen_action(view, 'block', b);
+					}
+				}
+			}
+		}
+		gen_action_undo(view);
+		gen_action(view, 'next');
+	},
+	battle_storm: function (who) {
+		push_undo();
+		game.storming.push(who);
+	},
+	block: function (who) {
+		push_undo();
+		game.storming.push(who);
+	},
+	next: function () {
+		clear_undo();
+		let n = game.storming.length;
+		console.log("STORM DECLARATION", n);
+		if (n == 0) {
+			log(game.active + " declines to storm.");
+			goto_declare_sally();
+		} else {
+			if (n == 1)
+				log("1 unit storms the castle.");
+			else
+				log(n + " units storm the castle.");
+			goto_storm_battle();
+		}
+	},
+	undo: pop_undo
+}
+
+function goto_declare_sally() {
+	game.active = besieged_player(game.where);
+	game.state = 'declare_sally';
+	game.was_contested = is_contested_field(game.where);
+}
+
+states.declare_sally = {
+	show_battle: true,
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to declare sallying.";
+		view.prompt = "Sally: Declare which blocks should sally onto the field.";
+		for (let b in BLOCKS) {
+			if (block_owner(b) == game.active && !is_battle_reserve(b)) {
+				if (game.location[b] == game.where && !game.sallying.includes(b)) {
+					gen_action(view, 'battle_sally', b);
+					gen_action(view, 'block', b);
+				}
+			}
+		}
+		gen_action_undo(view);
+		gen_action(view, 'next');
+	},
+	battle_sally: function (who) {
+		push_undo();
+		remove_from_array(game.castle, who);
+		game.sallying.push(who);
+	},
+	block: function (who) {
+		push_undo();
+		remove_from_array(game.castle, who);
+		game.sallying.push(who);
+	},
+	next: function () {
+		clear_undo();
+		let n = game.sallying.length;
+		console.log("SALLY DECLARATION", n);
+		if (n == 1)
+			log("1 unit sally.");
+		else
+			log(n + " units sally.");
+		if (is_contested_field(game.where)) {
+			if (!game.was_contested) {
+				log(game.active + " is now the attacker.");
+				console.log("NEW ATTACKER IS", game.active);
+				game.attacker[where] = game.active;
+			}
+			goto_field_battle();
+		} else if (count_reserves(game.where) > 0) {
+			resume_combat();
+		} else {
+			goto_siege_attrition();
+		}
+	},
+	undo: pop_undo
+}
+
+// RETREAT AFTER COMBAT
+
+function goto_retreat_after_combat() {
+	console.log("RETREAT AFTER COMBAT");
+// withdraw all sallying units to castle.
+// withdraw all storming units to field.
+// if field is contested then
+//	attacker must retreat
+//	defender may regroup
+// end
+	goto_siege_attrition();
+}
+
+// SIEGE ATTRITION
+
+function goto_siege_attrition() {
+	console.log("SIEGE ATTRITION");
+}
+
+// FIELD AND STORM BATTLE
+
+function goto_field_battle() {
+	console.log("FIELD BATTLE");
+}
+
+function goto_storm_battle() {
+	console.log("STORM BATTLE");
+}
+
+// OLD CRUFT
+
+/*
 
 function resume_battle() {
 	game.who = null;
@@ -1294,17 +1632,6 @@ function end_battle() {
 	log(victor + " wins the battle in " + game.where + "!");
 
 	goto_retreat();
-}
-
-function bring_on_reserves(round) {
-	for (let b in BLOCKS) {
-		if (game.location[b] == game.where) {
-			if (round == 2)
-				remove_from_array(game.reserves1, b);
-			else if (round == 3)
-				remove_from_array(game.reserves2, b);
-		}
-	}
 }
 
 function start_battle_round() {
@@ -1639,63 +1966,7 @@ states.retreat_in_battle = {
 	}
 }
 
-function goto_regroup() {
-	game.active = game.attacker[game.where];
-	if (is_enemy_town(game.where))
-		game.active = ENEMY[game.active];
-	game.state = 'regroup';
-	game.turn_log = [];
-}
-
-states.regroup = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to regroup.";
-		view.prompt = "Regroup: Choose an army to move.";
-		gen_action_undo(view);
-		gen_action(view, 'end_regroup');
-		for (let b in BLOCKS) {
-			if (game.location[b] == game.where) {
-				if (can_block_regroup(b))
-					gen_action(view, 'block', b);
-			}
-		}
-	},
-	block: function (who) {
-		push_undo();
-		game.who = who;
-		game.state = 'regroup_to';
-	},
-	end_regroup: function () {
-		print_turn_log(game.active + " regroups:");
-		game.where = null;
-		clear_undo();
-		goto_battle_phase();
-	},
-	undo: pop_undo
-}
-
-states.regroup_to = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to regroup.";
-		view.prompt = "Regroup: Move the army to a friendly or vacant town.";
-		gen_action_undo(view);
-		gen_action(view, 'block', game.who);
-		for (let to of TOWNS[game.where].exits)
-			if (can_block_regroup_to(game.who, to))
-				gen_action(view, 'town', to);
-	},
-	town: function (to) {
-		let from = game.where;
-		game.turn_log.push([from, to]);
-		move_block(game.who, game.where, to);
-		game.who = null;
-		game.state = 'regroup';
-	},
-	block: pop_undo,
-	undo: pop_undo
-}
+*/
 
 // DRAW PHASE
 
@@ -1763,13 +2034,14 @@ function make_battle_view() {
 	let battle = {
 		FA: [], FC: [], FR: [],
 		SA: [], SC: [], SR: [],
+		storming: game.storming,
+		sallying: game.sallying,
 		flash: game.flash
 	};
 
 	battle.title = game.attacker[game.where] + " attacks " + game.where;
-	if (game.battle_round == 0) {
+	if (game.combat_round == 0) {
 		battle.title += " \u2014 combat deployment";
-	} else {
 	}
 
 	function fill_cell(cell, owner, fn) {

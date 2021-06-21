@@ -526,15 +526,14 @@ function update_map() {
 		let town = game.location[b];
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
-			let castle = game.castle[b] ? " castle" : "";
-			// TODO: show besieging blocks too!
 			if (info.owner == player || info.owner == ASSASSINS) {
 				let image = " known block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
 				element.classList = info.owner + " block" + image + steps + moved;
 				layout[town].south.push(element);
 			} else {
-				element.classList = info.owner + " block" + moved;
+				let besieging = (game.sieges[town] == info.owner) ? " besieging" : "";
+				element.classList = info.owner + " block" + moved + besieging;
 				layout[town].north.push(element);
 			}
 			show_block(element);
@@ -648,6 +647,11 @@ function update_battle() {
 				ui.battle_menu[block].classList.add('treachery');
 
 			update_steps(block, steps, ui.battle_block[block], false);
+
+			if (block == game.battle.halfhit)
+				ui.battle_block[block].classList.add("halfhit");
+			else
+				ui.battle_block[block].classList.remove("halfhit");
 			if (reserve)
 				ui.battle_block[block].classList.add("secret");
 			else
@@ -691,10 +695,12 @@ function on_update() {
 	show_action_button("#next_button", "next");
 	show_action_button("#pass_button", "pass");
 	show_action_button("#undo_button", "undo");
+	show_action_button("#group_move_button", "group_move");
+	show_action_button("#end_group_move_button", "end_group_move");
 	show_action_button("#sea_move_button", "sea_move");
+	show_action_button("#end_sea_move_button", "end_sea_move");
 	show_action_button("#muster_button", "muster");
 	show_action_button("#end_muster_button", "end_muster");
-	show_action_button("#end_sea_move_button", "end_sea_move");
 	show_action_button("#end_move_phase_button", "end_move_phase");
 	show_action_button("#end_regroup_button", "end_regroup");
 	show_action_button("#end_retreat_button", "end_retreat");

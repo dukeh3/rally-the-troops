@@ -62,33 +62,33 @@ function log_move_continue(to, mark) {
 
 function log_move_end() {
 	if (game.move_buf && game.move_buf.length > 1)
-		game.turn_log.push(game.move_buf);
+		game.summary.push(game.move_buf);
 	delete game.move_buf;
 }
 
-function print_turn_log_no_count(text) {
+function print_summary_no_count(text) {
 	function print_move(last) {
 		return "\n" + last.join(" \u2192 ");
 	}
-	if (game.turn_log.length > 0) {
-		game.turn_log.sort();
-		for (let entry of game.turn_log)
+	if (game.summary.length > 0) {
+		game.summary.sort();
+		for (let entry of game.summary)
 			text += print_move(entry);
 	} else {
 		text += "\nnothing.";
 	}
 	log(text);
-	delete game.turn_log;
+	delete game.summary;
 }
 
-function print_turn_log(text) {
+function print_summary(text) {
 	function print_move(last) {
 		return "\n" + n + " - " + last.join(" \u2192 ");
 	}
-	game.turn_log.sort();
-	let last = game.turn_log[0];
+	game.summary.sort();
+	let last = game.summary[0];
 	let n = 0;
-	for (let entry of game.turn_log) {
+	for (let entry of game.summary) {
 		if (entry.toString() != last.toString()) {
 			text += print_move(last);
 			n = 0;
@@ -101,7 +101,7 @@ function print_turn_log(text) {
 	else
 		text += "\nnothing.";
 	log(text);
-	delete game.turn_log;
+	delete game.summary;
 }
 
 function is_active_player(current) {
@@ -238,6 +238,10 @@ function block_max_steps(who) {
 
 function is_saladin_family(who) {
 	return who == "Saladin" || who == "Al Adil" || who == "Al Aziz" || who == "Al Afdal" || who == "Al Zahir";
+}
+
+function is_english_crusader(who) {
+	return (who == "Richard" || who == "Robert" || who == "Crossbows");
 }
 
 function is_block_on_map(who) {
@@ -411,16 +415,24 @@ function can_block_land_move(who) {
 	return false;
 }
 
+function can_use_richards_sea_legs(who, to) {
+	// English Crusaders may attack by sea.
+	// If combined with another attack, the English must be the Main Attacker.
+	if (is_english_crusader(who)) {
+		if (game.attacker[to] == FRANK) {
+			let road = game.main_road[to];
+			if (road)
+				return (road == "England");
+		}
+		return true;
+	}
+	return false;
+}
+
 function can_block_sea_move_to(who, from, to) {
 	if (is_port(to)) {
-		// English Crusaders may attack by sea if they are the Main Attacker
-		if (who == "Richard" || who == "Robert" || who == "Crossbows") {
-			if (game.attacker[to] != FRANK)
-				return false;
-			if (game.main_road[to] != "England")
-				return false;
+		if (can_use_richards_sea_legs(who, to))
 			return true;
-		}
 		return is_friendly_port(to);
 	}
 	return false;
@@ -558,6 +570,17 @@ function can_muster_to(muster) {
 	for (let b in BLOCKS)
 		if (can_block_muster(b, muster))
 			return true;
+	return false;
+}
+
+function can_muster_anywhere() {
+	if (game.moves > 0)
+		return true;
+	for (let where of game.mustered) {
+		if (is_friendly_field(where))
+			if (can_muster_to(where))
+				return true;
+	}
 	return false;
 }
 
@@ -780,8 +803,6 @@ function start_player_turn() {
 
 function end_player_turn() {
 	game.moves = 0;
-	game.activated = null;
-	game.mustered = null;
 	game.main_road = null;
 
 	if (game.active == game.p2) {
@@ -839,24 +860,29 @@ function move_block(who, from, to) {
 function goto_move_phase(moves) {
 	game.state = 'move_phase';
 	game.moves = moves;
-	game.activated = [];
 	game.mustered = [];
 	game.main_road = {};
-	game.turn_log = [];
 }
 
 function end_move_phase() {
 	clear_undo();
 	game.moves = 0;
-	print_turn_log(game.active + " moves:");
 	end_player_turn();
+}
+
+function format_moves(phase, prompt) {
+	if (game.moves == 0)
+		return phase + "No moves left.";
+	if (game.moves == 1)
+		return phase + prompt + " \u2014 1 move left.";
+	return phase + prompt + " \u2014 " + game.moves + " moves left.";
 }
 
 states.move_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = "Move Phase: Group Move, Sea Move, or Muster. " + game.moves + "AP left.";
+		view.prompt = format_moves("Move Phase: ", "Group Move, Sea Move, or Muster");
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
@@ -870,11 +896,11 @@ states.move_phase = {
 	group_move: function () {
 		push_undo();
 		--game.moves;
-		game.state = 'group_move';
+		game.state = 'group_move_first';
+		game.summary = [];
 	},
 	sea_move: function () {
 		push_undo();
-		--game.moves;
 		game.state = 'sea_move';
 	},
 	muster: function () {
@@ -888,18 +914,31 @@ states.move_phase = {
 
 // GROUP MOVE
 
-states.group_move = {
+function can_group_move_more() {
+	for (let b in BLOCKS)
+		if (game.location[b] == game.where)
+			if (can_block_land_move(b))
+				return true;
+	return false;
+}
+
+states.group_move_first = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Group Move: Choose a block to group move.";
 		gen_action_undo(view);
-		for (let t in TOWNS) {
-		}
+		for (let b in BLOCKS)
+			if (can_block_land_move(b))
+				gen_action(view, 'block', b);
 	},
-	town: function () {
+	block: function (who) {
 		push_undo();
-		game.state = 'muster';
+		game.where = game.location[who];
+		game.who = who;
+		game.distance = 0;
+		game.last_from = null;
+		game.state = 'group_move_to';
 	},
 	undo: pop_undo
 }
@@ -910,41 +949,20 @@ states.group_move_who = {
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Group Move: Choose a block to group move.";
 		gen_action_undo(view);
-		gen_action(view, 'end_move_phase');
-		if (can_muster_anywhere())
-			gen_action(view, 'muster');
-		if (can_sea_move_anywhere())
-			gen_action(view, 'sea_move');
-		if (game.moves > 0) {
-			for (let b in BLOCKS)
+		gen_action(view, 'end_group_move');
+		for (let b in BLOCKS)
+			if (game.location[b] == game.where)
 				if (can_block_land_move(b))
 					gen_action(view, 'block', b);
-		} else {
-			for (let b in BLOCKS) {
-				let from = game.location[b];
-				if (game.activated.includes(from))
-					if (can_block_land_move(b))
-						gen_action(view, 'block', b);
-			}
-		}
 	},
 	block: function (who) {
 		push_undo();
 		game.who = who;
-		game.origin = game.location[who];
 		game.distance = 0;
 		game.last_from = null;
 		game.state = 'group_move_to';
 	},
-	sea_move: function () {
-		push_undo();
-		game.state = 'sea_move';
-	},
-	muster: function () {
-		push_undo();
-		game.state = 'muster';
-	},
-	end_move_phase: end_move_phase,
+	end_group_move: end_group_move,
 	undo: pop_undo
 }
 
@@ -969,6 +987,7 @@ states.group_move_to = {
 			end_move();
 			return;
 		}
+		lift_siege(from);
 		if (game.distance == 0)
 			log_move_start(from);
 		let mark = move_block(game.who, from, to);
@@ -990,21 +1009,20 @@ states.group_move_to = {
 }
 
 function end_move() {
-	if (game.distance > 0) {
-		lift_siege(game.origin);
-		let to = game.location[game.who];
-		if (!game.activated.includes(game.origin)) {
-			logp("activates " + game.origin + ".");
-			game.activated.push(game.origin);
-			game.moves --;
-		}
+	if (game.distance > 0)
 		game.moved[game.who] = true;
-	}
 	log_move_end();
 	game.who = null;
 	game.distance = 0;
-	game.origin = null;
-	game.state = 'group_move';
+	if (can_group_move_more())
+		game.state = 'group_move_who';
+	else
+		end_group_move();
+}
+
+function end_group_move() {
+	print_summary(game.active + " activates " + game.where + ":");
+	game.state = 'move_phase';
 }
 
 // SEA MOVE
@@ -1013,11 +1031,15 @@ states.sea_move = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = "Sea Move: Choose a block to sea move.";
+		view.prompt = format_moves("Sea Move: ", "Choose a block to sea move");
 		gen_action_undo(view);
+		// gen_action(view, 'end_sea_move');
 		for (let b in BLOCKS)
 			if (can_block_sea_move(b))
 				gen_action(view, 'block', b);
+	},
+	end_sea_move: function () {
+		game.state = 'move_phase';
 	},
 	block: function (who) {
 		game.who = who;
@@ -1030,7 +1052,10 @@ states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
-		view.prompt = "Sea Move " + block_name(game.who) + ".";
+		if (is_english_crusader(game.who))
+			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a port.";
+		else
+			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a friendly port.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
@@ -1039,22 +1064,21 @@ states.sea_move_to = {
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
+		--game.moves;
+
 		let from = game.location[game.who];
 		game.location[game.who] = to;
 		game.moved[game.who] = true;
-		log_move_start(from);
-		log_move_continue("Sea");
 
 		lift_siege(from);
 
 		// English Crusaders attack!
-		// TODO: attack on field or enter port in tripoli/tyre?
-		if (is_contested_town(to)) {
+		if (!is_friendly_port(to)) {
 			game.attacker[to] = FRANK;
 			game.main_road[to] = "England";
-			log_move_continue(to + ATTACK_MARK);
+			logp(game.active + " sea moves to " + to + ATTACK_MARK + ".");
 		} else {
-			log_move_continue(to);
+			logp(game.active + " sea moves to " + to + ".");
 		}
 
 		game.who = null;
@@ -1064,24 +1088,10 @@ states.sea_move_to = {
 		game.who = null;
 		game.state = 'sea_move';
 	},
-	undo: function () {
-		game.who = null;
-		game.state = 'sea_move';
-	},
+	undo: pop_undo,
 }
 
 // MUSTER
-
-function can_muster_anywhere() {
-	if (game.moves > 0)
-		return true;
-	for (let where of game.mustered) {
-		if (is_friendly_field(where))
-			if (can_muster_to(where))
-				return true;
-	}
-	return false;
-}
 
 states.muster = {
 	prompt: function (view, current) {
@@ -1090,24 +1100,17 @@ states.muster = {
 		view.prompt = "Muster: Choose one friendly or vacant muster town.";
 		gen_action_undo(view);
 		gen_action(view, 'end_muster');
-		if (game.moves > 0) {
-			for (let where in TOWNS) {
-				if (is_friendly_field(where))
-					if (can_muster_to(where))
-						gen_action(view, 'town', where);
-			}
-		} else {
-			for (let where of game.mustered) {
-				if (is_friendly_field(where))
-					if (can_muster_to(where))
-						gen_action(view, 'town', where);
-			}
+		for (let where in TOWNS) {
+			if (is_friendly_field(where))
+				if (can_muster_to(where))
+					gen_action(view, 'town', where);
 		}
 	},
 	town: function (where) {
 		push_undo();
 		game.where = where;
 		game.state = 'muster_who';
+		game.summary = [];
 	},
 	end_muster: pop_undo,
 	undo: pop_undo,
@@ -1131,8 +1134,9 @@ states.muster_who = {
 		game.state = 'muster_move_1';
 	},
 	end_muster: function () {
+		print_summary(game.active + " musters to " + game.where + ":");
 		game.where = null;
-		game.state = 'group_move';
+		game.state = 'move_phase';
 	},
 	undo: pop_undo,
 }
@@ -1248,11 +1252,6 @@ function end_muster_move() {
 	game.moved[game.who] = true;
 	game.who = null;
 	game.state = 'muster_who';
-	if (!game.mustered.includes(muster)) {
-		logp("musters to " + muster + ".");
-		game.mustered.push(muster);
-		--game.moves;
-	}
 }
 
 // COMBAT PHASE
@@ -1475,7 +1474,7 @@ function goto_regroup() {
 	reset_road_limits();
 	game.moved = {};
 	game.state = 'regroup';
-	game.turn_log = [];
+	game.summary = [];
 }
 
 states.regroup = {
@@ -1499,7 +1498,7 @@ states.regroup = {
 	},
 	end_regroup: function () {
 		clear_undo();
-		print_turn_log(game.active + " regroups:");
+		print_summary(game.active + " regroups:");
 		if (is_contested_town(game.where))
 			next_combat_round();
 		else
@@ -1521,7 +1520,7 @@ states.regroup_to = {
 	},
 	town: function (to) {
 		let from = game.where;
-		game.turn_log.push([from, to]);
+		game.summary.push([from, to]);
 		move_block(game.who, game.where, to);
 		game.who = null;
 		game.state = 'regroup';
@@ -1714,7 +1713,7 @@ function goto_retreat_after_combat() {
 	if (is_contested_field(game.where)) {
 		game.active = game.attacker[game.where];
 		game.state = 'retreat';
-		game.turn_log = [];
+		game.summary = [];
 	} else if (is_under_siege(game.where)) {
 		goto_siege_attrition();
 	} else {
@@ -1743,7 +1742,7 @@ states.retreat = {
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where && !is_block_in_castle(b) && block_owner(b) == game.active)
 				eliminate_block(b);
-		print_turn_log(game.active + " retreats:");
+		print_summary(game.active + " retreats:");
 		game.active = ENEMY[game.active];
 		console.log("ATTACKER RETREATED FROM THE FIELD");
 		goto_regroup();
@@ -1775,7 +1774,7 @@ states.retreat_to = {
 	},
 	town: function (to) {
 		let from = game.where;
-		game.turn_log.push([from, to]);
+		game.summary.push([from, to]);
 		move_block(game.who, game.where, to);
 		game.who = null;
 		game.state = 'retreat';

@@ -426,9 +426,7 @@ function play_card(player, card) {
 	remove_from_array(player.core, card);
 	remove_from_array(player.hand, card);
 	remove_from_array(player.discard, card);
-	if (REMOVE_AFTER_PLAY.includes(card))
-		game.removed.push(card);
-	else
+	if (!REMOVE_AFTER_PLAY.includes(card))
 		player.discard.push(card);
 	game.active_card = card;
 }
@@ -436,7 +434,6 @@ function play_card(player, card) {
 function play_battle_card(player, card) {
 	log(game.active + " plays \u{201c}" + CARD_NAMES[card] + "\u{201d}.");
 	remove_from_array(player.hand, card);
-	game.removed.push(card);
 }
 
 function deploy(piece_name, space) {
@@ -2508,7 +2505,6 @@ function can_play_corsairs_confiscated() {
 function play_corsairs_confiscated() {
 	move_all_pieces(TR_CORSAIRS, GIBRALTAR, TRIPOLITAN_SUPPLY);
 	remove_from_array(game.tr.core, MURAD_REIS_BREAKS_OUT);
-	game.removed.push(MURAD_REIS_BREAKS_OUT);
 	end_american_play();
 }
 
@@ -2784,7 +2780,6 @@ exports.setup = function (scenario, players) {
 			discard: [],
 			gold: 0,
 		},
-		removed: [],
 		where: null,
 		undo: [],
 	};
@@ -2914,7 +2909,6 @@ exports.view = function(state, current) {
 			score: 30 - tr_score,
 		},
 		card: game.active_card,
-		removed: game.removed,
 		where: game.where,
 	};
 

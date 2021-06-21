@@ -148,43 +148,42 @@ const PORTS = [];
 		army(rc, "Saracen", name, home, move, steps, combat, order, plural);
 	}
 
-	frank(13, "Barbarossa",		"Germania",	2,	4,	"B3",	"Crusaders", 0);
-	frank(23, "Frederik",		"Germania",	2,	3,	"B2",	"Crusaders", 0);
-	frank(33, "Leopold",		"Germania",	2,	3,	"B3",	"Crusaders", 0);
 
 	frank(11, "Richard",		"England",	3,	4,	"B4",	"Crusaders", 0);
-	frank(21, "Robert",		"Normandy",	2,	3,	"B3",	"Crusaders", 0);
-	frank(31, "Crossbows",		"Aquitaine",	2,	3,	"A2",	"Crusaders", 1);
-
 	frank(12, "Philippe",		"France",	2,	4,	"B3",	"Crusaders", 0);
-	frank(22, "Hugues",		"Bourgogne",	2,	4,	"B2",	"Crusaders", 0);
-	frank(32, "Fileps",		"Flanders",	2,	3,	"B3",	"Crusaders", 0);
-
-	frank(42, "Pilgrims",		"Genoa",	2,	4,	"C2",	"Pilgrims", 1);
-	frank(43, "Pilgrims",		"Sicily",	2,	3,	"C2",	"Pilgrims", 1);
-	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims", 1);
-
+	frank(13, "Barbarossa",		"Germania",	2,	4,	"B3",	"Crusaders", 0);
 	frank(14, "Templars",		"Jerusalem",	3,	3,	"B3",	"Military Orders", 1);
 	frank(15, "Templars",		"Antioch",	3,	3,	"B3",	"Military Orders", 1);
 	frank(16, "Templars",		"Gaza",		3,	3,	"B3",	"Military Orders", 1);
-	frank(17, "Templars",		"Tartus",	3,	3,	"B3",	"Military Orders", 1);
+	frank(17, "Templars",		"Tartus",	3,	2,	"B3",	"Military Orders", 1);
+
+	frank(21, "Robert",		"Normandy",	2,	3,	"B3",	"Crusaders", 0);
+	frank(22, "Hugues",		"Bourgogne",	2,	4,	"B2",	"Crusaders", 0);
+	frank(23, "Frederik",		"Germania",	2,	3,	"B2",	"Crusaders", 0);
 	frank(24, "Hospitallers",	"Jerusalem",	3,	4,	"B3",	"Military Orders", 1);
 	frank(25, "Hospitallers",	"Acre",		3,	3,	"B3",	"Military Orders", 1);
 	frank(26, "Hospitallers",	"Krak", 	3,	2,	"B3",	"Military Orders", 1);
-
 	frank(27, "Reynald",		"Sidon",	2,	3,	"B2",	"Outremers", 0);
+
+	frank(31, "Crossbows",		"Aquitaine",	2,	3,	"A2",	"Crusaders", 1);
+	frank(32, "Fileps",		"Flanders",	2,	3,	"B3",	"Crusaders", 0);
+	frank(33, "Leopold",		"Germania",	2,	3,	"B3",	"Crusaders", 0);
 	frank(34, "Conrad",		"Tyre",		2,	4,	"B3",	"Outremers", 0);
 	frank(35, "Balian",		"Nablus",	2,	3,	"B2",	"Outremers", 0);
 	frank(36, "Walter",		"Caesarea",	2,	3,	"B2",	"Outremers", 0);
 	frank(37, "Raymond",		"Tiberias",	2,	3,	"B2",	"Outremers", 0);
+
+	frank(41, "Turcopole",		"Antioch",	3,	3,	"A2",	"Turcopoles", 0);
+	frank(42, "Pilgrims",		"Genoa",	2,	4,	"C2",	"Pilgrims", 1);
+	frank(43, "Pilgrims",		"Sicily",	2,	3,	"C2",	"Pilgrims", 1);
 	frank(44, "King Guy",		"Jerusalem",	2,	4,	"B2",	"Outremers", 0);
 	frank(45, "Reynald",		"Kerak",	3,	2,	"B3",	"Outremers", 0);
 	frank(46, "Bohemond",		"Antioch",	2,	4,	"B2",	"Outremers", 0);
 	frank(47, "Raymond",		"Tripoli",	2,	4,	"B2",	"Outremers", 0);
-	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers", 0);
 
-	frank(41, "Turcopole",		"Antioch",	3,	3,	"A2",	"Turcopoles", 0);
 	frank(51, "Turcopole",		"Beirut",	3,	3,	"A2",	"Turcopoles", 0);
+	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims", 1);
+	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers", 0);
 
 	army(54, "Assassins", "Assassins", "Masyaf",	0,	3,	"A3",	"Assassins", 1);
 

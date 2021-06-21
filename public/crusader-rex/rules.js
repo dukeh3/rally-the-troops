@@ -6,6 +6,8 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
+// TODO: strict move order for group moves?
+
 exports.scenarios = [
 	"Third Crusade"
 ];
@@ -25,6 +27,7 @@ const S_POOL = "SP";
 // serif cirled numbers
 const DIE_HIT = [ 0, '\u2776', '\u2777', '\u2778', '\u2779', '\u277A', '\u277B' ];
 const DIE_MISS = [ 0, '\u2460', '\u2461', '\u2462', '\u2463', '\u2464', '\u2465' ];
+const DIE_SELF = '\u2465!';
 
 const ATTACK_MARK = "*";
 const RESERVE_MARK_1 = "\u2020";
@@ -242,7 +245,10 @@ function is_block_on_map(who) {
 }
 
 function can_activate(who) {
-	return block_owner(who) == game.active && is_block_on_map(who) && !game.moved[who];
+	return block_owner(who) == game.active &&
+		is_block_on_map(who) &&
+		!is_block_in_castle(who) &&
+		!game.moved[who];
 }
 
 function road_id(a, b) {
@@ -303,12 +309,22 @@ function count_enemy_in_field(where) {
 	return count;
 }
 
-function count_enemy_excluding_reserves(where) {
+function count_friendly_in_field_excluding_reserves(where) {
+	let p = game.active;
+	let count = 0;
+	for (let b in BLOCKS)
+		if (game.location[b] == where && block_owner(b) == p)
+			if (!is_block_in_castle(b) && !is_battle_reserve(b))
+				++count;
+	return count;
+}
+
+function count_enemy_in_field_excluding_reserves(where) {
 	let p = ENEMY[game.active];
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == p)
-			if (!is_battle_reserve(b))
+			if (!is_block_in_castle(b) && !is_battle_reserve(b))
 				++count;
 	return count;
 }
@@ -341,15 +357,8 @@ function is_friendly_port(where) {
 	return TOWNS[where].port && is_friendly_town(where);
 }
 
-function have_contested_towns() {
-	for (let where in TOWNS)
-		if (is_contested_town(where))
-			return true;
-	return false;
-}
-
 function count_pinning(where) {
-	return count_enemy_excluding_reserves(where);
+	return count_enemy_in_field_excluding_reserves(where);
 }
 
 function count_pinned(where) {
@@ -429,7 +438,7 @@ function can_block_sea_move(who) {
 }
 
 function can_block_continue(who, from, to) {
-	if (is_contested_town(to))
+	if (is_contested_field(to))
 		return false;
 	if (game.distance >= block_move(who))
 		return false;
@@ -437,7 +446,7 @@ function can_block_continue(who, from, to) {
 }
 
 function can_block_retreat_to(who, to) {
-	if (is_friendly_town(to) || is_vacant_town(to)) {
+	if (is_friendly_field(to) || is_vacant_town(to)) {
 		let from = game.location[who];
 		if (can_block_use_road(from, to)) {
 			if (road_was_last_used_by_enemy(from, to))
@@ -459,7 +468,7 @@ function can_block_retreat(who) {
 }
 
 function can_block_regroup_to(who, to) {
-	if (is_friendly_town(to) || is_vacant_town(to)) {
+	if (is_friendly_field(to) || is_vacant_town(to)) {
 		let from = game.location[who];
 		if (can_block_use_road(from, to))
 			return true;
@@ -478,7 +487,7 @@ function can_block_regroup(who) {
 }
 
 function can_block_use_road_to_muster(from, to) {
-	return can_block_use_road(from, to) && is_friendly_or_vacant_town(to);
+	return can_block_use_road(from, to) && is_friendly_or_vacant_field(to);
 }
 
 function can_block_muster_with_3_moves(n0, muster) {
@@ -558,6 +567,24 @@ function is_defender(who) {
 	return false;
 }
 
+function is_field_attacker(who) {
+	if (game.location[who] == game.where && block_owner(who) == game.attacker[game.where])
+		return !is_battle_reserve(who) && !is_block_in_castle(who);
+	return false;
+}
+
+function is_field_defender(who) {
+	if (game.location[who] == game.where && block_owner(who) != game.attacker[game.where])
+		return !is_battle_reserve(who) && !is_block_in_castle(who);
+	return false;
+}
+
+function is_field_combatant(who) {
+	if (game.location[who] == game.where)
+		return !is_battle_reserve(who) && !is_block_in_castle(who);
+	return false;
+}
+
 function disband(who) {
 	if (block_plural(who))
 		log(block_name(who) + " disband.");
@@ -585,22 +612,6 @@ function reduce_block(who) {
 	} else {
 		--game.steps[who];
 	}
-}
-
-function count_attackers() {
-	let count = 0;
-	for (let b in BLOCKS)
-		if (is_attacker(b))
-			++count;
-	return count;
-}
-
-function count_defenders() {
-	let count = 0;
-	for (let b in BLOCKS)
-		if (is_defender(b))
-			++count;
-	return count;
 }
 
 // GAME TURN
@@ -711,7 +722,9 @@ function reveal_cards() {
 	let fp = fc.moves;
 	let sp = sc.moves;
 	if (fp == sp) {
-		if (roll_d6() > 3)
+		let die = roll_d6();
+		log("Random first player.");
+		if (die > 3)
 			++fp;
 		else
 			++sp;
@@ -766,7 +779,7 @@ function move_block(who, from, to) {
 	game.location[who] = to;
 	game.road_limit[road_id(from, to)] = road_limit(from, to) + 1;
 	game.distance ++;
-	if (is_contested_town(to)) {
+	if (is_contested_field(to)) {
 		game.last_used[road_id(from, to)] = game.active;
 		if (!game.attacker[to]) {
 			game.attacker[to] = game.active;
@@ -808,8 +821,8 @@ function goto_move_phase(moves) {
 }
 
 function end_move_phase() {
-	game.moves = 0;
 	clear_undo();
+	game.moves = 0;
 	print_turn_log(game.active + " moves:");
 	end_player_turn();
 }
@@ -901,6 +914,7 @@ states.group_move_to = {
 
 function end_move() {
 	if (game.distance > 0) {
+		lift_siege(game.origin);
 		let to = game.location[game.who];
 		if (!game.activated.includes(game.origin)) {
 			logp("activates " + game.origin + ".");
@@ -965,6 +979,8 @@ states.sea_move_to = {
 		log_move_start(from);
 		log_move_continue("Sea");
 
+		lift_siege(from);
+
 		// English Crusaders attack!
 		if (is_contested_town(to)) {
 			game.attacker[to] = FRANK;
@@ -985,7 +1001,7 @@ function can_muster_anywhere() {
 	if (game.moves > 0)
 		return true;
 	for (let where of game.mustered) {
-		if (is_friendly_town(where))
+		if (is_friendly_field(where))
 			if (can_muster_to(where))
 				return true;
 	}
@@ -1001,13 +1017,13 @@ states.muster = {
 		gen_action(view, 'end_muster');
 		if (game.moves > 0) {
 			for (let where in TOWNS) {
-				if (is_friendly_town(where))
+				if (is_friendly_field(where))
 					if (can_muster_to(where))
 						gen_action(view, 'town', where);
 			}
 		} else {
 			for (let where of game.mustered) {
-				if (is_friendly_town(where))
+				if (is_friendly_field(where))
 					if (can_muster_to(where))
 						gen_action(view, 'town', where);
 			}
@@ -1077,6 +1093,7 @@ states.muster_move_1 = {
 		log_move_start(from);
 		log_move_continue(to);
 		move_block(game.who, from, to);
+		lift_siege(from);
 		if (to == game.where) {
 			end_muster_move();
 		} else {
@@ -1177,7 +1194,7 @@ function count_blocks_in_castle(where) {
 	return n;
 }
 
-function count_enemies_in_field_and_reserve(where) {
+function count_enemy_in_field_and_reserve(where) {
 	let n = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) != game.active)
@@ -1186,13 +1203,19 @@ function count_enemies_in_field_and_reserve(where) {
 	return n;
 }
 
-function count_friends_in_field_and_reserve(where) {
+function count_friendly_in_field_and_reserve(where) {
 	let n = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) == game.active)
 			if (game.location[b] == where && !game.castle.includes(b))
 				++n;
 	return n;
+}
+
+function is_contested_battle_field() {
+	let f = count_friendly_in_field_excluding_reserves(game.where);
+	let e = count_enemy_in_field_excluding_reserves(game.where);
+	return f > 0 && e > 0;
 }
 
 function count_reserves(where) {
@@ -1227,9 +1250,35 @@ function besieging_player(where) {
 	return ENEMY[besieged_player(where)];
 }
 
+function lift_siege(where) {
+	if (is_under_siege(where) && !is_contested_town(where)) {
+		log("Siege lifted in " + where + ".");
+		console.log("SIEGE LIFTED IN", where);
+		for (let b in BLOCKS)
+			if (is_block_in_castle_in(b, where))
+				remove_from_array(game.castle, b);
+	}
+}
+
+function lift_all_sieges() {
+	for (let t in TOWNS)
+		lift_siege(t);
+}
+
 function goto_combat_phase() {
 	game.moved = {};
-	if (have_contested_towns()) {
+	game.combat_list = [];
+	for (let where in TOWNS)
+		if (is_contested_town(where))
+			game.combat_list.push(where);
+	resume_combat_phase();
+}
+
+function resume_combat_phase() {
+	reset_road_limits();
+	game.moved = {};
+
+	if (game.combat_list.length > 0) {
 		game.active = game.p1;
 		game.state = 'combat_phase';
 	} else {
@@ -1240,13 +1289,13 @@ function goto_combat_phase() {
 states.combat_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose a battle or siege.";
+			return view.prompt = "Waiting for " + game.active + " to choose the next battle or siege.";
 		view.prompt = "Choose the next battle or siege!";
-		for (let where in TOWNS)
-			if (is_contested_town(where))
-				gen_action(view, 'town', where);
+		for (let where of game.combat_list)
+			gen_action(view, 'town', where);
 	},
 	town: function (where) {
+		remove_from_array(game.combat_list, where);
 		start_combat(where);
 	},
 }
@@ -1269,21 +1318,15 @@ function start_combat(where) {
 			game.active = ENEMY[game.attacker[game.where]];
 			game.state = 'combat_deployment';
 		} else {
+			game.attacker[game.where] = besieging_player(game.where);
 			console.log("CONTINUE SIEGE");
 			log("Siege continues from previous turn.");
-			resume_combat();
+			next_combat_round();
 		}
 	} else {
 		console.log("START NON-SIEGE");
-		resume_combat();
+		next_combat_round();
 	}
-}
-
-function lift_siege(where) {
-	console.log("SIEGE LIFTED IN", where);
-	for (let b in BLOCKS)
-		if (is_block_in_castle_in(b, game.where))
-			remove_from_array(game.castle, b);
 }
 
 function end_combat() {
@@ -1296,14 +1339,13 @@ function end_combat() {
 		lift_siege(game.where);
 	}
 
+	delete game.storming;
+	delete game.sallying;
 	game.where = null;
 	game.flash = "";
 	game.battle_round = 0;
-	reset_road_limits();
-	game.moved = {};
-	delete game.storming;
-	delete game.sallying;
-	goto_combat_phase();
+
+	resume_combat_phase();
 }
 
 // COMBAT DEPLOYMENT
@@ -1312,7 +1354,7 @@ states.combat_deployment = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to deploy units.";
+			return view.prompt = "Waiting for " + game.active + " to deploy blocks.";
 		view.prompt = "Deploy blocks on the field and in the castle.";
 		let max = castle_limit(game.where);
 		let n = count_blocks_in_castle(game.where);
@@ -1341,15 +1383,15 @@ states.combat_deployment = {
 		clear_undo();
 		let n = count_blocks_in_castle(game.where);
 		if (n == 1)
-			log("1 unit withdraws.");
+			log(game.active + " withdraws 1 block.");
 		else
-			log(n + " units withdraw.");
+			log(game.active + " withdraws " + n + " blocks.");
 		game.active = game.attacker[game.where];
-		if (count_enemies_in_field_and_reserve(game.where) == 0)  {
+		if (count_enemy_in_field_and_reserve(game.where) == 0)  {
 			console.log("DEFENDER REFUSED FIELD BATTLE");
 			return goto_regroup();
 		}
-		resume_combat();
+		next_combat_round();
 	},
 	undo: pop_undo
 }
@@ -1357,6 +1399,7 @@ states.combat_deployment = {
 // REGROUP AFTER FIELD BATTLE/SIEGE VICTORY
 
 function goto_regroup() {
+	lift_siege(game.where);
 	console.log("REGROUP", game.active);
 	reset_road_limits();
 	game.state = 'regroup';
@@ -1386,7 +1429,7 @@ states.regroup = {
 		clear_undo();
 		print_turn_log(game.active + " regroups:");
 		if (is_contested_town(game.where))
-			resume_combat();
+			next_combat_round();
 		else
 			end_combat();
 	},
@@ -1417,8 +1460,8 @@ states.regroup_to = {
 
 // COMBAT ROUND
 
-function resume_combat() {
-	console.log("RESUME COMBAT");
+function next_combat_round() {
+	console.log("NEXT COMBAT ROUND");
 	switch (game.combat_round) {
 	case 0: return goto_combat_round(1);
 	case 1: return goto_combat_round(2);
@@ -1434,17 +1477,20 @@ function bring_on_reserves(reserves) {
 }
 
 function goto_combat_round(combat_round) {
-	console.log("COMBAT ROUND", combat_round);
 	game.combat_round = combat_round;
+	game.moved = {};
 
-	let was_contested = is_contested_field(game.where);
+	console.log("COMBAT ROUND", combat_round);
+	log("~ Combat Round " + combat_round + " ~");
+
+	let was_contested = is_contested_battle_field();
 
 	if (combat_round == 2)
 		bring_on_reserves(game.reserves1);
 	if (combat_round == 3)
 		bring_on_reserves(game.reserves2);
 
-	if (is_contested_field(game.where)) {
+	if (is_contested_battle_field()) {
 		if (is_under_siege(game.where)) {
 			if (!was_contested) {
 				log("Relief forces arrive!");
@@ -1457,9 +1503,10 @@ function goto_combat_round(combat_round) {
 			}
 			let old_attacker = game.attacker[game.where];
 			game.attacker[game.where] = besieged_player(game.where);
-			console.log("NEW ATTACKER IS", game.attacker[game.where]);
-			if (old_attacker != game.attacker[game.where])
+			if (old_attacker != game.attacker[game.where]) {
+				console.log("NEW ATTACKER IS", game.attacker[game.where]);
 				log(game.attacker[game.where] + " is now the attacker.");
+			}
 		}
 		return goto_field_battle();
 	}
@@ -1510,9 +1557,9 @@ states.declare_storm = {
 			goto_declare_sally();
 		} else {
 			if (n == 1)
-				log("1 unit storms the castle.");
+				log(game.active + " storms with 1 block.");
 			else
-				log(n + " units storm the castle.");
+				log(game.active + " storms with " + n + " blocks.");
 			goto_storm_battle();
 		}
 	},
@@ -1522,7 +1569,7 @@ states.declare_storm = {
 function goto_declare_sally() {
 	game.active = besieged_player(game.where);
 	game.state = 'declare_sally';
-	game.was_contested = is_contested_field(game.where);
+	game.was_contested = is_contested_battle_field();
 }
 
 states.declare_sally = {
@@ -1556,19 +1603,21 @@ states.declare_sally = {
 		clear_undo();
 		let n = game.sallying.length;
 		console.log("SALLY DECLARATION", n);
-		if (n == 1)
-			log("1 unit sally.");
+		if (n == 0)
+			log(game.active + " declines to sally.");
+		else if (n == 1)
+			log(game.active + " sallies " + n + "block.");
 		else
-			log(n + " units sally.");
-		if (is_contested_field(game.where)) {
+			log(game.active + " sallies " + n + "blocks.");
+		if (is_contested_battle_field()) {
 			if (!game.was_contested) {
 				log(game.active + " is now the attacker.");
 				console.log("NEW ATTACKER IS", game.active);
-				game.attacker[where] = game.active;
+				game.attacker[game.where] = game.active;
 			}
 			goto_field_battle();
 		} else if (count_reserves(game.where) > 0) {
-			resume_combat();
+			next_combat_round();
 		} else {
 			goto_siege_attrition();
 		}
@@ -1580,292 +1629,23 @@ states.declare_sally = {
 
 function goto_retreat_after_combat() {
 	console.log("RETREAT AFTER COMBAT");
-// withdraw all sallying units to castle.
-// withdraw all storming units to field.
-// if field is contested then
-//	attacker must retreat
-//	defender may regroup
-// end
-	goto_siege_attrition();
-}
 
-// SIEGE ATTRITION
+	// withdraw all sallying blocks to castle.
+	for (let b of game.sallying)
+		game.castle.push(b);
+	game.sallying.length = 0;
 
-function goto_siege_attrition() {
-	console.log("SIEGE ATTRITION");
-}
+	// withdraw all storming blocks to the field.
+	game.storming.length = 0;
 
-// FIELD AND STORM BATTLE
-
-function goto_field_battle() {
-	console.log("FIELD BATTLE");
-}
-
-function goto_storm_battle() {
-	console.log("STORM BATTLE");
-}
-
-// OLD CRUFT
-
-/*
-
-function resume_battle() {
-	game.who = null;
-	if (game.victory)
-		return goto_game_over();
-	game.state = 'battle_round';
-	pump_battle_round();
-}
-
-function end_battle() {
-	game.flash = "";
-	game.battle_round = 0;
-	reset_road_limits();
-	game.moved = {};
-
-	game.active = game.attacker[game.where];
-	let victor = game.active;
-	if (is_contested_town(game.where))
-		victor = ENEMY[game.active];
-	else if (is_enemy_town(game.where))
-		victor = ENEMY[game.active];
-	log(victor + " wins the battle in " + game.where + "!");
-
-	goto_retreat();
-}
-
-function start_battle_round() {
-	if (++game.battle_round <= 3) {
-		log("~ Battle Round " + game.battle_round + " ~");
-
-		reset_road_limits();
-		game.moved = {};
-
-		if (game.battle_round == 2) {
-			if (count_defenders() == 0) {
-				log("Defending main force was eliminated.");
-				log("The attacker is now the defender.");
-				game.attacker[game.where] = ENEMY[game.attacker[game.where]];
-			} else if (count_attackers() == 0) {
-				log("Attacking main force was eliminated.");
-			}
-			bring_on_reserves(2);
-		}
-
-		if (game.battle_round == 3) {
-			bring_on_reserves(3);
-		}
-
-		pump_battle_round();
-	} else {
-		end_battle();
-	}
-}
-
-function pump_battle_round() {
-	function filter_battle_blocks(ci, is_candidate) {
-		let output = null;
-		for (let b in BLOCKS) {
-			if (is_candidate(b) && !game.moved[b]) {
-				if (block_initiative(b) == ci) {
-					if (!output)
-						output = [];
-					output.push(b);
-				}
-			}
-		}
-		return output;
-	}
-
-	function battle_step(active, initiative, candidate) {
-		game.battle_list = filter_battle_blocks(initiative, candidate);
-		if (game.battle_list) {
-			game.active = active;
-			return true;
-		}
-		return false;
-	}
-
-	if (is_friendly_town(game.where) || is_enemy_town(game.where)) {
-		end_battle();
-	} else if (count_attackers() == 0 || count_defenders() == 0) {
-		start_battle_round();
-	} else {
-		let attacker = game.attacker[game.where];
-		let defender = ENEMY[attacker];
-
-		if (battle_step(defender, 'A', is_defender)) return;
-		if (battle_step(attacker, 'A', is_attacker)) return;
-		if (battle_step(defender, 'B', is_defender)) return;
-		if (battle_step(attacker, 'B', is_attacker)) return;
-		if (battle_step(defender, 'C', is_defender)) return;
-		if (battle_step(attacker, 'C', is_attacker)) return;
-
-		start_battle_round();
-	}
-}
-
-function retreat_with_block(b) {
-	game.who = b;
-	game.state = 'retreat_in_battle';
-}
-
-function roll_attack(active, b, verb) {
-	game.hits = 0;
-	let fire = block_fire_power(b, game.where);
-	let printed_fire = block_printed_fire_power(b);
-	let rolls = [];
-	let steps = game.steps[b];
-	let name = block_name(b) + " " + BLOCKS[b].combat;
-	if (fire > printed_fire)
-		name += "+" + (fire - printed_fire);
-	for (let i = 0; i < steps; ++i) {
-		let die = roll_d6();
-		if (die <= fire) {
-			rolls.push(DIE_HIT[die]);
-			++game.hits;
-		} else {
-			rolls.push(DIE_MISS[die]);
-		}
-	}
-
-	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
-	if (block_plural(b)) {
-		if (game.hits == 0)
-			game.flash += "and miss.";
-		else if (game.hits == 1)
-			game.flash += "and score 1 hit.";
-		else
-			game.flash += "and score " + game.hits + " hits.";
-	} else {
-		if (game.hits == 0)
-			game.flash += "and misses.";
-		else if (game.hits == 1)
-			game.flash += "and scores 1 hit.";
-		else
-			game.flash += "and scores " + game.hits + " hits.";
-	}
-
-	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
-}
-
-function fire_with_block(b) {
-	game.moved[b] = true;
-	console.log ("fire", block_plural(b));
-	if (block_plural(b))
-		roll_attack(game.active, b, "fire");
-	else
-		roll_attack(game.active, b, "fires");
-	if (game.hits > 0) {
-		game.active = ENEMY[game.active];
-		goto_battle_hits();
-	} else {
-		resume_battle();
-	}
-}
-
-states.battle_round = {
-	show_battle: true,
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose a combat action.";
-		view.prompt = "Battle: Charge, Fire, Harry, or Retreat with an army.";
-		for (let b of game.battle_list) {
-			gen_action(view, 'block', b); // take default action
-			gen_action(view, 'battle_fire', b);
-			gen_action(view, 'battle_retreat', b);
-			// Turcopoles and Nomads can Harry (fire and retreat)
-			if (block_type(b) == 'turcopoles' || block_type(b) == 'nomads')
-				gen_action(view, 'battle_harry', b);
-			// All Frank B blocks are knights who can Charge
-			if (block_owner(b) == FRANK && block_initiative(b) == 'B')
-				gen_action(view, 'battle_charge', b);
-		}
-	},
-	battle_charge: function (who) {
-		charge_with_block(who);
-	},
-	battle_fire: function (who) {
-		fire_with_block(who);
-	},
-	battle_harry: function (who) {
-		harry_with_block(who);
-	},
-	battle_retreat: function (who) {
-		retreat_with_block(who);
-	},
-	block: function (who) {
-		fire_with_block(who);
-	},
-}
-
-function goto_battle_hits() {
-	game.battle_list = list_victims(game.active);
-	if (game.battle_list.length == 0)
-		resume_battle();
-	else
-		game.state = 'battle_hits';
-}
-
-function apply_hit(who) {
-	if (block_plural(who))
-		game.flash = block_name(who) + " take a hit.";
-	else
-		game.flash = block_name(who) + " takes a hit.";
-	reduce_block(who, 'combat');
-	game.hits--;
-	if (game.hits == 0)
-		resume_battle();
-	else {
-		game.battle_list = list_victims(game.active);
-		if (game.battle_list.length == 0)
-			resume_battle();
-		else
-			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
-	}
-}
-
-function list_victims(p) {
-	let is_candidate = (p == game.attacker[game.where]) ? is_attacker : is_defender;
-	let max = 0;
-	for (let b in BLOCKS)
-		if (is_candidate(b) && game.steps[b] > max)
-			max = game.steps[b];
-	let list = [];
-	for (let b in BLOCKS)
-		if (is_candidate(b) && game.steps[b] == max)
-			list.push(b);
-	return list;
-}
-
-states.battle_hits = {
-	show_battle: true,
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
-		for (let b of game.battle_list) {
-			gen_action(view, 'battle_hit', b);
-			gen_action(view, 'block', b);
-		}
-	},
-	battle_hit: function (who) {
-		apply_hit(who);
-	},
-	block: function (who) {
-		apply_hit(who);
-	},
-}
-
-function goto_retreat() {
-	game.active = game.attacker[game.where];
-	if (is_contested_town(game.where)) {
+	if (is_contested_field(game.where)) {
+		game.active = game.attacker[game.where];
 		game.state = 'retreat';
 		game.turn_log = [];
-		clear_undo();
+	} else if (is_under_siege(game.where)) {
+		goto_siege_attrition();
 	} else {
-		clear_undo();
-		goto_regroup();
+		end_combat();
 	}
 }
 
@@ -1877,20 +1657,22 @@ states.retreat = {
 		gen_action_undo(view);
 		let can_retreat = false;
 		for (let b in BLOCKS) {
-			if (game.location[b] == game.where && can_block_retreat(b)) {
+			if (game.location[b] == game.where && !is_block_in_castle(b) && can_block_retreat(b)) {
 				gen_action(view, 'block', b);
 				can_retreat = true;
 			}
 		}
-		if (!is_contested_town(game.where) || !can_retreat)
+		if (!is_contested_field(game.where) || !can_retreat)
 			gen_action(view, 'end_retreat');
 	},
 	end_retreat: function () {
+		clear_undo();
 		for (let b in BLOCKS)
-			if (game.location[b] == game.where && block_owner(b) == game.active)
+			if (game.location[b] == game.where && !is_block_in_castle(b) && block_owner(b) == game.active)
 				eliminate_block(b);
 		print_turn_log(game.active + " retreats:");
-		clear_undo();
+		game.active = ENEMY[game.active];
+		console.log("ATTACKER RETREATED FROM THE FIELD");
 		goto_regroup();
 	},
 	block: function (who) {
@@ -1934,6 +1716,304 @@ states.retreat_to = {
 	undo: pop_undo
 }
 
+// SIEGE ATTRITION
+
+function goto_siege_attrition() {
+	console.log("SIEGE ATTRITION");
+	end_combat();
+}
+
+// FIELD BATTLE
+
+function goto_field_battle() {
+	console.log("FIELD BATTLE");
+	resume_field_battle();
+}
+
+function resume_field_battle() {
+	game.state = 'field_battle';
+
+	function filter_battle_blocks(ci, is_candidate) {
+		let output = null;
+		for (let b in BLOCKS) {
+			if (is_candidate(b) && !game.moved[b]) {
+				if (block_initiative(b) == ci) {
+					if (!output)
+						output = [];
+					output.push(b);
+				}
+			}
+		}
+		return output;
+	}
+
+	game.active = game.p1;
+
+	if (is_friendly_field(game.where)) {
+		console.log("FIELD BATTLE WON BY", game.active);
+		log("Field battle won by", game.active);
+		return goto_regroup();
+	}
+
+	if (is_enemy_field(game.where)) {
+		game.active = ENEMY[game.active];
+		console.log("FIELD BATTLE WON BY", game.active);
+		log("Field battle won by", game.active + ".");
+		return goto_regroup();
+	}
+
+	function battle_step(active, initiative, candidate) {
+		game.battle_list = filter_battle_blocks(initiative, candidate);
+		if (game.battle_list) {
+			game.active = active;
+			return true;
+		}
+		return false;
+	}
+
+	let attacker = game.attacker[game.where];
+	let defender = ENEMY[attacker];
+
+	if (battle_step(defender, 'A', is_field_defender)) return;
+	if (battle_step(attacker, 'A', is_field_attacker)) return;
+	if (battle_step(defender, 'B', is_field_defender)) return;
+	if (battle_step(attacker, 'B', is_field_attacker)) return;
+	if (battle_step(defender, 'C', is_field_defender)) return;
+	if (battle_step(attacker, 'C', is_field_attacker)) return;
+
+	next_combat_round();
+}
+
+states.field_battle = {
+	show_battle: true,
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to choose a combat action.";
+		view.prompt = "Field Battle: Choose a combat action.";
+		for (let b of game.battle_list) {
+			gen_action(view, 'block', b); // take default action
+			gen_action(view, 'battle_fire', b);
+			if (game.sallying.includes(b)) {
+				// Only sallying forces may withdraw into the castle
+				gen_action(view, 'battle_withdraw');
+			} else {
+				if (can_block_retreat(b)) {
+					gen_action(view, 'battle_retreat', b);
+					// Turcopoles and Nomads can Harry (fire and retreat)
+					if (block_type(b) == 'turcopoles' || block_type(b) == 'nomads')
+						gen_action(view, 'battle_harry', b);
+				}
+			}
+			// All Frank B blocks are knights who can Charge
+			if (block_owner(b) == FRANK && block_initiative(b) == 'B')
+				gen_action(view, 'battle_charge', b);
+		}
+	},
+	block: field_fire_with_block,
+	battle_fire: field_fire_with_block,
+	battle_withdraw: field_withdraw_with_block,
+	battle_charge: charge_with_block,
+	battle_harry: harry_with_block,
+	battle_retreat: retreat_with_block,
+}
+
+// STORM BATTLE
+
+function goto_storm_battle() {
+	log("TODO: storm battle");
+	console.log("STORM BATTLE");
+	next_combat_round();
+}
+
+// BATTLE HITS
+
+function goto_field_battle_hits() {
+	game.active = ENEMY[game.active];
+	game.battle_list = list_field_victims();
+	console.log("victim list = ", game.battle_list);
+	if (game.battle_list.length == 0)
+		resume_field_battle();
+	else
+		game.state = 'field_battle_hits';
+}
+
+function list_field_victims() {
+	let max = 0;
+	for (let b in BLOCKS)
+		if (block_owner(b) == game.active && is_field_combatant(b) && game.steps[b] > max)
+			max = game.steps[b];
+	let list = [];
+	for (let b in BLOCKS)
+		if (block_owner(b) == game.active && is_field_combatant(b) && game.steps[b] == max)
+			list.push(b);
+	return list;
+}
+
+states.field_battle_hits = {
+	show_battle: true,
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to assign hits.";
+		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+		for (let b of game.battle_list) {
+			gen_action(view, 'battle_hit', b);
+			gen_action(view, 'block', b);
+		}
+	},
+	battle_hit: apply_field_battle_hit,
+	block: apply_field_battle_hit,
+}
+
+function apply_field_battle_hit(who) {
+	if (block_plural(who))
+		game.flash = block_name(who) + " take a hit.";
+	else
+		game.flash = block_name(who) + " takes a hit.";
+	reduce_block(who, 'combat');
+	game.hits--;
+	if (game.hits == 0)
+		resume_field_battle();
+	else {
+		game.battle_list = list_field_victims();
+		if (game.battle_list.length == 0)
+			resume_field_battle();
+		else
+			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
+	}
+}
+
+// BATTLE ACTIONS
+
+function roll_attack(active, b, verb, is_charge) {
+	game.hits = 0;
+	let fire = block_fire_power(b, game.where);
+	let printed_fire = block_printed_fire_power(b);
+	let rolls = [];
+	let steps = game.steps[b];
+	let name = block_name(b) + " " + BLOCKS[b].combat;
+	let self = 0;
+	if (fire > printed_fire)
+		name += "+" + (fire - printed_fire);
+	for (let i = 0; i < steps; ++i) {
+		let die = roll_d6();
+		if (die <= fire) {
+			rolls.push(DIE_HIT[die]);
+			++game.hits;
+		} else {
+			if (is_charge && die == 6) {
+				rolls.push(DIE_SELF);
+				++self;
+			} else {
+				rolls.push(DIE_MISS[die]);
+			}
+		}
+	}
+
+	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
+	if (block_plural(b)) {
+		if (game.hits == 0)
+			game.flash += "and miss.";
+		else if (game.hits == 1)
+			game.flash += "and score 1 hit.";
+		else
+			game.flash += "and score " + game.hits + " hits.";
+	} else {
+		if (game.hits == 0)
+			game.flash += "and misses.";
+		else if (game.hits == 1)
+			game.flash += "and scores 1 hit.";
+		else
+			game.flash += "and scores " + game.hits + " hits.";
+	}
+
+	if (self > 0) {
+		if (self == 1)
+			game.flash += " " + self + " self hit.";
+		else
+			game.flash += " " + self + " self hits.";
+		self = Math.min(self, game.steps[b]);
+		while (self-- > 0)
+			reduce_block(b);
+	}
+
+	log(active[0] + ": " + name + " " + verb + " " + rolls.join("") + ".");
+}
+
+function field_fire_with_block(b) {
+	game.moved[b] = true;
+	if (block_plural(b))
+		roll_attack(game.active, b, "fire", 0);
+	else
+		roll_attack(game.active, b, "fires", 0);
+	if (game.hits > 0) {
+		goto_field_battle_hits();
+	} else {
+		resume_field_battle();
+	}
+}
+
+function charge_with_block(b) {
+	game.moved[b] = true;
+	if (block_plural(b))
+		roll_attack(game.active, b, "charge", 1);
+	else
+		roll_attack(game.active, b, "charges", 1);
+	if (game.hits > 0) {
+		goto_field_battle_hits();
+	} else {
+		resume_field_battle();
+	}
+}
+
+function field_withdraw_with_block(b) {
+	log(game.active[0] + ": " + b + " withdraws.");
+	game.moved[b] = true;
+	remove_from_array(game.sallying, b);
+	game.castle.push(b);
+	resume_field_battle();
+}
+
+function harry_with_block(b) {
+	// TODO: fire, hits, retreat OR fire, retreat, hits order ?
+	if (block_plural(b))
+		roll_attack(game.active, b, "harry", 1);
+	else
+		roll_attack(game.active, b, "harries", 1);
+	game.who = b;
+	game.state = 'harry';
+}
+
+states.harry = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to harry.";
+		view.prompt = "Harry: Move the army to a friendly or vacant town.";
+		for (let to of TOWNS[game.where].exits)
+			if (can_block_retreat_to(game.who, to))
+				gen_action(view, 'town', to);
+	},
+	town: function (to) {
+		if (block_plural(game.who))
+			game.flash = block_name(game.who) + " retreat.";
+		else
+			game.flash = block_name(game.who) + " retreats.";
+		logp("retreats to " + to + ".");
+		game.location[game.who] = to;
+		move_block(game.who, game.where, to);
+		game.who = null;
+		if (game.hits > 0) {
+			goto_field_battle_hits();
+		} else {
+			resume_field_battle();
+		}
+	},
+}
+
+function retreat_with_block(b) {
+	game.who = b;
+	game.state = 'retreat_in_battle';
+}
+
 states.retreat_in_battle = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
@@ -1952,25 +2032,30 @@ states.retreat_in_battle = {
 			game.flash = block_name(game.who) + " retreats.";
 		logp("retreats to " + to + ".");
 		game.location[game.who] = to;
-		resume_battle();
+		move_block(game.who, game.where, to);
+		game.who = null;
+		resume_field_battle();
 	},
-	eliminate: function () {
-		eliminate_block(game.who);
-		resume_battle();
-	},
-	block: function (to) {
-		resume_battle();
+	block: function () {
+		game.who = null;
+		resume_field_battle();
 	},
 	undo: function () {
-		resume_battle();
+		game.who = null;
+		resume_field_battle();
 	}
 }
+
+// OLD CRUFT
+
+/*
 
 */
 
 // DRAW PHASE
 
 function goto_draw_phase() {
+	delete game.combat_list;
 	end_game_turn();
 }
 

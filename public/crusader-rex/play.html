@@ -52,6 +52,10 @@
 	border-radius: 6px;
 }
 
+.small_card.prior {
+	filter: grayscale(100%) contrast(70%) brightness(120%);
+}
+
 .role_info {
 	display: flex;
 	justify-content: center;
@@ -151,11 +155,10 @@ body.shift .block.known:hover {
 
 .block.Frank.highlight { border-color: white; }
 .block.Saracen.highlight { border-color: white; }
-.block.Assassins.highlight { border-color: white; }
 
 .block.Frank.selected { border-color: gold; }
 .block.Saracen.selected { border-color: lightgreen; }
-.block.Assassins.selected { border-color: hotpink; }
+.block.Assassins.selected { border-color: hotpink; box-shadow: none; }
 
 .block.highlight { cursor: pointer; }
 .block.highlight { box-shadow: 0px 0px 4px 1px white; }
@@ -163,7 +166,11 @@ body.shift .block.known:hover {
 .block.moved { filter: brightness(80%) grayscale(40%); }
 .block.highlight.moved { filter: brightness(95%) grayscale(40%); }
 
-.map .block.castle.known { border-color: #444; filter: grayscale(50%); }
+.map .block.castle.known, .map.stack_layout .block.castle {
+	border-color: #444;
+	filter: grayscale(50%);
+}
+
 .map .block.castle:not(.known) {
 	background-image: url("/crusader-rex/besieged.svg");
 	background-size: 60%;

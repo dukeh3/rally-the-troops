@@ -519,7 +519,8 @@ function hide_block(element) {
 function update_map() {
 	let layout = {};
 
-	document.getElementById("turn").textContent = "Year " + game.year + " (" + (game.year-1186) + "/6)" ;
+	document.getElementById("turn").textContent =
+		"Turn " + game.turn + " of Year " + game.year;
 
 	for (let town in TOWNS)
 		layout[town] = { north: [], south: [] };
@@ -574,29 +575,41 @@ function update_map() {
 	}
 }
 
+function update_card_display(element, card, prior_card) {
+	console.log("update_card_display", element, card, prior_card);
+	if (!card && !prior_card) {
+		element.className = "small_card card_back";
+	} else if (prior_card) {
+		element.className = "small_card prior " + CARDS[prior_card].image;
+	} else {
+		element.className = "small_card " + CARDS[card].image;
+	}
+}
+
 function update_cards() {
-	let cards = game.hand;
+	update_card_display(document.getElementById("frank_card"), game.f_card, game.prior_f_card);
+	update_card_display(document.getElementById("saracen_card"), game.s_card, game.prior_s_card);
+
 	for (let c = 1; c <= 27; ++c) {
-		ui.cards[c].classList.remove('enabled');
-		if (cards && cards.includes(c))
-			ui.cards[c].classList.add('show');
-		else
-			ui.cards[c].classList.remove('show');
+		let element = ui.cards[c];
+		if (game.hand.includes(c)) {
+			element.classList.add("show");
+			if (game.actions && game.actions.play) {
+				if (game.actions.play.includes(c)) {
+					element.classList.add("enabled");
+					element.classList.remove("disabled");
+				} else {
+					element.classList.remove("enabled");
+					element.classList.add("disabled");
+				}
+			} else {
+				element.classList.remove("enabled");
+				element.classList.remove("disabled");
+			}
+		} else {
+			element.classList.remove("show");
+		}
 	}
-
-	if (game.actions && game.actions.play) {
-		for (let c of game.actions.play)
-			ui.cards[c].classList.add('enabled');
-	}
-
-	if (!game.f_card)
-		document.querySelector("#frank_card").className = "small_card card_back";
-	else
-		document.querySelector("#frank_card").className = "small_card " + CARDS[game.f_card].image;
-	if (!game.s_card)
-		document.querySelector("#saracen_card").className = "small_card card_back";
-	else
-		document.querySelector("#saracen_card").className = "small_card " + CARDS[game.s_card].image;
 }
 
 function update_battle() {

@@ -11,7 +11,7 @@ const CARDS = {
 	3: { name: "Intrigue", event: "intrigue", image: "card_intrigue" },
 	4: { name: "Jihad", event: "jihad", image: "card_jihad" },
 	5: { name: "Manna", event: "manna", image: "card_manna" },
-	6: { name: "Winter Campaign", event: "winter_campaign", image: "card_winter_campaign" },
+	6: { name: "Winter Campaign", image: "card_winter_campaign" },
 	7: { name: "3", moves: 3, image: "card_3" },
 	8: { name: "3", moves: 3, image: "card_3" },
 	9: { name: "3", moves: 3, image: "card_3" },

@@ -277,6 +277,7 @@ function build_battle_block(b, block) {
 	menu.classList.add("battle_menu");
 	menu.appendChild(element);
 	menu.appendChild(menu_list);
+	menu.block = b;
 	ui.battle_menu[b] = menu;
 }
 
@@ -647,6 +648,25 @@ function update_cards() {
 	}
 }
 
+function compare_blocks(a, b) {
+	let aa = BLOCKS[a].combat;
+	let bb = BLOCKS[b].combat;
+	if (aa == bb)
+		return (a < b) ? -1 : (a > b) ? 1 : 0;
+	return (aa < bb) ? -1 : (aa > bb) ? 1 : 0;
+}
+
+function insert_battle_block(root, node, block) {
+	for (let i = 0; i < root.children.length; ++i) {
+		let prev = root.children[i];
+		if (compare_blocks(prev.block, block) > 0) {
+			root.insertBefore(node, prev);
+			return;
+		}
+	}
+	root.appendChild(node);
+}
+
 function update_battle() {
 	function fill_cell(name, list, show) {
 		let cell = document.getElementById(name);
@@ -656,9 +676,8 @@ function update_battle() {
 		for (let block of list) {
 			ui.present.add(block);
 
-			// TODO: insert in correct order!
 			if (!cell.contains(ui.battle_menu[block]))
-				cell.appendChild(ui.battle_menu[block]);
+				insert_battle_block(cell, ui.battle_menu[block], block);
 
 			if (block == game.who)
 				ui.battle_block[block].classList.add("selected");

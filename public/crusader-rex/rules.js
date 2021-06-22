@@ -5,6 +5,8 @@
 
 // TODO: sort blocks in battle screen!
 
+// TODO: pause after battle ends (ui maybe?)
+
 exports.scenarios = [
 	"Third Crusade"
 ];
@@ -3196,12 +3198,6 @@ function setup_game() {
 }
 
 // VIEW
-
-function compare_block_initiative(a, b) {
-	let aa = BLOCKS[a].combat;
-	let bb = BLOCKS[b].combat;
-	return (aa < bb) ? -1 : (aa > bb) ? 1 : 0;
-}
 
 function make_battle_view() {
 	let battle = {

@@ -335,8 +335,10 @@ function build_town(t, town) {
 function update_map_layout() {
 	for (let t in TOWNS) {
 		let element = ui.towns[t];
-		element.style.left = (town_x(t) - 35) + "px";
-		element.style.top = (town_y(t) - 35) + "px";
+		let xo = Math.round(element.offsetWidth/2)
+		let yo = Math.round(element.offsetHeight/2)
+		element.style.left = (town_x(t) - xo) + "px";
+		element.style.top = (town_y(t) - yo) + "px";
 	}
 }
 
@@ -562,7 +564,7 @@ function update_map() {
 			let moved = game.moved[b] ? " moved" : "";
 			if (town == DEAD)
 				moved = " moved";
-			if (info.owner == player || info.owner == ASSASSINS) {
+			if (info.owner == player || info.owner == ASSASSINS || b == game.assassinate) {
 				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
 				let known = " known"

@@ -1,23 +1,13 @@
 "use strict";
 
-// TODO: alternate home seats when drawing
-// TODO: frank seat adjustment at setup
-// TODO: saladin seat adjustment at setup
-
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
-
-// TODO: crusader arrival movement
-
-// TODO: Assassins -- move assassin block and show special battle screen!
-
-// TODO: replace game.steps and game.location etc with block_steps() and block_location()
 
 exports.scenarios = [
 	"Third Crusade"
 ];
 
-const { CARDS, BLOCKS, TOWNS, PORTS, ROADS } = require('./data');
+const { CARDS, BLOCKS, TOWNS, PORTS, ROADS, SHIELDS } = require('./data');
 
 const FRANKS = "Franks";
 const SARACENS = "Saracens";
@@ -28,7 +18,6 @@ const BOTH = "Both";
 const DEAD = "Dead";
 const F_POOL = "FP";
 const S_POOL = "SP";
-
 const ENGLAND = "England";
 const FRANCE = "France";
 const GERMANIA = "Germania";
@@ -37,6 +26,9 @@ const TRIPOLI = "Tripoli";
 const ALEPPO = "Aleppo";
 const ANTIOCH = "Antioch";
 const ST_SIMEON = "St. Simeon";
+const DAMASCUS = "Damascus";
+const MASYAF = "Masyaf";
+const SALADIN = "Saladin";
 
 const INTRIGUE = 3;
 const WINTER_CAMPAIGN = 6;
@@ -44,6 +36,7 @@ const WINTER_CAMPAIGN = 6;
 const ENGLISH_CRUSADERS = [ "Richard", "Robert", "Crossbows" ];
 const FRENCH_CRUSADERS = [ "Philippe", "Hugues", "Fileps" ];
 const GERMAN_CRUSADERS = [ "Barbarossa", "Frederik", "Leopold" ];
+const SALADIN_FAMILY = [ "Saladin", "Al Adil", "Al Aziz", "Al Afdal", "Al Zahir" ];
 
 const VICTORY_TOWNS = [
 	"Aleppo", "Damascus", "Egypt",
@@ -213,6 +206,16 @@ function deal_cards(deck, n) {
 	return hand;
 }
 
+function select_random_block(where) {
+	let list = [];
+	for (let b in BLOCKS)
+		if (game.location[b] == where)
+			list.push(b);
+	if (list.length == 0)
+		return null;
+	return list[Math.floor(Math.random() * list.length)];
+}
+
 function block_plural(who) {
 	return BLOCKS[who].plural;
 }
@@ -232,6 +235,21 @@ function block_home(who) {
 	if (home == "Bourgogne") return "France";
 	if (home == "Flanders") return "France";
 	return home;
+}
+
+function list_seats(who) {
+	if (is_saladin_family(who))
+		who = SALADIN;
+	switch (block_type(who)) {
+	case 'nomads': return [ block_home(who) ];
+	case 'turcopoles': who = "Turcopoles"; break;
+	case 'military_orders': who = BLOCKS[who].name; break;
+	}
+	let list = [];
+	for (let town in SHIELDS)
+		if (SHIELDS[town].includes(who))
+			list.push(town);
+	return list;
 }
 
 function block_pool(who) {
@@ -841,6 +859,94 @@ function reduce_block(who) {
 	}
 }
 
+// DEPLOYMENT
+
+function is_valid_frank_deployment() {
+	for (let town in TOWNS)
+		if (!is_within_castle_limit(town))
+			return false;
+	return true;
+}
+
+function goto_frank_deployment() {
+	game.active = FRANKS;
+	game.state = 'frank_deployment';
+}
+
+states.frank_deployment = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Deployment: Waiting for " + game.active + ".";
+		view.prompt = "Deployment: You may make seat adjustments.";
+		gen_action_undo(view);
+		if (is_valid_frank_deployment())
+			gen_action(view, 'next');
+		for (let b in BLOCKS) {
+			if (block_owner(b) == game.active && is_block_on_land(b))
+				if (list_seats(b).length > 1)
+					gen_action(view, 'block', b);
+		}
+	},
+	block: function (who) {
+		push_undo();
+		game.who = who;
+		game.state = 'frank_deployment_to';
+	},
+	next: goto_saracen_deployment,
+	undo: pop_undo
+}
+
+states.frank_deployment_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Deployment: Waiting for " + game.active + ".";
+		view.prompt = "Deployment: You may make seat adjustments.";
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		let from = game.location[game.who];
+		for (let town of list_seats(game.who))
+			if (town != from)
+				gen_action(view, 'town', town);
+	},
+	town: function (where) {
+		game.location[game.who] = where;
+		game.who = null;
+		game.state = 'frank_deployment';
+	},
+	block: pop_undo,
+	undo: pop_undo
+}
+
+function goto_saracen_deployment() {
+	for (let i = 0; i < 4; ++i) {
+		let nomad = select_random_block(S_POOL);
+		log(BLOCKS[nomad].name + " arrive in " + block_home(nomad) + ".");
+		deploy(nomad, block_home(nomad));
+	}
+	game.active = SARACENS;
+	game.state = 'saracen_deployment';
+	game.who = SALADIN;
+}
+
+states.saracen_deployment = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Deployment: Waiting for " + game.active + ".";
+		view.prompt = "Deployment: You may swap places with Saladin and any other block of his family."
+		gen_action(view, 'pass');
+		for (let b of SALADIN_FAMILY)
+			if (b != SALADIN && game.location[b] != game.location[SALADIN])
+				gen_action(view, 'block', b);
+	},
+	block: function (who) {
+		game.location[SALADIN] = game.location[who];
+		game.location[who] = DAMASCUS;
+		game.who = null;
+		start_year();
+	},
+	pass: start_year
+}
+
 // GAME TURN
 
 function is_friendly_town_for_vp(town) {
@@ -1098,16 +1204,6 @@ function goto_assassins() {
 	game.who = ASSASSINS;
 }
 
-function select_random_block(where) {
-	let list = [];
-	for (let b in BLOCKS)
-		if (game.location[b] == where)
-			list.push(b);
-	if (list.length == 0)
-		return null;
-	return list[Math.floor(Math.random() * list.length)];
-}
-
 states.assassins = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
@@ -1119,31 +1215,59 @@ states.assassins = {
 		}
 	},
 	block: function (who) {
-		let where = game.location[who];
+		game.where = game.location[who];
+		game.who = select_random_block(game.where);
+		game.location[ASSASSINS] = game.where;
+		game.state = 'assassins_show_1';
+	},
+}
 
-		who = select_random_block(where);
+states.assassins_show_1 = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Assassins: Waiting for " + game.active + ".";
+		view.prompt = "Assassins: The assassins target " + game.who + " in " + game.where + ".";
+		view.assassinate = game.who;
+		gen_action(view, 'next');
+	},
+	next: function () {
+		assassinate(game.who, game.where);
+		game.state = 'assassins_show_2';
+	},
+}
 
-		let hits = 0;
-		let rolls = [];
-		for (let i = 0; i < 3; ++i) {
-			let die = roll_d6();
-			if (die <= 3) {
-				rolls.push(DIE_HIT[die]);
-				++hits;
-			} else {
-				rolls.push(DIE_MISS[die]);
-			}
-		}
-		hits = Math.min(hits, game.steps[who]);
-
-		log("Assassins hit " + who + " in " + where + ": " + rolls.join("") + ".");
-		for (let i = 0; i < hits; ++i)
-			reduce_block(who);
-
+states.assassins_show_2 = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Assassins: Waiting for " + game.active + ".";
+		view.prompt = "Assassins: The assassins hit " + game.who + " in " + game.where + ".";
+		view.assassinate = game.who;
+		gen_action(view, 'next');
+	},
+	next: function () {
+		game.location[ASSASSINS] = MASYAF;
 		game.who = null;
+		game.where = null;
 		end_player_turn();
 	},
-	undo: pop_undo
+}
+
+function assassinate(who, where) {
+	let hits = 0;
+	let rolls = [];
+	for (let i = 0; i < 3; ++i) {
+		let die = roll_d6();
+		if (die <= 3) {
+			rolls.push(DIE_HIT[die]);
+			++hits;
+		} else {
+			rolls.push(DIE_MISS[die]);
+		}
+	}
+	hits = Math.min(hits, game.steps[who]);
+	log("Assassins hit " + who + " in " + where + ": " + rolls.join("") + ".");
+	for (let i = 0; i < hits; ++i)
+		reduce_block(who);
 }
 
 function goto_guide() {
@@ -2719,20 +2843,6 @@ function start_draw_phase() {
 	}
 }
 
-function list_seats(who) {
-	if (is_saladin_family(who))
-		who = "Saladin";
-	if (block_type(who) == 'turcopoles')
-		who = "Turcopoles";
-	if (block_type(who) == 'nomads')
-		return [ block_home(who) ];
-	let list = [];
-	for (let town in SHIELDS)
-		if (SHIELDS[town].includes(who))
-			list.push(town);
-	return list.join(", ");
-}
-
 states.draw_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
@@ -2754,7 +2864,7 @@ states.draw_phase = {
 		case 'emirs':
 		case 'nomads':
 			view.prompt = "Draw Phase: Place " + BLOCKS[game.who].name + " at full strength in "
-				+ list_seats(game.who) + " or at strength 1 in any friendly town.";
+				+ list_seats(game.who).join(", ") + " or at strength 1 in any friendly town.";
 			for (let town in TOWNS)
 				if (is_friendly_town(town))
 					gen_action(view, 'town', town);
@@ -3062,9 +3172,6 @@ function setup_game() {
 				deploy(b, block_pool(b));
 				break;
 			case 'crusaders':
-				if (b != "Philippe")
-				deploy(b, block_home(b));
-				else
 				deploy(b, block_pool(b));
 				break;
 			default:
@@ -3083,6 +3190,7 @@ function setup_game() {
 		}
 	}
 	count_victory_points();
+	goto_frank_deployment();
 }
 
 // VIEW
@@ -3143,6 +3251,10 @@ exports.ready = function (scenario, players) {
 
 exports.setup = function (scenario, players) {
 	game = {
+		s_hand: [],
+		f_hand: [],
+		s_card: 0,
+		f_card: 0,
 		attacker: {},
 		road_limit: {},
 		last_used: {},
@@ -3162,7 +3274,6 @@ exports.setup = function (scenario, players) {
 		undo: [],
 	}
 	setup_game();
-	start_year();
 	return game;
 }
 

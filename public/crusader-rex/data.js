@@ -105,6 +105,7 @@ const TOWNS = {
 	"England3":{"x":138,"y":1047},
 	"FP":{"x":120,"y":2150},
 	"SP":{"x":120,"y":2150},
+	"Dead":{"x":120,"y":2150},
 	*/
 	"Germania":{"x":139,"y":273},
 	"France":{"x":140,"y":573},
@@ -142,10 +143,10 @@ const PORTS = [];
 	}
 
 	function frank(rc, name, home, move, steps, combat, order, plural) {
-		army(rc, "Frank", name, home, move, steps, combat, order, plural);
+		army(rc, "Franks", name, home, move, steps, combat, order, plural);
 	}
 	function saracen(rc, name, home, move, steps, combat, order, plural) {
-		army(rc, "Saracen", name, home, move, steps, combat, order, plural);
+		army(rc, "Saracens", name, home, move, steps, combat, order, plural);
 	}
 
 

@@ -1,9 +1,9 @@
 "use strict";
 
-const FRANK = "Frank";
-const SARACEN = "Saracen";
+const FRANK = "Franks";
+const SARACEN = "Saracens";
 const ASSASSINS = "Assassins";
-const ENEMY = { Saracen: "Frank", Frank: "Saracen" }
+const ENEMY = { Saracens: "Franks", Franks: "Saracens" }
 const DEAD = "Dead";
 const F_POOL = "FP";
 const S_POOL = "SP";
@@ -753,4 +753,4 @@ drag_element_with_mouse(".battle", ".battle_header");
 scroll_with_middle_mouse(".grid_center", 3);
 init_map_zoom();
 init_shift_zoom();
-init_client(["Frank", "Saracen"]);
+init_client(["Franks", "Saracens"]);

@@ -23,10 +23,10 @@ exports.scenarios = [
 
 const { CARDS, BLOCKS, TOWNS, PORTS, ROADS } = require('./data');
 
-const FRANK = "Frank";
-const SARACEN = "Saracen";
+const FRANK = "Franks";
+const SARACEN = "Saracens";
 const ASSASSINS = "Assassins";
-const ENEMY = { Frank: "Saracen", Saracen: "Frank" };
+const ENEMY = { Franks: "Saracens", Saracens: "Franks" };
 const OBSERVER = "Observer";
 const BOTH = "Both";
 const DEAD = "Dead";
@@ -34,7 +34,7 @@ const F_POOL = "FP";
 const S_POOL = "SP";
 const ENGLAND = "England";
 const FRANCE = "France";
-const GERMANY = "Germany";
+const GERMANIA = "Germania";
 
 const INTRIGUE = 3;
 const WINTER_CAMPAIGN = 6;
@@ -55,11 +55,6 @@ let game = null;
 
 function log(...args) {
 	let s = Array.from(args).join("");
-	game.log.push(s);
-}
-
-function logp(...args) {
-	let s = game.active + " " + Array.from(args).join("");
 	game.log.push(s);
 }
 
@@ -266,7 +261,7 @@ function is_block_on_map(who) {
 function is_block_on_land(who) {
 	let location = game.location[who];
 	return location && location != DEAD && location != F_POOL && location != S_POOL &&
-		location != ENGLAND && location != FRANCE && location != GERMANY;
+		location != ENGLAND && location != FRANCE && location != GERMANIA;
 }
 
 function can_activate(who) {
@@ -868,7 +863,7 @@ states.play_card = {
 		if (current == FRANK) {
 			view.prior_s_card = game.prior_s_card;
 			if (game.f_card) {
-				view.prompt = "Waiting for Saracen to play a card.";
+				view.prompt = "Waiting for Saracens to play a card.";
 				gen_action(view, 'undo');
 			} else {
 				view.prompt = "Play a card.";
@@ -880,7 +875,7 @@ states.play_card = {
 		if (current == SARACEN) {
 			view.prior_f_card = game.prior_f_card;
 			if (game.s_card) {
-				view.prompt = "Waiting for Frank to play a card.";
+				view.prompt = "Waiting for Franks to play a card.";
 				gen_action(view, 'undo');
 			} else {
 				view.prompt = "Play a card.";
@@ -915,8 +910,8 @@ states.play_card = {
 }
 
 function reveal_cards() {
-	log("Frank plays " + CARDS[game.f_card].name + ".");
-	log("Saracen plays " + CARDS[game.s_card].name + ".");
+	log("Franks play " + CARDS[game.f_card].name + ".");
+	log("Saracens play " + CARDS[game.s_card].name + ".");
 	game.show_cards = true;
 
 	let fc = CARDS[game.f_card];
@@ -1102,7 +1097,7 @@ states.manna = {
 		game.moved[who] = 1;
 	},
 	next: function () {
-		print_summary(game.active + " Manna:");
+		print_summary(game.active + " use Manna:");
 		clear_undo();
 		game.moved = {};
 		end_player_turn();
@@ -1327,7 +1322,7 @@ function end_move() {
 }
 
 function end_group_move() {
-	print_summary(game.active + " activates " + game.where + ":");
+	print_summary(game.active + " activate " + game.where + ":");
 	game.state = 'move_phase';
 }
 
@@ -1382,17 +1377,17 @@ states.sea_move_to = {
 		if (besieged_player(to) == game.active) {
 			// Move into besieged fortified port
 			game.castle.push(game.who);
-			log(game.active + " sea moves:\n" + from + " \u2192 " + to + " castle.");
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
 
 		} else if (!is_friendly_port(to)) {
 			// English Crusaders attack!
 			game.attacker[to] = FRANK;
 			game.main_road[to] = "England";
-			log(game.active + " sea moves:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
 
 		} else {
 			// Normal move.
-			log(game.active + " sea moves:\n" + from + " \u2192 " + to + ".");
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + ".");
 		}
 
 		game.who = null;
@@ -1448,7 +1443,7 @@ states.muster_who = {
 		game.state = 'muster_move_1';
 	},
 	end_muster: function () {
-		print_summary(game.active + " musters to " + game.where + ":");
+		print_summary(game.active + " muster to " + game.where + ":");
 		game.where = null;
 		game.state = 'move_phase';
 	},
@@ -1711,9 +1706,9 @@ states.combat_deployment = {
 		clear_undo();
 		let n = count_blocks_in_castle(game.where);
 		if (n == 1)
-			log(game.active + " withdraws 1 block.");
+			log(game.active + " withdraw 1 block.");
 		else
-			log(game.active + " withdraws " + n + " blocks.");
+			log(game.active + " withdraw " + n + " blocks.");
 		game.active = game.attacker[game.where];
 		if (count_enemy_in_field_and_reserve(game.where) == 0)  {
 			console.log("DEFENDER REFUSED FIELD BATTLE");
@@ -1756,7 +1751,7 @@ states.regroup = {
 	},
 	end_regroup: function () {
 		clear_undo();
-		print_summary(game.active + " regroups:");
+		print_summary(game.active + " regroup:");
 		if (is_contested_town(game.where))
 			next_combat_round();
 		else
@@ -1881,7 +1876,7 @@ states.declare_storm = {
 		let n = game.storming.length;
 		console.log("STORM DECLARATION", n);
 		if (n == 0) {
-			log(game.active + " declines to storm.");
+			log(game.active + " decline to storm.");
 			goto_declare_sally();
 		} else {
 			goto_storm_battle();
@@ -1932,10 +1927,10 @@ states.declare_sally = {
 		let n = game.sallying.length;
 		console.log("SALLY DECLARATION", n);
 		if (n == 0)
-			log(game.active + " declines to sally.");
+			log(game.active + " decline to sally.");
 		if (is_contested_battle_field()) {
 			if (!game.was_contested) {
-				log(game.active + " is now the attacker.");
+				log(game.active + " are now the attacker.");
 				console.log("NEW ATTACKER IS", game.active);
 				game.attacker[game.where] = game.active;
 			}
@@ -2008,7 +2003,7 @@ states.retreat = {
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where && !is_block_in_castle(b) && block_owner(b) == game.active)
 				eliminate_block(b);
-		print_summary(game.active + " retreats:");
+		print_summary(game.active + " retreat:");
 		game.active = ENEMY[game.active];
 		console.log("ATTACKER RETREATED FROM THE FIELD");
 		goto_regroup();
@@ -2138,7 +2133,7 @@ function resume_field_battle() {
 
 	if (is_friendly_field(game.where)) {
 		console.log("FIELD BATTLE WON BY", game.active);
-		log("Field battle won by " + game.active);
+		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
@@ -2211,7 +2206,7 @@ function resume_storm_battle() {
 
 	if (is_friendly_town(game.where)) {
 		console.log("STORM BATTLE WON BY ATTACKER", game.active);
-		log("Siege battle won by " + game.active);
+		log("Siege battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
@@ -2510,7 +2505,7 @@ states.harry = {
 			game.flash = block_name(game.who) + " retreat.";
 		else
 			game.flash = block_name(game.who) + " retreats.";
-		logp("retreats to " + to + ".");
+		log(game.active + " retreat to " + to + ".");
 		game.location[game.who] = to;
 		move_block(game.who, game.where, to);
 		game.who = null;
@@ -2543,7 +2538,7 @@ states.retreat_in_battle = {
 			game.flash = block_name(game.who) + " retreat.";
 		else
 			game.flash = block_name(game.who) + " retreats.";
-		logp("retreats to " + to + ".");
+		log(game.active + " retreat to " + to + ".");
 		game.location[game.who] = to;
 		move_block(game.who, game.where, to);
 		game.who = null;

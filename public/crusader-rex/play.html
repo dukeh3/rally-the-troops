@@ -19,8 +19,8 @@
 .grid_log { background-color: ghostwhite; }
 .grid_top { background-color: gainsboro; }
 .grid_top.your_turn { background-color: orange; }
-.grid_top.Frank.your_turn { background-color: gold; }
-.grid_top.Saracen.your_turn { background-color: lightgreen; }
+.grid_top.Franks.your_turn { background-color: gold; }
+.grid_top.Saracens.your_turn { background-color: lightgreen; }
 .grid_top.disconnected { background-color: red; }
 .role_info { background-color: silver; }
 .one .role_name { background-color: khaki; }
@@ -149,15 +149,15 @@ body.shift .block.known:hover {
 	box-shadow: 0px 0px 4px 0px black;
 }
 
-.block.Frank { border: 3px solid darkkhaki; background-color: khaki; }
-.block.Saracen { border: 3px solid seagreen; background-color: darkseagreen; }
+.block.Franks { border: 3px solid darkkhaki; background-color: khaki; }
+.block.Saracens { border: 3px solid seagreen; background-color: darkseagreen; }
 .block.Assassins { border: 3px solid rebeccapurple; background-color: rebeccapurple; }
 
-.block.Frank.highlight { border-color: white; }
-.block.Saracen.highlight { border-color: white; }
+.block.Franks.highlight { border-color: white; }
+.block.Saracens.highlight { border-color: white; }
 
-.block.Frank.selected { border-color: gold; }
-.block.Saracen.selected { border-color: lightgreen; }
+.block.Franks.selected { border-color: gold; }
+.block.Saracens.selected { border-color: lightgreen; }
 .block.Assassins.selected { border-color: hotpink; box-shadow: none; }
 
 .block.highlight { cursor: pointer; }
@@ -374,13 +374,13 @@ body.shift .block.known:hover {
 
 		<div class="role one">
 			<div class="role_vp" id="frank_vp"></div>
-			<div class="role_name">Frank (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">Franks (<span class="role_user">$USER</span>)</div>
 			<div class="role_info"><div class="small_card card_back" id="frank_card"></div></div>
 		</div>
 
 		<div class="role two">
 			<div class="role_vp" id="saracen_vp"></div>
-			<div class="role_name">Saracen (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">Saracens (<span class="role_user">$USER</span>)</div>
 			<div class="role_info"><div class="small_card card_back" id="saracen_card"></div></div>
 		</div>
 

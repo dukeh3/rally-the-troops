@@ -1600,7 +1600,8 @@ states.combat_phase = {
 	},
 	town: function (where) {
 		remove_from_array(game.combat_list, where);
-		if (game.attacker[where] == game.jihad) {
+		let attacker = game.attacker[where] || besieging_player(where);
+		if (attacker == game.jihad) {
 			game.active = game.attacker[where];
 			game.state = 'use_jihad_event';
 			game.where = where;
@@ -2219,6 +2220,13 @@ function resume_storm_battle() {
 	}
 
 	if (is_enemy_town(game.where)) {
+		console.log("STORM BATTLE WON BY DEFENDER", ENEMY[game.active]);
+		game.halfhit = null;
+		log("Storming repulsed.");
+		return next_combat_round();
+	}
+
+	if (game.storming.length == 0) {
 		console.log("STORM BATTLE WON BY DEFENDER", ENEMY[game.active]);
 		game.halfhit = null;
 		log("Storming repulsed.");

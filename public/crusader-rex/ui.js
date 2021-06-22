@@ -119,8 +119,10 @@ function on_focus_battle_block(evt) {
 
 	if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(b))
 		msg = "Fire with " + msg;
-	else if (game.actions && game.actions.battle_retreat && game.actions.battle_retreat.includes(b))
-		msg = "Retreat with " + msg;
+	else if (game.actions && game.actions.battle_storm && game.actions.battle_storm.includes(b))
+		msg = "Storm with " + msg;
+	else if (game.actions && game.actions.battle_sally && game.actions.battle_sally.includes(b))
+		msg = "Sally with " + msg;
 	else if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
 		msg = "Take hit on " + msg;
 
@@ -142,8 +144,12 @@ function on_focus_battle_fire(evt) {
 }
 
 function on_focus_battle_retreat(evt) {
-	document.getElementById("status").textContent =
-		"Retreat with " + block_name(evt.target.block);
+	if (game.battle.storming.includes(evt.target.block))
+		document.getElementById("status").textContent =
+			"Withdraw with " + block_name(evt.target.block);
+	else
+		document.getElementById("status").textContent =
+			"Retreat with " + block_name(evt.target.block);
 }
 
 function on_focus_battle_harry(evt) {

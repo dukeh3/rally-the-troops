@@ -63,6 +63,8 @@ let ui = {
 function on_focus_town(evt) {
 	let where = evt.target.town;
 	let text = where;
+	if (where in SHIELDS)
+		text += " \u2014 " + SHIELDS[where].join(", ");
 	document.getElementById("status").textContent = text;
 }
 

@@ -33,6 +33,43 @@ const CARDS = {
 const BLOCKS = {};
 const ROADS = {};
 
+const SHIELDS = {
+	Antioch: [ "Bohemond", "Templars", "Turcopoles" ],
+	Latakia: [ "Bohemond"  ],
+	Saone: [ "Josselin"  ],
+	Margat: [ "Hospitallers"  ],
+	Krak: [ "Hospitallers"  ],
+	Tartus: [ "Templars"  ],
+	Tripoli: [ "Bohemond", "Raymond (Tripoli)" ],
+	Beirut: [ "Turcopoles", "King Guy" ],
+	Sidon: [ "Reynald (Sidon)" ],
+	Beaufort: [ "Reynald (Sidon)" ],
+	Tyre: [ "Conrad", "King Guy" ],
+	Acre: [ "Turcopoles", "Hospitallers", "King Guy" ],
+	Tiberias: [ "Turcopoles", "Raymond (Tripoli)" ],
+	Baisan: [ "Hospitallers" ],
+	Caesarea: [ "Walter" ],
+	Baisan: [ "Hospitallers" ],
+	Nablus: [ "Balian" ],
+	Amman: [ "Templars" ],
+	Jaffa: [ "King Guy" ],
+	Jerusalem: [ "King Guy", "Hospitallers", "Templars" ],
+	Ascalon: [ "Balian", "King Guy" ],
+	Hebron: [ "King Guy" ],
+	Gaza: [ "Templars" ],
+	Kerak: [ "Reynald (Kerak)" ],
+	Egypt: [ "Saladin", "Qara-Qush", "Yuzpah" ],
+	Aleppo: [ "Saladin", "Sanjar", "Zangi" ],
+	Ashtera: [ "Yazkuj" ],
+	Artah: [ "Sulaiman" ],
+	Damascus: [ "Saladin", "Keukburi", "Al Mashtub" ],
+	Homs: [ "Tuman", "Shirkuh" ],
+	Zerdana: [ "Jurdik" ],
+	Baalbek: [ "Bahram" ],
+	Hama: [ "Taqi al Din" ],
+	Banyas: [ "Qaimaz" ]
+}
+
 // From edit.html output
 const TOWNS = {
 	"Acre":{"x":452,"y":1566},
@@ -428,4 +465,4 @@ const PORTS = [];
 })();
 
 if (typeof module != 'undefined')
-	module.exports = { CARDS, BLOCKS, TOWNS, PORTS, ROADS }
+	module.exports = { CARDS, BLOCKS, TOWNS, PORTS, ROADS, SHIELDS }

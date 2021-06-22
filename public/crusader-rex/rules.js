@@ -1103,6 +1103,8 @@ function select_random_block(where) {
 	for (let b in BLOCKS)
 		if (game.location[b] == where)
 			list.push(b);
+	if (list.length == 0)
+		return null;
 	return list[Math.floor(Math.random() * list.length)];
 }
 
@@ -2696,43 +2698,63 @@ states.retreat_in_battle = {
 
 function goto_draw_phase() {
 	delete game.combat_list;
-
-	//if (game.year > 1187 && !is_winter()) {
-	if (!is_winter()) {
+	if (game.year > 1187 && !is_winter()) {
 		game.active = game.p1;
-		return start_draw_phase();
+		start_draw_phase();
+	} else {
+		end_game_turn();
 	}
-	end_game_turn();
 }
 
 function start_draw_phase() {
+	game.state = 'draw_phase';
 	if (game.active == FRANKS) {
 		game.who = select_random_block(F_POOL);
-		game.state = 'draw_phase';
+		if (!game.who)
+			end_draw_phase();
 	} else {
 		game.who = select_random_block(S_POOL);
-		game.state = 'draw_phase';
+		if (!game.who)
+			end_draw_phase();
 	}
+}
+
+function list_seats(who) {
+	if (is_saladin_family(who))
+		who = "Saladin";
+	if (block_type(who) == 'turcopoles')
+		who = "Turcopoles";
+	if (block_type(who) == 'nomads')
+		return [ block_home(who) ];
+	let list = [];
+	for (let town in SHIELDS)
+		if (SHIELDS[town].includes(who))
+			list.push(town);
+	return list.join(", ");
 }
 
 states.draw_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Draw Phase: Waiting for " + game.active + ".";
-		view.prompt = "Draw Phase: Place " + game.who + ".";
 		gen_action(view, 'next');
 		switch (block_type(game.who)) {
 		case 'crusaders':
+			view.prompt = "Draw Phase: Place " + game.who + " in the staging area.";
 			gen_action(view, 'town', block_home(game.who));
 			break;
 		case 'pilgrims':
+			view.prompt = "Draw Phase: Place " + game.who + " in a friendly port.";
 			for (let town in TOWNS)
 				if (is_friendly_port(town) || can_enter_besieged_port(town))
 					gen_action(view, 'town', town);
 			break;
+		case 'turcopoles':
 		case 'outremers':
 		case 'emirs':
 		case 'nomads':
+			view.prompt = "Draw Phase: Place " + BLOCKS[game.who].name + " at full strength in "
+				+ list_seats(game.who) + " or at strength 1 in any friendly town.";
 			for (let town in TOWNS)
 				if (is_friendly_town(town))
 					gen_action(view, 'town', town);

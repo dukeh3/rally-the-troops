@@ -26,6 +26,34 @@
 .one .role_name { background-color: khaki; }
 .two .role_name { background-color: darkseagreen; }
 
+.map #timeline {
+	position: absolute;
+}
+
+.map.tall #timeline {
+	width: 88px; height: 35px; top: 2410px;
+	background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.3), rgba(255,255,255,0.8));
+}
+
+.map.wide #timeline {
+	width: 35px; height: 88px; left: 2410px;
+	background-image: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.3), rgba(255,255,255,0.8));
+}
+
+.map.tall #timeline.year_1187 { left: 702px; }
+.map.tall #timeline.year_1188 { left: 793px; width: 89px; }
+.map.tall #timeline.year_1189 { left: 885px; }
+.map.tall #timeline.year_1190 { left: 976px; width: 89px; }
+.map.tall #timeline.year_1191 { left: 1068px; }
+.map.tall #timeline.year_1192 { left: 1160px; width: 85px; }
+
+.map.wide #timeline.year_1187 { top: 30px; height: 86px; }
+.map.wide #timeline.year_1188 { top: 119px; }
+.map.wide #timeline.year_1189 { top: 211px; }
+.map.wide #timeline.year_1190 { top: 304px; }
+.map.wide #timeline.year_1191 { top: 393px; height: 89px; }
+.map.wide #timeline.year_1192 { top: 485px; }
+
 #turn {
 	padding: 8px 0px 8px 8px;
 	border-bottom: 1px solid black;
@@ -399,6 +427,7 @@ body.shift .block.known:hover {
 <div id="blocks" class="blocks"></div>
 <div id="offmap" class="offmap" style="visibility:hidden"></div>
 <div id="towns" class="towns"></div>
+<div id="timeline" class="year_1187"></div>
 </div>
 </div>
 

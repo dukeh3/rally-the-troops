@@ -1650,16 +1650,19 @@ function start_combat() {
 		if (!is_under_siege(game.where)) {
 			console.log("START SIEGE");
 			log("~ Combat Deployment ~");
-			game.active = ENEMY[game.attacker[game.where]];
+			game.castle_owner = ENEMY[game.attacker[game.where]];
+			game.active = game.castle_owner;
 			game.state = 'combat_deployment';
 		} else {
-			game.attacker[game.where] = besieging_player(game.where);
+			game.castle_owner = besieged_player(game.where);
+			game.attacker[game.where] = ENEMY[game.castle_owner];
 			console.log("CONTINUE SIEGE");
 			log("Existing siege continues.");
 			next_combat_round();
 		}
 	} else {
 		console.log("START NON-SIEGE");
+		game.castle_owner = null;
 		next_combat_round();
 	}
 }
@@ -1672,6 +1675,7 @@ function end_combat() {
 	if (game.jihad == game.where)
 		game.jihad = null;
 
+	delete game.castle_owner;
 	delete game.storming;
 	delete game.sallying;
 	game.where = null;
@@ -2181,17 +2185,11 @@ states.field_battle = {
 						gen_action(view, 'battle_harry', b);
 				}
 
-				// Defender refused siege, but can still withdraw into castle if friendly.
-				if (game.active != game.attacker[game.where]) {
-					if (game.sallying.length == 0) {
-						let n = count_blocks_in_castle(game.where);
-						if (n == 0) {
-							gen_action(view, 'battle_withdraw', b);
-						} else if (n < castle_limit(game.where)) {
-							if (game.active == besieged_player(game.where))
-								gen_action(view, 'battle_withdraw', b);
-						}
-					}
+				// Defender can withdraw into castle if friendly and there is room.
+				if (game.active != game.attacker[game.where] && game.active == game.castle_owner) {
+					// TODO: allow swapping place of sallying block, leaving it to die if it cannot withdraw?
+					if (game.sallying.length + count_blocks_in_castle(game.where) < castle_limit(game.where))
+						gen_action(view, 'battle_withdraw', b);
 				}
 			}
 			// All Frank B blocks are knights who can Charge
@@ -2646,15 +2644,11 @@ function compare_block_initiative(a, b) {
 }
 
 function make_battle_view() {
-	let castle_owner = besieged_player(game.where);
-	if (!castle_owner)
-		castle_owner = ENEMY[game.attacker[game.where]];
-
 	let battle = {
 		FR: [], FC: [], FF: [],
 		SR: [], SC: [], SF: [],
-		FCS: (castle_owner == FRANKS) ? castle_limit(game.where) : 0,
-		SCS: (castle_owner == SARACENS) ? castle_limit(game.where) : 0,
+		FCS: (game.castle_owner == FRANKS) ? castle_limit(game.where) : 0,
+		SCS: (game.castle_owner == SARACENS) ? castle_limit(game.where) : 0,
 		storming: game.storming,
 		sallying: game.sallying,
 		halfhit: game.halfhit,

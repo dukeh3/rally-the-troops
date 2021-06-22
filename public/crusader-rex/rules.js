@@ -2315,7 +2315,7 @@ function goto_storm_battle_hits() {
 }
 
 function list_storm_victims() {
-	if (game.halfhit)
+	if (game.halfhit && block_owner(game.halfhit) == game.active)
 		return [ game.halfhit ];
 	let max = 0;
 	for (let b in BLOCKS)

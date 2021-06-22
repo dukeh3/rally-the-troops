@@ -1,0 +1,254 @@
+== SIEGE AND BATTLE PROCEDURE ==
+
+* COMBAT DEPLOYMENT
+
+if not siege then
+	defender may withdraw into castle.
+	if field is empty and no reserves in queue then
+		attacker may regroup.
+		goto combat round 1.
+	end
+end
+
+* COMBAT ROUND 1 TO 3
+
+if round 2 then
+	primary reserves arrive.
+end
+
+if round 3 then
+	secondary reserves arrive.
+end
+
+if besieged reserves arrive then
+	withdraw all storming units to field.
+	besieging is defender.
+	besieged is attacker.
+end
+
+if field is contested then
+	besieged may sally into field.
+	battle with all units in field.
+	if victorious then
+		victor may regroup.
+		if not siege then
+			end battle.
+		end
+	end
+
+else if currently storming or attacker declares storming then
+	besieging is attacker
+	besieged is defender
+	besieging may add blocks to storm.
+	battle with all units in castle.
+	if besieging is victorious then
+		besieging may regroup.
+		end battle.
+	end
+
+else if defender declares sallying then
+	besieging is defender.
+	besieged is attacker.
+	battle with all units in field.
+	if victorious then
+		victor may regroup.
+		if not siege then
+			end battle.
+		end
+	end
+
+else if no reserves in queue then
+	goto siege attrition.
+end
+
+if round 1 or round 2 then
+	goto next combat round.
+else
+	goto after battle retreat.
+end
+
+* AFTER BATTLE RETREAT
+
+withdraw all sallying units to castle.
+withdraw all storming units to field.
+
+if field is contested then
+	attacker must retreat
+	defender may regroup
+end
+
+if siege then
+	goto siege attrition.
+else
+	end battle.
+end
+
+* SIEGE ATTRITION
+
+roll and apply attrition.
+if castle falls then
+	besieging may regroup
+end
+
+end battle.
+
+== BATTLE UI SCREENS ==
+
+area: "Reserves"
+area: "Field"
+area: "Withdraw Castle" -- defender
+area: "Storming Castle" -- attacker
+	-> "Castle"
+
+* Combat Deployment
+	defender main force can choose to 'withdraw'
+* Declare Storming
+	besieging main force can choose to 'storm'
+* Declare Sally
+	besieged in castle can choose to 'sally'
+* Battle round in castle
+	show field as reserves
+
+With big screen:
+
+	enemy reserves
+	enemy castle (optional)
+	enemy field
+	my field
+	my castle (optional)
+	my reserves
+
+
+=============
+
+1) New fight!
+
+Defender deploys (main forces only) in castle and/or field. -- see example on page 5
+
+// -- ERROR: reserve blocks moving into same area? --
+// If all withdraw and no reinforcements are coming, attacker may regroup.
+// Regroup into other existing siege -- arrive as reinforcements.
+// If any attacker blocks stay, goto existing siege.
+
+If any defenders stay, goto field battle.
+Else goto siege.
+
+2) Field battle!
+
+Defender may withdraw into castle as combat action.
+
+If defender is eliminated and there are blocks in the castle, goto existing siege.
+
+Else regroup.
+
+3) Existing siege!
+
+Attacker declares storm?
+	goto storm round
+
+Defender declares sally?
+	goto sally round
+
+--- 
+
+Combat Deployment
+	Defender may withdraw into castle if new battle.
+
+Combat Round 1
+	If field has units
+		-> defender declare sally (if possible)
+		-> battle round in field.
+	Else attacker declare storm?
+		-> battle round in castle
+	Else defender declare sally?
+		-> besieged becomes attacker
+		-> battle round in field
+	Else if no reinforcements on the way
+		-> skip to siege attrition
+
+Combat Round 2
+	Reserves arrive.
+		Besieged becomes attacker if relief forces arrive.
+	If field is empty
+		-> attacker may regroup some blocks (see 6.7 regroups note)
+	Else if field has units
+		-> defender declare sally (if possible)
+		-> battle round in field.
+	Else if storm ongoing?
+		-> attacker declare more storming units
+		-> battle round in castle
+	Else attacker declare storm?
+		-> battle round in castle
+	Else defender declare sally?
+		-> besieged becomes attacker
+		-> battle round in field
+	Else if no reinforcements on the way
+		-> skip to siege attrition
+	Same as Round 1.
+
+Combat Round 3
+	Same as Round 2.
+
+>>> Battle round in field
+	if field is empty
+		if attacker is in field
+			attacker may regroup
+			if attacker is besieging and leaves some
+				proceed to next combat round
+			else 
+				end combat
+			end
+		else
+			defender may regroup
+			end combat
+		end
+	end
+
+Retreat Round
+	All sallying withdraw.
+	All storming withdraw.
+	If field units:
+		Attacker/besieging must retreat
+
+Siege Attrition
+	Roll for attrition.
+	If defender is eliminated, attacker may regroup.
+
+---
+
+6.56 timing
+
+	new siege:
+		2 frank in town
+		3 saracen attack main road
+		1 saracen attack secondary road
+		2 frank reinforce main
+		1 frank reinforce secondary
+
+
+			round 1: 2 frank vs 3 saracen
+			round 2: 2+2 frank vs 3+1 saracen
+			round 3: 2+2+1 frank vs 3+1 saracen
+	
+	old siege:
+		2 p1 in castle
+		2 p2 in field
+		1 p1 attack main road (relief)
+		1 p1 attack second road
+		1 p2 reinforce main road
+		1 p2 reinforce second road
+
+		round 1: 2+1 p1 vs 2 p2
+		round 2: 2+1 p1 vs 2+1 p2
+		round 3: 2+1+1 p1 vs 2+1+1 p2
+
+	old siege #2:
+		2 p1 in field
+		2 p2 in castle
+		p1 pass
+		1 p2 reinforce main road (relief)
+		1 p2 reinforce second road
+
+		round 1: 2 p1 vs 2 p2 -or- 2 p1 vs 2+1 p2?
+		-- I believe the rules clarification missed this case --
+

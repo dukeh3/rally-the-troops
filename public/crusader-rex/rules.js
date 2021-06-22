@@ -2148,6 +2148,9 @@ function resume_field_battle() {
 		return goto_regroup();
 	}
 
+	if (!is_contested_battle_field())
+		return next_combat_round();
+
 	game.state = 'field_battle';
 	pump_battle_step(is_field_attacker, is_field_defender);
 }
@@ -2643,6 +2646,8 @@ function make_battle_view() {
 		sallying: game.sallying,
 		halfhit: game.halfhit,
 		flash: game.flash,
+		round: game.combat_round,
+		show_castle: game.storming.length > 0 && game.state != 'declare_storm',
 	};
 
 	battle.title = game.attacker[game.where] + " attack " + game.where;
@@ -2653,7 +2658,7 @@ function make_battle_view() {
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where & block_owner(b) == owner && fn(b))
-				cell.push([b, game.steps[b], game.moved[b]?1:0])
+				cell.push(b)
 		// cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
 	}
 

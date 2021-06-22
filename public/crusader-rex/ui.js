@@ -615,12 +615,12 @@ function update_cards() {
 }
 
 function update_battle() {
-	function fill_cell(name, list, reserve) {
+	function fill_cell(name, list, show) {
 		let cell = document.getElementById(name);
 
 		ui.present.clear();
 
-		for (let [block, steps, moved] of list) {
+		for (let block of list) {
 			ui.present.add(block);
 
 			// TODO: insert in correct order!
@@ -665,24 +665,20 @@ function update_battle() {
 			if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(block))
 				ui.battle_menu[block].classList.add('treachery');
 
-			update_steps(block, steps, ui.battle_block[block], false);
+			update_steps(block, game.steps[block], ui.battle_block[block], false);
 
 			if (block == game.battle.halfhit)
 				ui.battle_block[block].classList.add("halfhit");
 			else
 				ui.battle_block[block].classList.remove("halfhit");
-			if (reserve)
-				ui.battle_block[block].classList.add("secret");
+			if (show)
+				ui.battle_block[block].classList.add("known");
 			else
-				ui.battle_block[block].classList.remove("secret");
-			if (moved)
+				ui.battle_block[block].classList.remove("known");
+			if (game.moved[block])
 				ui.battle_block[block].classList.add("moved");
 			else
 				ui.battle_block[block].classList.remove("moved");
-			if (reserve)
-				ui.battle_block[block].classList.remove("known");
-			else
-				ui.battle_block[block].classList.add("known");
 		}
 
 		for (let b in BLOCKS) {
@@ -695,19 +691,19 @@ function update_battle() {
 
 	if (player == FRANKS) {
 		fill_cell("FR", game.battle.FR, true);
-		fill_cell("FC", game.battle.FC, false);
-		fill_cell("FF", game.battle.FF, false);
-		fill_cell("EF", game.battle.SF, false);
-		fill_cell("EC", game.battle.SC, false);
-		fill_cell("ER", game.battle.SR, true);
+		fill_cell("FC", game.battle.FC, true);
+		fill_cell("FF", game.battle.FF, true);
+		fill_cell("EF", game.battle.SF, game.battle.round > 0);
+		fill_cell("EC", game.battle.SC, game.battle.show_castle);
+		fill_cell("ER", game.battle.SR, false);
 		document.getElementById("FC").className = "c" + game.battle.FCS;
 		document.getElementById("EC").className = "c" + game.battle.SCS;
 	} else {
-		fill_cell("ER", game.battle.FR, true);
-		fill_cell("EC", game.battle.FC, false);
-		fill_cell("EF", game.battle.FF, false);
-		fill_cell("FF", game.battle.SF, false);
-		fill_cell("FC", game.battle.SC, false);
+		fill_cell("ER", game.battle.FR, false);
+		fill_cell("EC", game.battle.FC, game.battle.show_castle);
+		fill_cell("EF", game.battle.FF, game.battle.round > 0);
+		fill_cell("FF", game.battle.SF, true);
+		fill_cell("FC", game.battle.SC, true);
 		fill_cell("FR", game.battle.SR, true);
 		document.getElementById("EC").className = "c" + game.battle.FCS;
 		document.getElementById("FC").className = "c" + game.battle.SCS;

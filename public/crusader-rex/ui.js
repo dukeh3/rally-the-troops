@@ -537,8 +537,20 @@ function update_map() {
 		let info = BLOCKS[b];
 		let element = ui.blocks[b];
 		let town = game.location[b];
+
+		if ((town == F_POOL && player != FRANKS) || (town == S_POOL && player != SARACENS)) {
+			hide_block(element);
+			continue;
+		}
+		if (town == DEAD && player != info.owner) {
+			hide_block(element)
+			continue;
+		}
+
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
+			if (town == DEAD)
+				moved = " moved";
 			if (info.owner == player || info.owner == ASSASSINS) {
 				let image = " known block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
@@ -584,7 +596,6 @@ function update_map() {
 }
 
 function update_card_display(element, card, prior_card) {
-	console.log("update_card_display", element, card, prior_card);
 	if (!card && !prior_card) {
 		element.className = "small_card card_back";
 	} else if (prior_card) {

@@ -49,6 +49,11 @@ const RESERVE_MARK_1 = "\u2020";
 const RESERVE_MARK_2 = "\u2021";
 const NO_MARK = "";
 
+// Only used by UI layer for layout. remove from game logic.
+delete TOWNS[DEAD];
+delete TOWNS[F_POOL];
+delete TOWNS[S_POOL];
+
 let states = {};
 
 let game = null;

@@ -2276,6 +2276,22 @@ function king_can_go_home(current) {
 function goto_scottish_king() {
 	print_turn_log_no_count("Scottish nobles go home:");
 
+	// We can end winter early if Moray and Wallace are dead or on the map, and Moray is not overstacked
+	if (game.year == game.end_year) {
+		let e = count_english_nobles();
+		let s = count_scottish_nobles();
+		// We have a clear winner.
+		if (s > 7 || e > 7)
+			return goto_game_over();
+		// Moray is dead so there can be no tie.
+		if (game.location[MORAY] == null)
+			return goto_game_over();
+		// Wallace is dead so there can be no tie breaker.
+		if (game.location[WALLACE] == null)
+			return goto_game_over();
+		// A tie is possible, need to continue to disband and build phase...
+	}
+
 	if (is_on_map(KING) && king_can_go_home(game.location[KING])) {
 		game.state = 'scottish_king';
 		game.active = SCOTLAND;

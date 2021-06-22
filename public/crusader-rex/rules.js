@@ -6,16 +6,14 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: hide blocks in battle deployment and sallying etc
 // TODO: battle dialog messages
-// TODO: nicer looking battle dialog -- reserve, castle*, field, field, castle*, reserve
-// TODO: battle dialog block order
 
-// TODO: draw phase
 // TODO: winter turn
 // TODO: winter campaign
 
 // TODO: crusader arrival movement
+
+// TODO: alternate home seats
 
 exports.scenarios = [
 	"Third Crusade"
@@ -632,13 +630,10 @@ function can_muster_to(muster) {
 }
 
 function can_muster_anywhere() {
-	if (game.moves > 0)
-		return true;
-	for (let where of game.mustered) {
+	for (let where in TOWNS)
 		if (is_friendly_field(where))
 			if (can_muster_to(where))
 				return true;
-	}
 	return false;
 }
 
@@ -982,6 +977,7 @@ function start_player_turn() {
 	log("");
 	log("Start " + game.active + " turn.");
 	reset_road_limits();
+	game.main_road = {};
 	let card = CARDS[game.active == FRANKS ? game.f_card : game.s_card];
 	if (card.event)
 		goto_event_card(card.event);
@@ -1155,8 +1151,6 @@ function move_block(who, from, to) {
 function goto_move_phase(moves) {
 	game.state = 'move_phase';
 	game.moves = moves;
-	game.mustered = [];
-	game.main_road = {};
 }
 
 function end_move_phase() {
@@ -1668,6 +1662,8 @@ function start_combat() {
 }
 
 function end_combat() {
+	log("~ Combat Ends ~");
+
 	console.log("END COMBAT IN", game.where);
 
 	lift_siege(game.where);
@@ -1680,7 +1676,7 @@ function end_combat() {
 	delete game.sallying;
 	game.where = null;
 	game.flash = "";
-	game.battle_round = 0;
+	game.combat_round = 0;
 
 	resume_combat_phase();
 }
@@ -1838,6 +1834,7 @@ function goto_combat_round(combat_round) {
 				if (game.storming.length > 0) {
 					log("Storming canceled by arriving relief force.");
 					console.log("STORMING CANCELED");
+					game.halfhit = null;
 					game.storming.length = 0;
 				}
 				let old_attacker = game.attacker[game.where];
@@ -1952,7 +1949,6 @@ states.declare_sally = {
 		} else if (count_reserves(game.where) > 0) {
 			next_combat_round();
 		} else {
-			log("~ Combat Ends ~");
 			goto_siege_attrition();
 		}
 	},
@@ -1975,17 +1971,17 @@ function sally_with_block(who) {
 function goto_retreat_after_combat() {
 	console.log("RETREAT AFTER COMBAT");
 
-	log("~ Combat Ends ~");
-
 	// withdraw all sallying blocks to castle.
 	for (let b of game.sallying)
 		game.castle.push(b);
 	game.sallying.length = 0;
 
 	// withdraw all storming blocks to the field.
+	game.halfhit = null;
 	game.storming.length = 0;
 
 	if (is_contested_field(game.where)) {
+		log("~ Retreat ~");
 		game.active = game.attacker[game.where];
 		game.state = 'retreat';
 		game.summary = [];
@@ -2067,15 +2063,16 @@ states.retreat_to = {
 
 function goto_siege_attrition() {
 	console.log("SIEGE ATTRITION");
+	log("~ Siege Attrition ~");
 	game.active = besieging_player(game.where);
 	for (let b in BLOCKS) {
 		if (is_block_in_castle_in(b, game.where)) {
 			let die = roll_d6();
 			if (die <= 3) {
-				log("Siege attrition: " + DIE_HIT[die] + ".");
+				log("Attrition roll " + DIE_HIT[die] + ".");
 				reduce_block(b);
 			} else {
-				log("Siege attrition: " + DIE_MISS[die] + ".");
+				log("Attrition roll " + DIE_MISS[die] + ".");
 			}
 		}
 	}
@@ -2226,7 +2223,7 @@ function resume_storm_battle() {
 		console.log("STORM BATTLE WON BY DEFENDER", ENEMY[game.active]);
 		game.halfhit = null;
 		log("Storming repulsed.");
-		return next_combat_round();
+		return goto_regroup();
 	}
 
 	if (game.storming.length == 0) {
@@ -2578,7 +2575,76 @@ states.retreat_in_battle = {
 
 function goto_draw_phase() {
 	delete game.combat_list;
+
+	//if (game.year > 1187 && !is_winter()) {
+	if (!is_winter()) {
+		game.active = game.p1;
+		return start_draw_phase();
+	}
 	end_game_turn();
+}
+
+function start_draw_phase() {
+	if (game.active == FRANKS) {
+		game.who = select_random_block(F_POOL);
+		game.state = 'draw_phase';
+	} else {
+		game.who = select_random_block(S_POOL);
+		game.state = 'draw_phase';
+	}
+}
+
+states.draw_phase = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to place drawn block.";
+		view.prompt = "Draw Phase: Place " + game.who + ".";
+		gen_action(view, 'next');
+		switch (block_type(game.who)) {
+		case 'crusaders':
+			gen_action(view, 'town', block_home(game.who));
+			break;
+		case 'pilgrims':
+			for (let town in TOWNS)
+				if (is_friendly_port(town) || can_enter_besieged_port(town))
+					gen_action(view, 'town', town);
+			break;
+		case 'outremers':
+		case 'emirs':
+		case 'nomads':
+			for (let town in TOWNS)
+				if (is_friendly_town(town))
+					gen_action(view, 'town', town);
+			break;
+		}
+	},
+	town: function (where) {
+		let type = block_type(game.who);
+		let home = block_home(game.who);
+
+		log(game.active + " arrive in " + where + ".");
+
+		game.location[game.who] = where;
+		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && (where != home))
+			game.steps[game.who] = 1;
+		else
+			game.steps[game.who] = block_max_steps(game.who);
+
+		game.who = null;
+		end_draw_phase();
+	},
+	next: function () {
+		end_draw_phase();
+	},
+}
+
+function end_draw_phase() {
+	if (game.active == game.p1) {
+		game.active = game.p2;
+		start_draw_phase();
+	} else {
+		end_game_turn();
+	}
 }
 
 // GAME OVER
@@ -2657,10 +2723,16 @@ function make_battle_view() {
 		show_castle: game.storming.length > 0 && game.state != 'declare_storm',
 	};
 
-	battle.title = game.attacker[game.where] + " attack " + game.where;
-	if (game.combat_round == 0) {
-		battle.title += " \u2014 combat deployment";
-	}
+	if (is_under_siege(game.where))
+		battle.title = ENEMY[game.castle_owner] + " besiege " + game.where;
+	else
+		battle.title = game.attacker[game.where] + " attack " + game.where;
+	if (game.combat_round == 0)
+		battle.title += " \u2014 Combat Deployment";
+	else
+		battle.title += " \u2014 Round " + game.combat_round;
+	if (game.where == game.jihad)
+		battle.title += " \u2014 Jihad!";
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)

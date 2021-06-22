@@ -7,6 +7,9 @@ const ENEMY = { Saracens: "Franks", Franks: "Saracens" }
 const DEAD = "Dead";
 const F_POOL = "FP";
 const S_POOL = "SP";
+const ENGLAND = "England";
+const FRANCE = "France";
+const GERMANIA = "Germania";
 
 let label_layout = window.localStorage['crusader-rex/label-layout'] || 'spread';
 
@@ -373,7 +376,9 @@ function layout_blocks(location, secret, known) {
 		document.getElementById("map").classList.add("stack_layout");
 	else
 		document.getElementById("map").classList.remove("stack_layout");
-	if (label_layout == 'spread' || (location == S_POOL || location == F_POOL || location == DEAD))
+	if (label_layout == 'spread' ||
+		(location == S_POOL || location == F_POOL || location == DEAD ||
+			location == ENGLAND || location == FRANCE || location == GERMANIA))
 		layout_blocks_spread(location, secret, known);
 	else
 		layout_blocks_stacked(location, secret, known);
@@ -454,6 +459,8 @@ function position_block(town, row, n_rows, col, n_cols, element) {
 	let space = TOWNS[town];
 	let block_size = 60+6;
 	let padding = 4;
+	if (town == ENGLAND || town == FRANCE || town == GERMANIA)
+		padding = 21;
 	let offset = block_size + padding;
 	let row_size = (n_rows-1) * offset;
 	let col_size = (n_cols-1) * offset;
@@ -552,9 +559,12 @@ function update_map() {
 			if (town == DEAD)
 				moved = " moved";
 			if (info.owner == player || info.owner == ASSASSINS) {
-				let image = " known block_" + info.image;
+				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
-				element.classList = info.owner + " block" + image + steps + moved;
+				let known = " known"
+				if ((town == S_POOL || town == F_POOL) && b != game.who)
+					known = "";
+				element.classList = info.owner + known + " block" + image + steps + moved;
 				layout[town].south.push(element);
 			} else {
 				let besieging = (game.sieges[town] == info.owner) ? " besieging" : "";

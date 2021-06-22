@@ -102,20 +102,18 @@ function on_click_map_block(evt) {
 		send_action('block', b);
 }
 
-function is_battle_reserve(who, list) {
-	for (let [b, s, m] of list)
-		if (who == b)
-			return true;
-	return false;
-}
-
 function on_focus_battle_block(evt) {
 	let b = evt.target.block;
-	let msg = block_name(b);
-	if (is_battle_reserve(b, game.battle.FR))
-		msg = "Frank Reserve";
-	if (is_battle_reserve(b, game.battle.SR))
-		msg = "Saracen Reserve";
+	let msg;
+
+	if (!evt.target.classList.contains("known")) {
+		if (block_owner(b) == FRANKS)
+			msg = "Franks";
+		else if (block_owner(b) == SARACENS)
+			msg = "Saracens";
+	} else {
+		msg = block_name(b);
+	}
 
 	if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(b))
 		msg = "Fire with " + msg;
@@ -123,6 +121,8 @@ function on_focus_battle_block(evt) {
 		msg = "Storm with " + msg;
 	else if (game.actions && game.actions.battle_sally && game.actions.battle_sally.includes(b))
 		msg = "Sally with " + msg;
+	else if (game.actions && game.actions.battle_withdraw && game.actions.battle_withdraw.includes(b))
+		msg = "Withdraw with " + msg;
 	else if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
 		msg = "Take hit on " + msg;
 

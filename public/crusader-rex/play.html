@@ -135,8 +135,8 @@
 	opacity: 0.0;
 	z-index: 1;
 	border: 5px solid white;
-	width: 60px;
-	height: 60px;
+	width: 70px;
+	height: 70px;
 	border-radius: 50%;
 }
 .town.highlight {
@@ -156,6 +156,7 @@
 /* BLOCKS */
 
 body.shift .block.known:hover {
+	filter: none;
 	transform: scale(2) !important;
 	transition: 100ms;
 	z-index: 100;
@@ -181,23 +182,18 @@ body.shift .block.known:hover {
 .block.Saracens { border: 3px solid seagreen; background-color: darkseagreen; }
 .block.Assassins { border: 3px solid rebeccapurple; background-color: rebeccapurple; }
 
-.block.Franks.highlight { border-color: white; }
-.block.Saracens.highlight { border-color: white; }
+.block.Franks.highlight { border-color: white !important ; }
+.block.Saracens.highlight { border-color: lightgreen !important ; }
 
 .block.Franks.selected { border-color: gold; }
-.block.Saracens.selected { border-color: lightgreen; }
-.block.Assassins.selected { border-color: hotpink; box-shadow: none; }
+.block.Saracens.selected { border-color: gold; }
+.block.Assassins.selected { border-color: hotpink; }
 
 .block.highlight { cursor: pointer; }
-.block.highlight { box-shadow: 0px 0px 4px 1px white; }
-.block.selected { box-shadow: 0 0 4px 1px white; }
 .block.moved { filter: brightness(80%) grayscale(40%); }
 .block.highlight.moved { filter: brightness(95%) grayscale(40%); }
-
-.map .block.castle.known, .map.stack_layout .block.castle {
-	border-color: #444;
-	filter: grayscale(50%);
-}
+.map .block.castle.known { filter: grayscale(50%); }
+.map.stack_layout .block.castle { filter: grayscale(90%); }
 
 .map .block.castle:not(.known) {
 	background-image: url("/crusader-rex/besieged.svg");

@@ -3,6 +3,8 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
+// TODO: sort blocks in battle screen!
+
 exports.scenarios = [
 	"Third Crusade"
 ];

@@ -207,6 +207,7 @@ function on_button_end_move_phase(evt) { send_action('end_move_phase'); }
 function on_button_end_regroup(evt) { send_action('end_regroup'); }
 function on_button_end_retreat(evt) { send_action('end_retreat'); }
 function on_button_eliminate(evt) { send_action('eliminate'); }
+function on_button_jihad(evt) { send_action('jihad'); }
 
 function build_battle_button(menu, b, c, click, enter, img_src) {
 	let img = new Image();
@@ -725,6 +726,7 @@ function on_update() {
 	show_action_button("#end_move_phase_button", "end_move_phase");
 	show_action_button("#end_regroup_button", "end_regroup");
 	show_action_button("#end_retreat_button", "end_retreat");
+	show_action_button("#jihad_button", "jihad");
 	show_action_button("#eliminate_button", "eliminate");
 
 	document.getElementById("frank_vp").textContent = game.f_vp;

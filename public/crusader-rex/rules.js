@@ -42,6 +42,14 @@ const FRENCH_CRUSADERS = [ "Philippe", "Hugues", "Fileps" ];
 const GERMAN_CRUSADERS = [ "Barbarossa", "Frederik", "Leopold" ];
 const SALADIN_FAMILY = [ "Saladin", "Al Adil", "Al Aziz", "Al Afdal", "Al Zahir" ];
 
+const KINGDOMS = {
+	Syria: SARACENS,
+	Antioch: FRANKS,
+	Tripoli: FRANKS,
+	Jerusalem: FRANKS,
+	Egypt: SARACENS,
+};
+
 const VICTORY_TOWNS = [
 	"Aleppo", "Damascus", "Egypt",
 	"Antioch", "Tripoli", "Acre", "Jerusalem"
@@ -896,7 +904,10 @@ states.frank_deployment = {
 		game.who = who;
 		game.state = 'frank_deployment_to';
 	},
-	next: goto_saracen_deployment,
+	next: function () {
+		clear_undo();
+		goto_saracen_deployment();
+	},
 	undo: pop_undo
 }
 
@@ -1029,17 +1040,6 @@ function start_game_turn() {
 	game.moved = {};
 
 	goto_card_phase();
-}
-
-function end_game_turn() {
-	if (is_winter()) {
-		goto_winter_campaign();
-	} else {
-		if (check_sudden_death())
-			return;
-		game.turn ++;
-		start_game_turn();
-	}
 }
 
 // CARD PHASE
@@ -1316,8 +1316,8 @@ states.manna = {
 		game.moved[who] = 1;
 	},
 	next: function () {
-		print_summary(game.active + " use Manna:");
 		clear_undo();
+		print_summary(game.active + " use Manna:");
 		game.moved = {};
 		end_player_turn();
 	},
@@ -1368,9 +1368,9 @@ function goto_move_phase(moves) {
 }
 
 function end_move_phase() {
+	clear_undo();
 	game.who = null;
 	game.where = null;
-	clear_undo();
 	game.moves = 0;
 	end_player_turn();
 }
@@ -1814,7 +1814,7 @@ function end_muster_move() {
 
 function goto_combat_phase() {
 	if (is_winter())
-		end_game_turn();
+		return end_game_turn();
 
 	game.moved = {};
 	game.combat_list = [];
@@ -2009,10 +2009,9 @@ states.regroup = {
 	end_regroup: function () {
 		clear_undo();
 		print_summary(game.active + " regroup:");
-		// winter campaign regroup
 		if (is_winter())
 			end_winter_campaign();
-		if (is_contested_town(game.where))
+		else if (is_contested_town(game.where))
 			next_combat_round();
 		else
 			end_combat();
@@ -2904,16 +2903,27 @@ function end_draw_phase() {
 	}
 }
 
+function end_game_turn() {
+	if (is_winter()) {
+		goto_winter_campaign();
+	} else {
+		if (check_sudden_death())
+			return;
+		game.turn ++;
+		start_game_turn();
+	}
+}
+
 // WINTER CAMPAIGN
 
 function goto_winter_campaign() {
 	log("");
-	log("Start Winter.");
-
 	if (game.winter_campaign) {
+		log("Start Winter Campaign.");
 		game.active = game.winter_campaign;
 		game.state = 'winter_campaign';
 	} else {
+		log("Start Winter.");
 		end_winter_campaign();
 	}
 }
@@ -2931,6 +2941,7 @@ states.winter_campaign = {
 	town: function (where) {
 		log(game.active + " maintain siege of " + where + ".");
 		game.winter_campaign = where;
+		game.where = where;
 
 		let target = (game.where == TYRE || game.where == TRIPOLI) ? 2 : 4;
 		for (let b in BLOCKS) {
@@ -3024,7 +3035,6 @@ states.winter_supply = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Winter Supply: Waiting for " + game.active + ".";
-		view.prompt = "Winter Supply: Disband excess blocks.";
 		gen_action_undo(view);
 		let okay_to_end = true;
 		for (let b in BLOCKS) {
@@ -3040,14 +3050,19 @@ states.winter_supply = {
 				}
 			}
 		}
-		if (okay_to_end)
+		if (okay_to_end) {
+			view.prompt = "Winter Supply: Disband excess blocks \u2014 done.";
 			gen_action(view, 'next');
+		} else {
+			view.prompt = "Winter Supply: Disband excess blocks.";
+		}
 	},
 	block: function (who) {
 		push_undo();
 		disband(who);
 	},
 	next: function () {
+		clear_undo();
 		if (game.summary.length > 0)
 			print_summary(game.active + " disband:");
 		if (game.active == FRANKS) {
@@ -3076,31 +3091,51 @@ function goto_winter_replacements() {
 	game.state = 'winter_replacements';
 }
 
+function replacement_cost(where) {
+	let region = TOWNS[where].region;
+	if (KINGDOMS[region] == game.active)
+		return 1;
+	return 2;
+}
+
 states.winter_replacements = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Winter Replacements: Waiting for " + game.active + ".";
 		view.prompt = "Winter Replacements: Distribute replacement points.";
 		gen_action_undo(view);
-		gen_action(view, 'next');
+		let okay_to_end = true;
 		for (let b in BLOCKS) {
 			if (block_owner(b) == game.active && is_block_on_land(b)) {
 				let where = game.location[b];
-				if (is_friendly_town(where) && game.rp[where] > 0) {
-					if (game.steps[b] < block_max_steps(b))
+				let cost = replacement_cost(where);
+				if (is_friendly_town(where) && game.rp[where] >= cost) {
+					if (game.steps[b] < block_max_steps(b)) {
 						gen_action(view, 'block', b);
+						okay_to_end = false;
+					}
 				}
 			}
+		}
+		if (okay_to_end) {
+			view.prompt = "Winter Replacements: Distribute replacement points \u2014 done.";
+			gen_action(view, 'next');
+		} else {
+			view.prompt = "Winter Replacements: Distribute replacement points.";
 		}
 	},
 	block: function (who) {
 		let where = game.location[who];
+		let cost = replacement_cost(where);
 		push_undo();
 		game.summary.push([where]);
 		game.steps[who] ++;
-		game.rp[where] --;
+		game.rp[where] -= cost;
 	},
-	next: end_winter_replacements,
+	next: function () {
+		clear_undo();
+		end_winter_replacements();
+	},
 	undo: pop_undo
 }
 

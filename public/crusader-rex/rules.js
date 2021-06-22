@@ -8,7 +8,7 @@
 
 // TODO: hide blocks in battle deployment and sallying etc
 // TODO: battle dialog messages
-// TODO: nicer looking battle dialog
+// TODO: nicer looking battle dialog -- reserve, castle*, field, field, castle*, reserve
 // TODO: battle dialog block order
 
 // TODO: draw phase
@@ -1831,7 +1831,7 @@ function goto_combat_round(combat_round) {
 			game.attacker[game.where] = besieged_player(game.where);
 			if (old_attacker != game.attacker[game.where]) {
 				console.log("NEW ATTACKER IS", game.attacker[game.where]);
-				log(game.attacker[game.where] + " is now the attacker.");
+				log(game.attacker[game.where] + " are now the attacker.");
 			}
 			return goto_declare_sally();
 		}
@@ -2366,7 +2366,7 @@ function apply_storm_battle_hit(who) {
 
 function roll_attack(active, b, verb, is_charge) {
 	game.hits = 0;
-	let fire = block_fire_power(b, game.where);
+	let fire = block_fire_power(b, game.where) + is_charge;
 	let printed_fire = block_printed_fire_power(b);
 	let rolls = [];
 	let steps = game.steps[b];
@@ -2484,9 +2484,9 @@ function storm_withdraw_with_block(b) {
 function harry_with_block(b) {
 	// TODO: fire, hits, retreat OR fire, retreat, hits order ?
 	if (block_plural(b))
-		roll_attack(game.active, b, "harry", 1);
+		roll_attack(game.active, b, "harry", 0);
 	else
-		roll_attack(game.active, b, "harries", 1);
+		roll_attack(game.active, b, "harries", 0);
 	game.who = b;
 	game.state = 'harry';
 }
@@ -2633,7 +2633,7 @@ function make_battle_view() {
 		flash: game.flash
 	};
 
-	battle.title = game.attacker[game.where] + " attacks " + game.where;
+	battle.title = game.attacker[game.where] + " attack " + game.where;
 	if (game.combat_round == 0) {
 		battle.title += " \u2014 combat deployment";
 	}

@@ -1,7 +1,7 @@
 "use strict";
 
-const FRANK = "Franks";
-const SARACEN = "Saracens";
+const FRANKS = "Franks";
+const SARACENS = "Saracens";
 const ASSASSINS = "Assassins";
 const ENEMY = { Saracens: "Franks", Franks: "Saracens" }
 const DEAD = "Dead";
@@ -379,7 +379,7 @@ function layout_blocks_spread(town, north, south) {
 	let wrap = TOWNS[town].wrap;
 	let rows = [];
 
-	if (north.length + south.length > wrap * 3) {
+	if (north.length + south.length > wrap * 2) {
 		north = north.concat(south);
 		south = [];
 	}
@@ -616,7 +616,7 @@ function update_cards() {
 
 function update_battle() {
 	function fill_cell(name, list, reserve) {
-		let cell = window[name];
+		let cell = document.getElementById(name);
 
 		ui.present.clear();
 
@@ -693,24 +693,24 @@ function update_battle() {
 		}
 	}
 
-	if (player == FRANK) {
+	if (player == FRANKS) {
 		fill_cell("FR", game.battle.FR, true);
-		fill_cell("FA", game.battle.FA, false);
-		fill_cell("FB", game.battle.FB, false);
 		fill_cell("FC", game.battle.FC, false);
-		fill_cell("EA", game.battle.SA, false);
-		fill_cell("EB", game.battle.SB, false);
+		fill_cell("FF", game.battle.FF, false);
+		fill_cell("EF", game.battle.SF, false);
 		fill_cell("EC", game.battle.SC, false);
 		fill_cell("ER", game.battle.SR, true);
+		document.getElementById("FC").className = "c" + game.battle.FCS;
+		document.getElementById("EC").className = "c" + game.battle.SCS;
 	} else {
 		fill_cell("ER", game.battle.FR, true);
-		fill_cell("EA", game.battle.FA, false);
-		fill_cell("EB", game.battle.FB, false);
 		fill_cell("EC", game.battle.FC, false);
-		fill_cell("FA", game.battle.SA, false);
-		fill_cell("FB", game.battle.SB, false);
+		fill_cell("EF", game.battle.FF, false);
+		fill_cell("FF", game.battle.SF, false);
 		fill_cell("FC", game.battle.SC, false);
 		fill_cell("FR", game.battle.SR, true);
+		document.getElementById("EC").className = "c" + game.battle.FCS;
+		document.getElementById("FC").className = "c" + game.battle.SCS;
 	}
 }
 

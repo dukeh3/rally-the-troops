@@ -23,8 +23,8 @@ exports.scenarios = [
 
 const { CARDS, BLOCKS, TOWNS, PORTS, ROADS } = require('./data');
 
-const FRANK = "Franks";
-const SARACEN = "Saracens";
+const FRANKS = "Franks";
+const SARACENS = "Saracens";
 const ASSASSINS = "Assassins";
 const ENEMY = { Franks: "Saracens", Saracens: "Franks" };
 const OBSERVER = "Observer";
@@ -215,7 +215,7 @@ function block_home(who) {
 }
 
 function block_pool(who) {
-	if (BLOCKS[who].owner == FRANK)
+	if (BLOCKS[who].owner == FRANKS)
 		return F_POOL;
 	return S_POOL;
 }
@@ -446,7 +446,7 @@ function can_use_richards_sea_legs(who, to) {
 	// English Crusaders may attack by sea.
 	// If combined with another attack, the English must be the Main Attacker.
 	if (is_english_crusader(who)) {
-		if (game.attacker[to] == FRANK) {
+		if (game.attacker[to] == FRANKS) {
 			let road = game.main_road[to];
 			if (road)
 				return (road == "England");
@@ -671,6 +671,10 @@ function is_field_combatant(who) {
 	return false;
 }
 
+function is_block_in_field(who) {
+	return !is_battle_reserve(who) && !is_block_in_castle(who);
+}
+
 function is_storm_attacker(who) {
 	return game.storming.includes(who);
 }
@@ -860,7 +864,7 @@ states.play_card = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for players to play a card.";
-		if (current == FRANK) {
+		if (current == FRANKS) {
 			view.prior_s_card = game.prior_s_card;
 			if (game.f_card) {
 				view.prompt = "Waiting for Saracens to play a card.";
@@ -872,7 +876,7 @@ states.play_card = {
 						gen_action(view, 'play', c);
 			}
 		}
-		if (current == SARACEN) {
+		if (current == SARACENS) {
 			view.prior_f_card = game.prior_f_card;
 			if (game.s_card) {
 				view.prompt = "Waiting for Franks to play a card.";
@@ -886,11 +890,11 @@ states.play_card = {
 		}
 	},
 	play: function (card, current) {
-		if (current == FRANK) {
+		if (current == FRANKS) {
 			remove_from_array(game.f_hand, card);
 			game.f_card = card;
 		}
-		if (current == SARACEN) {
+		if (current == SARACENS) {
 			remove_from_array(game.s_hand, card);
 			game.s_card = card;
 		}
@@ -898,11 +902,11 @@ states.play_card = {
 			reveal_cards();
 	},
 	undo: function (_, current) {
-		if (current == FRANK) {
+		if (current == FRANKS) {
 			game.f_hand.push(game.f_card);
 			game.f_card = 0;
 		}
-		if (current == SARACEN) {
+		if (current == SARACENS) {
 			game.s_hand.push(game.s_card);
 			game.s_card = 0;
 		}
@@ -937,9 +941,9 @@ function reveal_cards() {
 	delete game.winter_campaign;
 	if (is_winter()) {
 		if (game.f_card == WINTER_CAMPAIGN)
-			game.winter_campaign = FRANK;
+			game.winter_campaign = FRANKS;
 		if (game.s_card == WINTER_CAMPAIGN)
-			game.winter_campaign = SARACEN;
+			game.winter_campaign = SARACENS;
 	}
 
 	game.prior_f_card = game.f_card;
@@ -958,11 +962,11 @@ function reveal_cards() {
 	}
 
 	if (fp > sp) {
-		game.p1 = FRANK;
-		game.p2 = SARACEN;
+		game.p1 = FRANKS;
+		game.p2 = SARACENS;
 	} else {
-		game.p1 = SARACEN;
-		game.p2 = FRANK;
+		game.p1 = SARACENS;
+		game.p2 = FRANKS;
 	}
 
 	game.active = game.p1;
@@ -973,7 +977,7 @@ function start_player_turn() {
 	log("");
 	log("Start " + game.active + " turn.");
 	reset_road_limits();
-	let card = CARDS[game.active == FRANK ? game.f_card : game.s_card];
+	let card = CARDS[game.active == FRANKS ? game.f_card : game.s_card];
 	if (card.event)
 		goto_event_card(card.event);
 	else
@@ -1381,7 +1385,7 @@ states.sea_move_to = {
 
 		} else if (!is_friendly_port(to)) {
 			// English Crusaders attack!
-			game.attacker[to] = FRANK;
+			game.attacker[to] = FRANKS;
 			game.main_road[to] = "England";
 			log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
 
@@ -1826,12 +1830,12 @@ function goto_combat_round(combat_round) {
 					console.log("STORMING CANCELED");
 					game.storming.length = 0;
 				}
-			}
-			let old_attacker = game.attacker[game.where];
-			game.attacker[game.where] = besieged_player(game.where);
-			if (old_attacker != game.attacker[game.where]) {
-				console.log("NEW ATTACKER IS", game.attacker[game.where]);
-				log(game.attacker[game.where] + " are now the attacker.");
+				let old_attacker = game.attacker[game.where];
+				game.attacker[game.where] = besieged_player(game.where);
+				if (old_attacker != game.attacker[game.where]) {
+					console.log("NEW ATTACKER IS", game.attacker[game.where]);
+					log(game.attacker[game.where] + " are now the attacker.");
+				}
 			}
 			return goto_declare_sally();
 		}
@@ -2182,7 +2186,7 @@ states.field_battle = {
 				}
 			}
 			// All Frank B blocks are knights who can Charge
-			if (block_owner(b) == FRANK && block_initiative(b) == 'B')
+			if (block_owner(b) == FRANKS && block_initiative(b) == 'B')
 				gen_action(view, 'battle_charge', b);
 		}
 	},
@@ -2197,12 +2201,13 @@ states.field_battle = {
 // STORM BATTLE
 
 function goto_storm_battle() {
-	console.log("STORM BATTLE");
+	game.attacker[game.where] = besieging_player(game.where);
+	console.log("STORM BATTLE", game.attacker[game.where]);
 	resume_storm_battle();
 }
 
 function resume_storm_battle() {
-	game.active = besieging_player(game.where);
+	game.active = game.attacker[game.where];
 
 	if (is_friendly_town(game.where)) {
 		console.log("STORM BATTLE WON BY ATTACKER", game.active);
@@ -2351,14 +2356,15 @@ function apply_storm_battle_hit(who) {
 	}
 	game.hits--;
 
-	if (game.hits == 0)
+	if (game.hits == 0) {
 		resume_storm_battle();
-	else {
+	} else {
 		game.battle_list = list_storm_victims();
-		if (game.battle_list.length == 0)
+		if (game.battle_list.length == 0) {
 			resume_storm_battle();
-		else
+		} else {
 			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
+		}
 	}
 }
 
@@ -2592,7 +2598,7 @@ function setup_game() {
 	reset_blocks();
 	game.year = 1187;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == FRANK) {
+		if (block_owner(b) == FRANKS) {
 			switch (block_type(b)) {
 			case 'pilgrims':
 			case 'crusaders':
@@ -2603,7 +2609,7 @@ function setup_game() {
 				break;
 			}
 		}
-		if (block_owner(b) == SARACEN) {
+		if (block_owner(b) == SARACENS) {
 			if (block_type(b) == 'emirs')
 				deploy(b, block_home(b));
 			if (block_type(b) == 'nomads')
@@ -2624,13 +2630,19 @@ function compare_block_initiative(a, b) {
 }
 
 function make_battle_view() {
+	let castle_owner = besieged_player(game.where);
+	if (!castle_owner)
+		castle_owner = ENEMY[game.attacker[game.where]];
+
 	let battle = {
-		FA: [], FB: [], FC: [], FR: [],
-		SA: [], SB: [], SC: [], SR: [],
+		FR: [], FC: [], FF: [],
+		SR: [], SC: [], SF: [],
+		FCS: (castle_owner == FRANKS) ? castle_limit(game.where) : 0,
+		SCS: (castle_owner == SARACENS) ? castle_limit(game.where) : 0,
 		storming: game.storming,
 		sallying: game.sallying,
 		halfhit: game.halfhit,
-		flash: game.flash
+		flash: game.flash,
 	};
 
 	battle.title = game.attacker[game.where] + " attack " + game.where;
@@ -2642,18 +2654,17 @@ function make_battle_view() {
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where & block_owner(b) == owner && fn(b))
 				cell.push([b, game.steps[b], game.moved[b]?1:0])
-		cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
+		// cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
 	}
 
-	fill_cell(battle.FA, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b) && game.storming.includes(b));
-	fill_cell(battle.FB, FRANK, b => !is_battle_reserve(b) && !is_block_in_castle(b) && !game.storming.includes(b));
-	fill_cell(battle.FC, FRANK, b => !is_battle_reserve(b) && is_block_in_castle(b));
-	fill_cell(battle.FR, FRANK, b => is_battle_reserve(b));
-
-	fill_cell(battle.SA, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b) && game.storming.includes(b));
-	fill_cell(battle.SB, SARACEN, b => !is_battle_reserve(b) && !is_block_in_castle(b) && !game.storming.includes(b));
-	fill_cell(battle.SC, SARACEN, b => !is_battle_reserve(b) && is_block_in_castle(b));
-	fill_cell(battle.SR, SARACEN, b => is_battle_reserve(b));
+	fill_cell(battle.FR, FRANKS, b => is_battle_reserve(b));
+	fill_cell(battle.FC, FRANKS, b => is_block_in_castle(b));
+	fill_cell(battle.FF, FRANKS, b => is_block_in_field(b) && !game.storming.includes(b));
+	fill_cell(battle.FF, SARACENS, b => is_block_in_field(b) && game.storming.includes(b));
+	fill_cell(battle.SF, FRANKS, b => is_block_in_field(b) && game.storming.includes(b));
+	fill_cell(battle.SF, SARACENS, b => is_block_in_field(b) && !game.storming.includes(b));
+	fill_cell(battle.SC, SARACENS, b => is_block_in_castle(b));
+	fill_cell(battle.SR, SARACENS, b => is_battle_reserve(b));
 
 	return battle;
 }
@@ -2729,9 +2740,9 @@ exports.view = function(state, current) {
 		year: game.year,
 		turn: game.turn,
 		active: game.active,
-		f_card: (game.show_cards || current == FRANK) ? game.f_card : 0,
-		s_card: (game.show_cards || current == SARACEN) ? game.s_card : 0,
-		hand: (current == FRANK) ? game.f_hand : (current == SARACEN) ? game.s_hand : [],
+		f_card: (game.show_cards || current == FRANKS) ? game.f_card : 0,
+		s_card: (game.show_cards || current == SARACENS) ? game.s_card : 0,
+		hand: (current == FRANKS) ? game.f_hand : (current == SARACENS) ? game.s_hand : [],
 		who: (game.active == current) ? game.who : null,
 		location: game.location,
 		castle: game.castle,

@@ -533,6 +533,8 @@ function hide_block(element) {
 function update_map() {
 	let layout = {};
 
+	document.getElementById("frank_vp").textContent = game.f_vp + " VP";
+	document.getElementById("saracen_vp").textContent = game.s_vp + " VP";
 	document.getElementById("timeline").className = "year_" + game.year;
 	document.getElementById("turn").textContent =
 		"Turn " + game.turn + " of Year " + game.year;

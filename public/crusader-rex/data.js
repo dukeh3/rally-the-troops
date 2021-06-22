@@ -1,17 +1,12 @@
 "use strict";
 
-const VICTORY_TOWNS = [
-	"Aleppo", "Damascus", "Egypt",
-	"Antioch", "Tripoli", "Acre", "Jerusalem"
-];
-
 const CARDS = {
 	1: { name: "Assassins", event: "assassins", image: "card_assassins" },
 	2: { name: "Guide", event: "guide", image: "card_guide" },
 	3: { name: "Intrigue", event: "intrigue", image: "card_intrigue" },
 	4: { name: "Jihad", event: "jihad", image: "card_jihad" },
 	5: { name: "Manna", event: "manna", image: "card_manna" },
-	6: { name: "Winter Campaign", image: "card_winter_campaign" },
+	6: { name: "Winter Campaign", moves: 1, image: "card_winter_campaign" },
 	7: { name: "3", moves: 3, image: "card_3" },
 	8: { name: "3", moves: 3, image: "card_3" },
 	9: { name: "3", moves: 3, image: "card_3" },
@@ -277,7 +272,7 @@ const PORTS = [];
 	town('X', 1.0, 0.5, 3,	"Syria",		"Ashtera",	1, "town");
 	town('X', 1.0, 0.5, 3,	"Syria",		"Ajlun",	0, "town");
 
-	town('X', 0.5, 0.5, 3,	"Antioch",		"St. Simeon",	0, "port");
+	town('X', 0.0, 0.5, 3,	"Antioch",		"St. Simeon",	0, "port");
 	town('Y', 0.5, 0.5, 3,	"Antioch",		"Antioch",	3, "town");
 	town('Y', 1.0, 0.5, 3,	"Antioch",		"Harim",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Antioch",		"Kassab",	0, "town");
@@ -423,6 +418,11 @@ const PORTS = [];
 	minor("Dimona", "Zoar");
 	minor("Dimona", "Hebron");
 	minor("Hebron", "Lachish");
+
+	// off-map roads
+	ROADS["Germania/St. Simeon"] = 'minor';
+	ROADS["Aleppo/Germania"] = 'major';
+	ROADS["Antioch/Germania"] = 'major';
 
 	// TODO: seats and alternate seats
 })();

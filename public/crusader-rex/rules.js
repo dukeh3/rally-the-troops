@@ -1,19 +1,17 @@
 "use strict";
 
+// TODO: alternate home seats when drawing
 // TODO: frank seat adjustment at setup
 // TODO: saladin seat adjustment at setup
 
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: battle dialog messages
-
-// TODO: winter turn
-// TODO: winter campaign
-
 // TODO: crusader arrival movement
 
-// TODO: alternate home seats
+// TODO: Assassins -- move assassin block and show special battle screen!
+
+// TODO: replace game.steps and game.location etc with block_steps() and block_location()
 
 exports.scenarios = [
 	"Third Crusade"
@@ -30,12 +28,27 @@ const BOTH = "Both";
 const DEAD = "Dead";
 const F_POOL = "FP";
 const S_POOL = "SP";
+
 const ENGLAND = "England";
 const FRANCE = "France";
 const GERMANIA = "Germania";
+const TYRE = "Tyre";
+const TRIPOLI = "Tripoli";
+const ALEPPO = "Aleppo";
+const ANTIOCH = "Antioch";
+const ST_SIMEON = "St. Simeon";
 
 const INTRIGUE = 3;
 const WINTER_CAMPAIGN = 6;
+
+const ENGLISH_CRUSADERS = [ "Richard", "Robert", "Crossbows" ];
+const FRENCH_CRUSADERS = [ "Philippe", "Hugues", "Fileps" ];
+const GERMAN_CRUSADERS = [ "Barbarossa", "Frederik", "Leopold" ];
+
+const VICTORY_TOWNS = [
+	"Aleppo", "Damascus", "Egypt",
+	"Antioch", "Tripoli", "Acre", "Jerusalem"
+];
 
 // serif cirled numbers
 const DIE_HIT = [ 0, '\u2776', '\u2777', '\u2778', '\u2779', '\u277A', '\u277B' ];
@@ -95,7 +108,7 @@ function print_summary_no_count(text) {
 
 function print_summary(text) {
 	function print_move(last) {
-		return "\n" + n + " - " + last.join(" \u2192 ");
+		return "\n" + n + " " + last.join(" \u2192 ");
 	}
 	game.summary.sort();
 	let last = game.summary[0];
@@ -122,6 +135,10 @@ function is_active_player(current) {
 
 function is_inactive_player(current) {
 	return current == OBSERVER || (game.active != current && game.active != BOTH);
+}
+
+function is_winter() {
+	return game.turn == 6;
 }
 
 function remove_from_array(array, item) {
@@ -363,6 +380,7 @@ function is_enemy_town(where) { return count_friendly(where) == 0 && count_enemy
 function is_vacant_town(where) { return count_friendly(where) == 0 && count_enemy(where) == 0; }
 function is_contested_town(where) { return count_friendly(where) > 0 && count_enemy(where) > 0; }
 function is_friendly_or_vacant_town(where) { return is_friendly_town(where) || is_vacant_town(where); }
+function is_contested_or_enemy_town(where) { return count_enemy(where) > 0; }
 
 function is_friendly_field(where) { return count_friendly_in_field(where) > 0 && count_enemy_in_field(where) == 0; }
 function is_enemy_field(where) { return count_friendly_in_field(where) == 0 && count_enemy_in_field(where) > 0; }
@@ -448,20 +466,22 @@ function can_block_land_move(who) {
 function can_use_richards_sea_legs(who, to) {
 	// English Crusaders may attack by sea.
 	// If combined with another attack, the English must be the Main Attacker.
-	if (is_english_crusader(who)) {
-		if (game.attacker[to] == FRANKS) {
-			let road = game.main_road[to];
-			if (road)
-				return (road == "England");
+	if (is_contested_or_enemy_town(to)) {
+		if (is_english_crusader(who)) {
+			if (game.attacker[to] == FRANKS) {
+				let road = game.main_road[to];
+				if (road)
+					return (road == "England");
+			}
+			return true;
 		}
-		return true;
 	}
 	return false;
 }
 
 function can_enter_besieged_port(where) {
 	// Tripoli and Tyre are friendly to besieged defender!
-	if (where == "Tripoli" || where == "Tyre")
+	if (where == TRIPOLI || where == TYRE)
 		if (besieged_player(where) == game.active)
 			return count_blocks_in_castle(where) < castle_limit(where);
 	return false;
@@ -469,7 +489,7 @@ function can_enter_besieged_port(where) {
 
 function can_leave_besieged_port(where) {
 	// Tripoli and Tyre are friendly to besieged defender!
-	if (where == "Tripoli" || where == "Tyre")
+	if (where == TRIPOLI || where == TYRE)
 		if (besieged_player(where) == game.active)
 			return true;
 	return false;
@@ -477,13 +497,23 @@ function can_leave_besieged_port(where) {
 
 function can_block_sea_move_to(who, to) {
 	if (is_port(to)) {
-		if (can_use_richards_sea_legs(who, to))
-			return true;
-		if (can_enter_besieged_port(to))
-			return true;
+		// cannot start or reinforce battles in winter
+		if (!is_winter()) {
+			if (can_use_richards_sea_legs(who, to))
+				return true;
+			if (can_enter_besieged_port(to))
+				return true;
+		}
 		return is_friendly_port(to);
 	}
 	return false;
+}
+
+function are_crusaders_not_in_pool(crusaders) {
+	for (let b of crusaders)
+		if (game.location[b] == F_POOL)
+			return false;
+	return true;
 }
 
 function can_block_sea_move_from(who, from) {
@@ -491,6 +521,12 @@ function can_block_sea_move_from(who, from) {
 		return true;
 	if (can_leave_besieged_port(from))
 		return true;
+	if (from == ENGLAND)
+		return are_crusaders_not_in_pool(ENGLISH_CRUSADERS);
+	if (from == FRANCE)
+		return are_crusaders_not_in_pool(FRENCH_CRUSADERS);
+	if (from == GERMANIA)
+		return are_crusaders_not_in_pool(GERMAN_CRUSADERS);
 	return false;
 }
 
@@ -546,6 +582,9 @@ function can_block_retreat(who) {
 }
 
 function can_block_regroup_to(who, to) {
+	// regroup during winter campaign
+	if (is_winter() && is_contested_or_enemy_town(to))
+		return false;
 	if (is_friendly_field(to) || is_vacant_town(to)) {
 		let from = game.location[who];
 		if (can_block_use_road(from, to))
@@ -771,11 +810,11 @@ function lift_all_sieges() {
 }
 
 function disband(who) {
-	if (block_plural(who))
-		log(block_name(who) + " disband.");
+	game.summary.push([game.location[who]]);
+	if (is_saladin_family(who) || block_type(who) == 'crusaders' || block_type(who) == 'military_orders')
+		game.location[who] = null; // permanently eliminated
 	else
-		log(block_name(who) + " disbands.");
-	game.location[who] = block_pool(who);
+		game.location[who] = DEAD; // into to the pool next year
 	game.steps[who] = block_max_steps(who);
 }
 
@@ -803,6 +842,51 @@ function reduce_block(who) {
 }
 
 // GAME TURN
+
+function is_friendly_town_for_vp(town) {
+	if (is_friendly_town(town))
+		return true;
+	if (is_under_siege(town))
+		return besieged_player(town) == game.active;
+	return false;
+}
+
+function is_enemy_town_for_vp(town) {
+	if (is_enemy_town(town))
+		return true;
+	if (is_under_siege(town))
+		return besieging_player(town) == game.active;
+	return false;
+}
+
+function count_victory_points() {
+	let save_active = game.active;
+	game.active = FRANKS;
+	game.f_vp = 0;
+	game.s_vp = 0;
+	for (let town of VICTORY_TOWNS) {
+		if (is_friendly_town_for_vp(town))
+			++ game.f_vp;
+		else if (is_enemy_town_for_vp(town))
+			++ game.s_vp;
+	}
+	game.active = save_active;
+}
+
+function check_sudden_death() {
+	if (game.f_vp == 7) {
+		game.state = 'game_over';
+		game.result = FRANKS;
+		game.victory = "Franks control all seven victory cities."
+		return true;
+	}
+	if (game.s_vp == 7) {
+		game.state = 'game_over';
+		game.result = SARACENS;
+		game.victory = "Saracens control all seven victory cities."
+		return true;
+	}
+}
 
 function start_year() {
 	log("");
@@ -838,16 +922,14 @@ function start_game_turn() {
 }
 
 function end_game_turn() {
-	if (game.turn == 6) {
-		goto_winter_campaigns();
+	if (is_winter()) {
+		goto_winter_campaign();
 	} else {
+		if (check_sudden_death())
+			return;
 		game.turn ++;
 		start_game_turn();
 	}
-}
-
-function is_winter() {
-	return game.turn == 6;
 }
 
 // CARD PHASE
@@ -989,6 +1071,8 @@ function end_player_turn() {
 	game.moves = 0;
 	game.main_road = null;
 
+	count_victory_points();
+
 	if (game.active == game.p2) {
 		goto_combat_phase();
 	} else {
@@ -1025,7 +1109,7 @@ function select_random_block(where) {
 states.assassins = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to play Assassins.";
+			return view.prompt = "Assassins: Waiting for " + game.active + ".";
 		view.prompt = "Assassins: Choose one enemy block.";
 		for (let b in BLOCKS) {
 			if (is_block_on_land(b) && block_owner(b) == ENEMY[game.active])
@@ -1082,7 +1166,7 @@ function goto_manna() {
 states.manna = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to play Manna.";
+			return view.prompt = "Manna: Waiting for " + game.active + ".";
 		view.prompt = "Manna: Add one step to three different friendly blocks \u2014 " + game.moves + " left.";
 		gen_action_undo(view);
 		gen_action(view, 'next');
@@ -1205,9 +1289,10 @@ states.move_phase = {
 
 // GROUP MOVE
 
-function group_move_phase() {
+function group_move_phase(inactive = 0) {
 	if (game.active == game.jihad) return "Jihad: ";
 	if (game.active == game.guide) return "Guide: ";
+	if (inactive) return "Move Phase: ";
 	return "Group Move: ";
 }
 
@@ -1222,8 +1307,8 @@ function can_group_move_more() {
 states.group_move_first = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = group_move_phase() + "Choose a block to group move.";
+			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_phase(0) + "Choose a block to group move.";
 		gen_action_undo(view);
 		if (game.active == game.guide || game.active == game.jihad)
 			gen_action(view, 'end_move_phase');
@@ -1246,8 +1331,8 @@ states.group_move_first = {
 states.group_move_who = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = group_move_phase() + "Choose a block to group move.";
+			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_phase(0) + "Choose a block to group move.";
 		gen_action_undo(view);
 		if (game.active == game.guide || game.active == game.jihad)
 			gen_action(view, 'end_move_phase');
@@ -1273,16 +1358,29 @@ states.group_move_who = {
 states.group_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
-		view.prompt = group_move_phase() + "Move " + block_name(game.who) + ".";
+			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_phase(0) + "Move " + block_name(game.who) + ".";
 		gen_action_undo(view);
-		gen_action(view, 'block', game.who);
+		if (game.distance == 0)
+			gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
-		if (game.distance > 0)
-			gen_action(view, 'town', from);
+		if (game.distance > 0) {
+			// cannot start or reinforce battles in winter
+			if (!(is_winter() && is_contested_or_enemy_town(from)))
+				gen_action(view, 'town', from);
+		}
 		for (let to of TOWNS[from].exits) {
-			if (to != game.last_from && can_block_land_move_to(game.who, from, to))
+			if (to != game.last_from && can_block_land_move_to(game.who, from, to)) {
+				// cannot start or reinforce battles in winter
+				if (is_winter() && is_contested_or_enemy_town(to)) {
+					// but can move through friendly sieges
+					if (!is_friendly_field(to))
+						continue;
+					if (game.distance + 1 >= block_move(game.who))
+						continue;
+				}
 				gen_action(view, 'town', to);
+			}
 		}
 	},
 	town: function (to) {
@@ -1303,12 +1401,7 @@ states.group_move_to = {
 		if (!can_block_continue(game.who, from, to))
 			end_move();
 	},
-	block: function () {
-		if (game.distance == 0)
-			pop_undo();
-		else
-			end_move();
-	},
+	block: pop_undo,
 	undo: pop_undo
 }
 
@@ -1354,7 +1447,7 @@ states.sea_move = {
 states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		if (is_english_crusader(game.who))
 			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a port.";
 		else
@@ -1362,9 +1455,16 @@ states.sea_move_to = {
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
-		for (let to of PORTS)
-			if (to != from && can_block_sea_move_to(game.who, to))
-				gen_action(view, 'town', to);
+		if (from == GERMANIA) {
+			gen_action(view, 'town', ALEPPO);
+			gen_action(view, 'town', ANTIOCH);
+			if (road_limit(GERMANIA, ST_SIMEON) < 2)
+				gen_action(view, 'town', ST_SIMEON);
+		} else {
+			for (let to of PORTS)
+				if (to != from && can_block_sea_move_to(game.who, to))
+					gen_action(view, 'town', to);
+		}
 	},
 	town: function (to) {
 		--game.moves;
@@ -1373,24 +1473,33 @@ states.sea_move_to = {
 		game.location[game.who] = to;
 		game.moved[game.who] = true;
 
-		lift_siege(from);
-
-		remove_from_array(game.castle, game.who);
-
-		if (besieged_player(to) == game.active) {
-			// Move into besieged fortified port
-			game.castle.push(game.who);
-			log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
-
-		} else if (!is_friendly_port(to)) {
-			// English Crusaders attack!
-			game.attacker[to] = FRANKS;
-			game.main_road[to] = "England";
-			log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
-
+		if (from == GERMANIA) {
+			game.distance = 0;
+			let mark = move_block(game.who, from, to);
+			if (mark)
+				log(game.active + " move:\n Germania \u2192 " + to + mark + ".");
+			else
+				log(game.active + " move:\n Germania \u2192 " + to + ".");
 		} else {
-			// Normal move.
-			log(game.active + " sea move:\n" + from + " \u2192 " + to + ".");
+			lift_siege(from);
+
+			remove_from_array(game.castle, game.who);
+
+			if (besieged_player(to) == game.active) {
+				// Move into besieged fortified port
+				game.castle.push(game.who);
+				log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
+
+			} else if (!is_friendly_port(to)) {
+				// English Crusaders attack!
+				game.attacker[to] = FRANKS;
+				game.main_road[to] = "England";
+				log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
+
+			} else {
+				// Normal move.
+				log(game.active + " sea move:\n" + from + " \u2192 " + to + ".");
+			}
 		}
 
 		game.who = null;
@@ -1408,14 +1517,20 @@ states.sea_move_to = {
 states.muster = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Muster: Choose one friendly or vacant muster town.";
 		gen_action_undo(view);
-		gen_action(view, 'end_muster');
 		for (let where in TOWNS) {
-			if (is_friendly_field(where))
-				if (can_muster_to(where))
-					gen_action(view, 'town', where);
+			// cannot start or reinforce battles in winter
+			if (is_winter()) {
+				if (is_friendly_town(where))
+					if (can_muster_to(where))
+						gen_action(view, 'town', where);
+			} else {
+				if (is_friendly_field(where))
+					if (can_muster_to(where))
+						gen_action(view, 'town', where);
+			}
 		}
 	},
 	town: function (where) {
@@ -1424,14 +1539,13 @@ states.muster = {
 		game.state = 'muster_who';
 		game.summary = [];
 	},
-	end_muster: pop_undo,
 	undo: pop_undo,
 }
 
 states.muster_who = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Muster: Move blocks to " + game.where + ".";
 		view.muster = game.where;
 		gen_action_undo(view);
@@ -1456,7 +1570,7 @@ states.muster_who = {
 states.muster_move_1 = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
 		view.muster = game.where;
 		gen_action_undo(view);
@@ -1498,7 +1612,7 @@ states.muster_move_1 = {
 states.muster_move_2 = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
 		view.muster = game.where;
 		gen_action_undo(view);
@@ -1536,7 +1650,7 @@ states.muster_move_2 = {
 states.muster_move_3 = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		view.prompt = "Muster: Move " + block_name(game.who) + " to " + game.where + ".";
 		view.muster = game.where;
 		gen_action_undo(view);
@@ -1569,6 +1683,9 @@ function end_muster_move() {
 // COMBAT PHASE
 
 function goto_combat_phase() {
+	if (is_winter())
+		end_game_turn();
+
 	game.moved = {};
 	game.combat_list = [];
 	for (let where in TOWNS)
@@ -1592,8 +1709,8 @@ function resume_combat_phase() {
 states.combat_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose the next battle or siege.";
-		view.prompt = "Choose the next battle or siege!";
+			return view.prompt = "Combat Phase: Waiting for " + game.active + ".";
+		view.prompt = "Combat Phase: Choose the next battle or siege!";
 		for (let where of game.combat_list)
 			gen_action(view, 'town', where);
 	},
@@ -1614,7 +1731,7 @@ states.combat_phase = {
 states.use_jihad_event = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose the next battle or siege.";
+			return view.prompt = "Combat Phase: Waiting for " + game.active + ".";
 		view.prompt = "Do you want to use the surprise attack granted by Jihad?";
 		gen_action(view, 'jihad');
 		gen_action(view, 'pass');
@@ -1687,7 +1804,7 @@ states.combat_deployment = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to deploy blocks.";
+			return view.prompt = "Waiting for " + game.active + " to deploy.";
 		view.prompt = "Deploy blocks on the field and in the castle.";
 		let max = castle_limit(game.where);
 		let n = count_blocks_in_castle(game.where);
@@ -1762,6 +1879,9 @@ states.regroup = {
 	end_regroup: function () {
 		clear_undo();
 		print_summary(game.active + " regroup:");
+		// winter campaign regroup
+		if (is_winter())
+			end_winter_campaign();
 		if (is_contested_town(game.where))
 			next_combat_round();
 		else
@@ -1865,8 +1985,8 @@ states.declare_storm = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to declare storming.";
-		view.prompt = "Storm: Declare which blocks should storm the castle.";
+			return view.prompt = "Siege Declaration: Waiting for " + game.active + " to declare storm.";
+		view.prompt = "Siege Declaration: Declare which blocks should storm the castle.";
 		if (game.storming.length < castle_limit(game.where)) {
 			for (let b in BLOCKS) {
 				if (block_owner(b) == game.active && !is_battle_reserve(b)) {
@@ -1918,8 +2038,8 @@ states.declare_sally = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to declare sallying.";
-		view.prompt = "Sally: Declare which blocks should sally onto the field.";
+			return view.prompt = "Siege Declaration: Waiting for " + game.active + " to declare sally.";
+		view.prompt = "Siege Declaration: Declare which blocks should sally onto the field.";
 		for (let b in BLOCKS) {
 			if (block_owner(b) == game.active && !is_battle_reserve(b) && is_block_in_castle(b)) {
 				if (game.location[b] == game.where && !game.sallying.includes(b)) {
@@ -2065,10 +2185,11 @@ function goto_siege_attrition() {
 	console.log("SIEGE ATTRITION");
 	log("~ Siege Attrition ~");
 	game.active = besieging_player(game.where);
+	let target = (game.where == TYRE || game.where == TRIPOLI) ? 1 : 3;
 	for (let b in BLOCKS) {
 		if (is_block_in_castle_in(b, game.where)) {
 			let die = roll_d6();
-			if (die <= 3) {
+			if (die <= target) {
 				log("Attrition roll " + DIE_HIT[die] + ".");
 				reduce_block(b);
 			} else {
@@ -2166,7 +2287,7 @@ states.field_battle = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose a combat action.";
+			return view.prompt = "Field Battle: Waiting for " + game.active + ".";
 		view.prompt = "Field Battle: Choose a combat action.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'block', b); // take default action
@@ -2241,8 +2362,8 @@ states.storm_battle = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to choose a combat action.";
-		view.prompt = "Field Battle: Choose a combat action.";
+			return view.prompt = "Storm: Waiting for " + game.active + ".";
+		view.prompt = "Storm: Choose a combat action.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'block', b); // take default action
 			gen_action(view, 'battle_fire', b);
@@ -2282,8 +2403,8 @@ states.field_battle_hits = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+			return view.prompt = "Field Battle: Waiting for " + game.active + " to assign hits.";
+		view.prompt = "Field Battle: Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'battle_hit', b);
 			gen_action(view, 'block', b);
@@ -2340,8 +2461,8 @@ states.storm_battle_hits = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+			return view.prompt = "Storm: Waiting for " + game.active + " to assign hits.";
+		view.prompt = "Storm: Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'battle_hit', b);
 			gen_action(view, 'block', b);
@@ -2511,7 +2632,7 @@ function harry_with_block(b) {
 states.harry = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to harry.";
+			return view.prompt = "Field Battle: Waiting for " + game.active + " to harry.";
 		view.prompt = "Harry: Move the army to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
@@ -2542,7 +2663,7 @@ function retreat_with_block(b) {
 states.retreat_in_battle = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to retreat.";
+			return view.prompt = "Retreat: Waiting for " + game.active + ".";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
 		view.prompt = "Retreat: Move the army to a friendly or vacant town.";
@@ -2597,7 +2718,7 @@ function start_draw_phase() {
 states.draw_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to place drawn block.";
+			return view.prompt = "Draw Phase: Waiting for " + game.active + ".";
 		view.prompt = "Draw Phase: Place " + game.who + ".";
 		gen_action(view, 'next');
 		switch (block_type(game.who)) {
@@ -2647,6 +2768,241 @@ function end_draw_phase() {
 	}
 }
 
+// WINTER CAMPAIGN
+
+function goto_winter_campaign() {
+	log("");
+	log("Start Winter.");
+
+	if (game.winter_campaign) {
+		game.active = game.winter_campaign;
+		game.state = 'winter_campaign';
+	} else {
+		end_winter_campaign();
+	}
+}
+
+states.winter_campaign = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Winter Campaign: Waiting for " + game.active + ".";
+		view.prompt = "Winter Campaign: Select a siege to maintain over the winter.";
+		gen_action(view, 'pass');
+		for (let town in TOWNS)
+			if (is_friendly_field(town) && is_under_siege(town))
+				gen_action(view, 'town', town);
+	},
+	town: function (where) {
+		log(game.active + " maintain siege of " + where + ".");
+		game.winter_campaign = where;
+
+		let target = (game.where == TYRE || game.where == TRIPOLI) ? 2 : 4;
+		for (let b in BLOCKS) {
+			if (is_block_in_castle_in(b, game.where)) {
+				let die = roll_d6();
+				if (die <= target) {
+					log("Attrition roll " + DIE_HIT[die] + ".");
+					reduce_block(b);
+				} else {
+					log("Attrition roll " + DIE_MISS[die] + ".");
+				}
+			}
+		}
+
+		if (!is_under_siege(game.where)) {
+			log(game.where + " falls to siege attrition.");
+			goto_regroup();
+		} else {
+			log("Siege continues.");
+			end_winter_campaign();
+		}
+	},
+	pass: function () {
+		log(game.active + " decline to winter campaign.");
+		game.winter_campaign = null;
+		end_winter_campaign();
+	},
+}
+
+function end_winter_campaign() {
+	eliminate_besieging_blocks(FRANKS);
+	eliminate_besieging_blocks(SARACENS);
+	lift_all_sieges();
+	if (check_sudden_death())
+		return;
+	goto_winter_supply();
+}
+
+function eliminate_besieging_blocks(owner) {
+	game.summary = [];
+	for (let b in BLOCKS) {
+		if (block_owner(b) == owner) {
+			let where = game.location[b];
+			if (where == game.winter_campaign)
+				continue;
+			if (is_block_on_land(b) && is_under_siege(where))
+				if (block_owner(b) == besieging_player(where))
+					disband(b);
+		}
+	}
+	if (game.summary.length > 0)
+		print_summary(owner + " disband sieges:");
+	else
+		game.summary = null;
+}
+
+// WINTER SUPPLY
+
+function is_within_castle_limit(where) {
+	return count_friendly(where) <= Math.max(1, castle_limit(where));
+}
+
+function need_winter_supply_check() {
+	for (let town in TOWNS) {
+		if (town == game.winter_campaign)
+			continue;
+		if (is_friendly_town(town) && !is_within_castle_limit(town))
+			return true;
+	}
+	return false;
+}
+
+function goto_winter_supply() {
+	game.active = FRANKS;
+	if (need_winter_supply_check()) {
+		game.state = 'winter_supply';
+		game.summary = [];
+	} else {
+		game.active = SARACENS;
+		if (need_winter_supply_check()) {
+			game.state = 'winter_supply';
+			game.summary = [];
+		} else {
+			game.active = FRANKS;
+			goto_winter_replacements();
+		}
+	}
+}
+
+states.winter_supply = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Winter Supply: Waiting for " + game.active + ".";
+		view.prompt = "Winter Supply: Disband excess blocks.";
+		gen_action_undo(view);
+		let okay_to_end = true;
+		for (let b in BLOCKS) {
+			if (block_owner(b) == game.active) {
+				if (is_block_on_land(b)) {
+					let where = game.location[b];
+					if (where == game.winter_campaign)
+						continue;
+					if (!is_within_castle_limit(where)) {
+						gen_action(view, 'block', b);
+						okay_to_end = false;
+					}
+				}
+			}
+		}
+		if (okay_to_end)
+			gen_action(view, 'next');
+	},
+	block: function (who) {
+		push_undo();
+		disband(who);
+	},
+	next: function () {
+		if (game.summary.length > 0)
+			print_summary(game.active + " disband:");
+		if (game.active == FRANKS) {
+			game.active = SARACENS;
+			game.summary = [];
+		} else {
+			game.active = FRANKS;
+			goto_winter_replacements();
+		}
+	},
+	undo: pop_undo
+}
+
+// WINTER REPLACEMENTS
+
+function goto_winter_replacements() {
+	game.rp = {};
+
+	for (let town in TOWNS)
+		if (is_under_siege(town))
+			game.rp[town] = 0;
+		else
+			game.rp[town] = castle_limit(town);
+
+	game.summary = [];
+	game.state = 'winter_replacements';
+}
+
+states.winter_replacements = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Winter Replacements: Waiting for " + game.active + ".";
+		view.prompt = "Winter Replacements: Distribute replacement points.";
+		gen_action_undo(view);
+		gen_action(view, 'next');
+		for (let b in BLOCKS) {
+			if (block_owner(b) == game.active && is_block_on_land(b)) {
+				let where = game.location[b];
+				if (is_friendly_town(where) && game.rp[where] > 0) {
+					if (game.steps[b] < block_max_steps(b))
+						gen_action(view, 'block', b);
+				}
+			}
+		}
+	},
+	block: function (who) {
+		let where = game.location[who];
+		push_undo();
+		game.summary.push([where]);
+		game.steps[who] ++;
+		game.rp[where] --;
+	},
+	next: end_winter_replacements,
+	undo: pop_undo
+}
+
+function end_winter_replacements() {
+	print_summary(game.active + " replace:");
+	if (game.active == FRANKS) {
+		game.active = SARACENS;
+		game.summary = [];
+	} else {
+		goto_year_end();
+	}
+}
+
+function goto_year_end() {
+	if (game.year == 1192) {
+		game.state = 'game_over';
+		if (game.f_vp > game.s_vp) {
+			game.result = FRANKS;
+			game.victory = "Franks win!";
+		} else if (game.f_vp < game.s_vp) {
+			game.victory = "Saracens win!";
+			game.result = SARACENS;
+		} else {
+			game.victory = "The game is a draw.";
+			game.result = null;
+		}
+		return;
+	}
+
+	// Return eliminated blocks to pool.
+	for (let b in BLOCKS)
+		if (game.location[b] == DEAD)
+			game.location[b] = block_pool(b);
+
+	game.year ++;
+	start_year();
+}
+
 // GAME OVER
 
 function goto_game_over() {
@@ -2681,7 +3037,12 @@ function setup_game() {
 		if (block_owner(b) == FRANKS) {
 			switch (block_type(b)) {
 			case 'pilgrims':
+				deploy(b, block_pool(b));
+				break;
 			case 'crusaders':
+				if (b != "Philippe")
+				deploy(b, block_home(b));
+				else
 				deploy(b, block_pool(b));
 				break;
 			default:
@@ -2699,6 +3060,7 @@ function setup_game() {
 			deploy(b, block_home(b));
 		}
 	}
+	count_victory_points();
 }
 
 // VIEW
@@ -2824,6 +3186,8 @@ exports.view = function(state, current) {
 		year: game.year,
 		turn: game.turn,
 		active: game.active,
+		f_vp: game.f_vp,
+		s_vp: game.s_vp,
 		f_card: (game.show_cards || current == FRANKS) ? game.f_card : 0,
 		s_card: (game.show_cards || current == SARACENS) ? game.s_card : 0,
 		hand: (current == FRANKS) ? game.f_hand : (current == SARACENS) ? game.s_hand : [],

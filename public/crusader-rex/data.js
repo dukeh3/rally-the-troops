@@ -36,7 +36,7 @@ const ROADS = {};
 const SHIELDS = {
 	Antioch: [ "Bohemond", "Templars", "Turcopoles" ],
 	Latakia: [ "Bohemond"  ],
-	Saone: [ "Josselin"  ],
+	"Sa\xf4ne": [ "Josselin"  ],
 	Margat: [ "Hospitallers"  ],
 	Krak: [ "Hospitallers"  ],
 	Tartus: [ "Templars"  ],
@@ -115,7 +115,7 @@ const TOWNS = {
 	"Nablus":{"x":643,"y":1787},
 	"Qaddas":{"x":1145,"y":916},
 	"Ramallah":{"x":514,"y":1952},
-	"Saone":{"x":653,"y":428},
+	"Sa\xf4ne":{"x":653,"y":428},
 	"Shughur":{"x":656,"y":296},
 	"Sidon":{"x":493,"y":1276},
 	"St. Simeon":{"x":364,"y":211},
@@ -125,17 +125,6 @@ const TOWNS = {
 	"Tyre":{"x":465,"y":1397},
 	"Zerdana":{"x":1021,"y":300},
 	"Zoar":{"x":955,"y":2278},
-	/*
-	"Germania1":{"x":139,"y":273},
-	"Germania2":{"x":139,"y":359},
-	"Germania3":{"x":138,"y":447},
-	"France1":{"x":140,"y":573},
-	"France2":{"x":140,"y":660},
-	"France3":{"x":139,"y":747},
-	"England1":{"x":139,"y":873},
-	"England2":{"x":140,"y":961},
-	"England3":{"x":138,"y":1047},
-	*/
 	"Germania":{"x":140,"y":272},
 	"France":{"x":140,"y":573},
 	"England":{"x":140,"y":873},
@@ -216,7 +205,7 @@ const PORTS = [];
 
 	frank(51, "Turcopoles",		"Beirut",	3,	3,	"A2",	"Turcopoles", 1);
 	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims", 1);
-	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers", 0);
+	frank(53, "Josselin",		"Sa\xf4ne",	2,	3,	"B2",	"Outremers", 0);
 
 	army(54, "Assassins", "Assassins", "Masyaf",	0,	3,	"A3",	"Assassins", 1);
 
@@ -274,25 +263,13 @@ const PORTS = [];
 		TOWNS[name].wrap = wrap;
 	}
 
-/*
-	town('X', 0, 0, 0,	"Staging", "England1", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "England2", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "England3", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "France1", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "France2", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "France3", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "Germania1", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "Germania2", 0, "staging");
-	town('X', 0, 0, 0,	"Staging", "Germania3", 0, "staging");
-*/
-
 	town('Y', 0.0, 0.0, 30,	"Pool", "FP", 0, "pool");
 	town('Y', 0.0, 0.0, 30,	"Pool", "SP", 0, "pool");
 	town('Y', 1.0, 1.0, 30,	"Pool", "Dead", 0, "pool");
 
-	town('Y', 1.0, 0.5, 3,	"Staging", 		"England", 	0, "staging");
-	town('Y', 1.0, 0.5, 3,	"Staging", 		"France", 	0, "staging");
-	town('Y', 1.0, 0.5, 3,	"Staging", 		"Germania", 	0, "staging");
+	town('Y', 1.0, 0.5, 3,	"Staging", 		"England", 	3, "staging");
+	town('Y', 1.0, 0.5, 3,	"Staging", 		"France", 	3, "staging");
+	town('Y', 1.0, 0.5, 3,	"Staging", 		"Germania", 	3, "staging");
 
 
 	town('X', 1.0, 0.5, 3,	"Syria",		"Aleppo",	3, "town");
@@ -315,7 +292,7 @@ const PORTS = [];
 	town('X', 0.5, 0.5, 3,	"Antioch",		"Kassab",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Antioch",		"Shughur",	0, "town");
 	town('X', 0.0, 0.5, 3,	"Antioch",		"Latakia",	1, "port");
-	town('X', 0.5, 0.5, 3,	"Antioch",		"Saone",	1, "town");
+	town('X', 0.5, 0.5, 3,	"Antioch",		"Sa\xf4ne",	1, "town");
 	town('Y', 0.5, 0.5, 3,	"Antioch",		"Albara",	0, "town");
 	town('X', 0.0, 0.5, 3,	"Antioch",		"Margat",	1, "port");
 
@@ -419,9 +396,9 @@ const PORTS = [];
 	minor("St. Simeon", "Antioch");
 	minor("Antioch", "Kassab");
 	minor("Kassab", "Latakia");
-	minor("Latakia", "Saone");
-	minor("Saone", "Shughur");
-	minor("Saone", "Albara");
+	minor("Latakia", "Sa\xf4ne");
+	minor("Sa\xf4ne", "Shughur");
+	minor("Sa\xf4ne", "Albara");
 	minor("Albara", "Zerdana");
 	minor("Zerdana", "Artah");
 

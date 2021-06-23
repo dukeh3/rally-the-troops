@@ -1631,7 +1631,7 @@ states.group_move_to = {
 
 function end_move() {
 	if (game.distance > 0)
-		game.moved[game.who] = true;
+		game.moved[game.who] = 1;
 	log_move_end();
 	game.who = null;
 	game.distance = 0;
@@ -1695,7 +1695,7 @@ states.sea_move_to = {
 
 		let from = game.location[game.who];
 		game.location[game.who] = to;
-		game.moved[game.who] = true;
+		game.moved[game.who] = 1;
 
 		if (from == GERMANIA) {
 			game.distance = 0;
@@ -1899,7 +1899,7 @@ states.muster_move_3 = {
 function end_muster_move() {
 	let muster = game.where;
 	log_move_end();
-	game.moved[game.who] = true;
+	game.moved[game.who] = 1;
 	game.who = null;
 	game.state = 'muster_who';
 }
@@ -2482,6 +2482,14 @@ function goto_field_battle() {
 }
 
 function resume_field_battle() {
+	// we have a queued up harry action
+	if (game.harry) {
+		game.active = game.harry;
+		game.state = 'harry';
+		delete game.harry;
+		return;
+	}
+
 	game.active = game.attacker[game.where];
 
 	console.log("FIELD BATTLE ATTACKER=", game.attacker[game.where]);
@@ -2796,7 +2804,7 @@ function roll_attack(active, b, verb, is_charge) {
 }
 
 function field_fire_with_block(b) {
-	game.moved[b] = true;
+	game.moved[b] = 1;
 	if (block_plural(b))
 		roll_attack(game.active, b, "fire", 0);
 	else
@@ -2809,7 +2817,7 @@ function field_fire_with_block(b) {
 }
 
 function siege_fire_with_block(b) {
-	game.moved[b] = true;
+	game.moved[b] = 1;
 	if (block_plural(b))
 		roll_attack(game.active, b, "fire", 0);
 	else
@@ -2822,7 +2830,7 @@ function siege_fire_with_block(b) {
 }
 
 function charge_with_block(b) {
-	game.moved[b] = true;
+	game.moved[b] = 1;
 	if (block_plural(b))
 		roll_attack(game.active, b, "charge", 1);
 	else
@@ -2840,7 +2848,7 @@ function field_withdraw_with_block(b) {
 	else
 		game.flash = b + " withdraws.";
 	log(game.active[0] + ": " + game.flash);
-	game.moved[b] = true;
+	game.moved[b] = 1;
 	remove_from_array(game.sallying, b);
 	game.castle.push(b);
 	resume_field_battle();
@@ -2852,19 +2860,23 @@ function siege_withdraw_with_block(b) {
 	else
 		game.flash = b + " withdraws.";
 	log(game.active[0] + ": " + game.flash);
-	game.moved[b] = true;
+	game.moved[b] = 1;
 	remove_from_array(game.storming, b);
 	resume_siege_battle();
 }
 
 function harry_with_block(b) {
-	// TODO: fire, hits, retreat OR fire, retreat, hits order ?
+	game.harry = game.active; // remember to retreat after hits have been applied
+	game.who = b;
 	if (block_plural(b))
 		roll_attack(game.active, b, "harry", 0);
 	else
 		roll_attack(game.active, b, "harries", 0);
-	game.who = b;
-	game.state = 'harry';
+	if (game.hits > 0) {
+		goto_field_battle_hits();
+	} else {
+		resume_field_battle();
+	}
 }
 
 states.harry = {
@@ -2885,11 +2897,7 @@ states.harry = {
 		game.location[game.who] = to;
 		move_block(game.who, game.where, to);
 		game.who = null;
-		if (game.hits > 0) {
-			goto_field_battle_hits();
-		} else {
-			resume_field_battle();
-		}
+		resume_field_battle();
 	},
 }
 

@@ -120,15 +120,15 @@ function on_focus_battle_block(evt) {
 		msg = block_name(b);
 	}
 
-	if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(b))
+	if (game.actions && game.actions.fire && game.actions.fire.includes(b))
 		msg = "Fire with " + msg;
-	else if (game.actions && game.actions.battle_storm && game.actions.battle_storm.includes(b))
+	else if (game.actions && game.actions.storm && game.actions.storm.includes(b))
 		msg = "Storm with " + msg;
-	else if (game.actions && game.actions.battle_sally && game.actions.battle_sally.includes(b))
+	else if (game.actions && game.actions.sally && game.actions.sally.includes(b))
 		msg = "Sally with " + msg;
-	else if (game.actions && game.actions.battle_withdraw && game.actions.battle_withdraw.includes(b))
+	else if (game.actions && game.actions.withdraw && game.actions.withdraw.includes(b))
 		msg = "Withdraw with " + msg;
-	else if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
+	else if (game.actions && game.actions.hit && game.actions.hit.includes(b))
 		msg = "Take hit on " + msg;
 
 	document.getElementById("status").textContent = msg;
@@ -143,12 +143,12 @@ function on_click_battle_block(evt) {
 	send_action('block', b);
 }
 
-function on_focus_battle_fire(evt) {
+function on_focus_fire(evt) {
 	document.getElementById("status").textContent =
 		"Fire with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_retreat(evt) {
+function on_focus_retreat(evt) {
 	if (game.battle.storming.includes(evt.target.block))
 		document.getElementById("status").textContent =
 			"Withdraw with " + block_name(evt.target.block);
@@ -157,32 +157,32 @@ function on_focus_battle_retreat(evt) {
 			"Retreat with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_harry(evt) {
+function on_focus_harry(evt) {
 	document.getElementById("status").textContent =
 		"Harry with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_charge(evt) {
+function on_focus_charge(evt) {
 	document.getElementById("status").textContent =
 		"Charge with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_withdraw(evt) {
+function on_focus_withdraw(evt) {
 	document.getElementById("status").textContent =
 		"Withdraw with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_storm(evt) {
+function on_focus_storm(evt) {
 	document.getElementById("status").textContent =
 		"Storm with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_sally(evt) {
+function on_focus_sally(evt) {
 	document.getElementById("status").textContent =
 		"Sally with " + block_name(evt.target.block);
 }
 
-function on_focus_battle_hit(evt) {
+function on_focus_hit(evt) {
 	document.getElementById("status").textContent =
 		"Take hit on " + block_name(evt.target.block);
 }
@@ -191,14 +191,14 @@ function on_blur_battle_button(evt) {
 	document.getElementById("status").textContent = "";
 }
 
-function on_click_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
-function on_click_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
-function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
-function on_click_battle_charge(evt) { send_action('battle_charge', evt.target.block); }
-function on_click_battle_harry(evt) { send_action('battle_harry', evt.target.block); }
-function on_click_battle_withdraw(evt) { send_action('battle_withdraw', evt.target.block); }
-function on_click_battle_storm(evt) { send_action('battle_storm', evt.target.block); }
-function on_click_battle_sally(evt) { send_action('battle_sally', evt.target.block); }
+function on_click_hit(evt) { send_action('hit', evt.target.block); }
+function on_click_fire(evt) { send_action('fire', evt.target.block); }
+function on_click_retreat(evt) { send_action('retreat', evt.target.block); }
+function on_click_charge(evt) { send_action('charge', evt.target.block); }
+function on_click_harry(evt) { send_action('harry', evt.target.block); }
+function on_click_withdraw(evt) { send_action('withdraw', evt.target.block); }
+function on_click_storm(evt) { send_action('storm', evt.target.block); }
+function on_click_sally(evt) { send_action('sally', evt.target.block); }
 
 function on_click_card(evt) {
 	let c = evt.target.id.split("+")[1] | 0;
@@ -249,28 +249,28 @@ function build_battle_block(b, block) {
 	menu_list.classList.add("battle_menu_list");
 
 	build_battle_button(menu_list, b, "hit",
-		on_click_battle_hit, on_focus_battle_hit,
+		on_click_hit, on_focus_hit,
 		"/images/cross-mark.svg");
 	build_battle_button(menu_list, b, "charge",
-		on_click_battle_charge, on_focus_battle_charge,
+		on_click_charge, on_focus_charge,
 		"/images/mounted-knight.svg");
 	build_battle_button(menu_list, b, "fire",
-		on_click_battle_fire, on_focus_battle_fire,
+		on_click_fire, on_focus_fire,
 		"/images/pointy-sword.svg");
 	build_battle_button(menu_list, b, "harry",
-		on_click_battle_harry, on_focus_battle_harry,
+		on_click_harry, on_focus_harry,
 		"/images/arrow-flights.svg");
 	build_battle_button(menu_list, b, "retreat",
-		on_click_battle_retreat, on_focus_battle_retreat,
+		on_click_retreat, on_focus_retreat,
 		"/images/flying-flag.svg");
 	build_battle_button(menu_list, b, "withdraw",
-		on_click_battle_withdraw, on_focus_battle_withdraw,
+		on_click_withdraw, on_focus_withdraw,
 		"/images/stone-tower.svg");
 	build_battle_button(menu_list, b, "storm",
-		on_click_battle_storm, on_focus_battle_storm,
+		on_click_storm, on_focus_storm,
 		"/images/siege-tower.svg");
 	build_battle_button(menu_list, b, "sally",
-		on_click_battle_sally, on_focus_battle_sally,
+		on_click_sally, on_focus_sally,
 		"/images/doorway.svg");
 
 	let menu = document.createElement("div");
@@ -696,25 +696,25 @@ function update_battle() {
 
 			if (game.actions && game.actions.block && game.actions.block.includes(block))
 				ui.battle_block[block].classList.add("highlight");
-			if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(block))
+			if (game.actions && game.actions.fire && game.actions.fire.includes(block))
 				ui.battle_menu[block].classList.add('fire');
-			if (game.actions && game.actions.battle_retreat && game.actions.battle_retreat.includes(block))
+			if (game.actions && game.actions.retreat && game.actions.retreat.includes(block))
 				ui.battle_menu[block].classList.add('retreat');
-			if (game.actions && game.actions.battle_harry && game.actions.battle_harry.includes(block))
+			if (game.actions && game.actions.harry && game.actions.harry.includes(block))
 				ui.battle_menu[block].classList.add('harry');
-			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
+			if (game.actions && game.actions.charge && game.actions.charge.includes(block))
 				ui.battle_menu[block].classList.add('charge');
-			if (game.actions && game.actions.battle_withdraw && game.actions.battle_withdraw.includes(block))
+			if (game.actions && game.actions.withdraw && game.actions.withdraw.includes(block))
 				ui.battle_menu[block].classList.add('withdraw');
-			if (game.actions && game.actions.battle_storm && game.actions.battle_storm.includes(block))
+			if (game.actions && game.actions.storm && game.actions.storm.includes(block))
 				ui.battle_menu[block].classList.add('storm');
-			if (game.actions && game.actions.battle_sally && game.actions.battle_sally.includes(block))
+			if (game.actions && game.actions.sally && game.actions.sally.includes(block))
 				ui.battle_menu[block].classList.add('sally');
-			if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(block))
+			if (game.actions && game.actions.hit && game.actions.hit.includes(block))
 				ui.battle_menu[block].classList.add('hit');
-			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
+			if (game.actions && game.actions.charge && game.actions.charge.includes(block))
 				ui.battle_menu[block].classList.add('charge');
-			if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(block))
+			if (game.actions && game.actions.treachery && game.actions.treachery.includes(block))
 				ui.battle_menu[block].classList.add('treachery');
 
 			update_steps(block, game.steps[block], ui.battle_block[block], false);

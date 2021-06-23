@@ -390,7 +390,7 @@ function count_friendly_in_field_excluding_reserves(where) {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == p)
-			if (!is_block_in_castle(b) && !is_battle_reserve(b))
+			if (!is_block_in_castle(b) && !is_reserve(b))
 				++count;
 	return count;
 }
@@ -400,7 +400,7 @@ function count_enemy_in_field_excluding_reserves(where) {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == p)
-			if (!is_block_in_castle(b) && !is_battle_reserve(b))
+			if (!is_block_in_castle(b) && !is_reserve(b))
 				++count;
 	return count;
 }
@@ -441,7 +441,7 @@ function count_pinned(where) {
 	let count = 0;
 	for (let b in BLOCKS)
 		if (game.location[b] == where && block_owner(b) == game.active)
-			if (!is_battle_reserve(b))
+			if (!is_reserve(b))
 				++count;
 	return count;
 }
@@ -706,53 +706,53 @@ function can_muster_anywhere() {
 	return false;
 }
 
-function is_battle_reserve(who) {
+function is_reserve(who) {
 	return game.reserves1.includes(who) || game.reserves2.includes(who);
 }
 
 function is_attacker(who) {
 	if (game.location[who] == game.where && block_owner(who) == game.attacker[game.where])
-		return !is_battle_reserve(who);
+		return !is_reserve(who);
 	return false;
 }
 
 function is_defender(who) {
 	if (game.location[who] == game.where && block_owner(who) != game.attacker[game.where])
-		return !is_battle_reserve(who);
+		return !is_reserve(who);
 	return false;
 }
 
 function is_field_attacker(who) {
 	if (game.location[who] == game.where && block_owner(who) == game.attacker[game.where])
-		return !is_battle_reserve(who) && !is_block_in_castle(who);
+		return !is_reserve(who) && !is_block_in_castle(who);
 	return false;
 }
 
 function is_field_defender(who) {
 	if (game.location[who] == game.where && block_owner(who) != game.attacker[game.where])
-		return !is_battle_reserve(who) && !is_block_in_castle(who);
+		return !is_reserve(who) && !is_block_in_castle(who);
 	return false;
 }
 
 function is_field_combatant(who) {
 	if (game.location[who] == game.where)
-		return !is_battle_reserve(who) && !is_block_in_castle(who);
+		return !is_reserve(who) && !is_block_in_castle(who);
 	return false;
 }
 
 function is_block_in_field(who) {
-	return !is_battle_reserve(who) && !is_block_in_castle(who);
+	return !is_reserve(who) && !is_block_in_castle(who);
 }
 
-function is_storm_attacker(who) {
+function is_siege_attacker(who) {
 	return game.storming.includes(who);
 }
 
-function is_storm_defender(who) {
+function is_siege_defender(who) {
 	return is_block_in_castle_in(who, game.where);
 }
 
-function is_storm_combatant(who) {
+function is_siege_combatant(who) {
 	return game.storming.includes(who) || is_block_in_castle_in(who, game.where);
 }
 
@@ -796,7 +796,7 @@ function count_reserves(where) {
 	let n = 0;
 	for (let b in BLOCKS)
 		if (block_owner(b) == game.active)
-			if (game.location[b] == where && is_battle_reserve(b))
+			if (game.location[b] == where && is_reserve(b))
 				++n;
 	return n;
 }
@@ -1940,9 +1940,9 @@ states.combat_deployment = {
 		let n = count_blocks_in_castle(game.where);
 		if (n < max) {
 			for (let b in BLOCKS) {
-				if (block_owner(b) == game.active && !is_battle_reserve(b)) {
+				if (block_owner(b) == game.active && !is_reserve(b)) {
 					if (game.location[b] == game.where && !game.castle.includes(b)) {
-						gen_action(view, 'battle_withdraw', b);
+						gen_action(view, 'withdraw', b);
 						gen_action(view, 'block', b);
 					}
 				}
@@ -1951,7 +1951,7 @@ states.combat_deployment = {
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},
-	battle_withdraw: function (who) {
+	withdraw: function (who) {
 		push_undo();
 		game.castle.push(who);
 	},
@@ -2105,7 +2105,7 @@ function goto_combat_round(combat_round) {
 
 function goto_declare_storm() {
 	if (game.storming.length == castle_limit(game.where))
-		return goto_storm_battle();
+		return goto_siege_battle();
 	game.active = besieging_player(game.where);
 	game.state = 'declare_storm';
 }
@@ -2118,9 +2118,9 @@ states.declare_storm = {
 		view.prompt = "Siege Declaration: Declare which blocks should storm the castle.";
 		if (game.storming.length < castle_limit(game.where)) {
 			for (let b in BLOCKS) {
-				if (block_owner(b) == game.active && !is_battle_reserve(b)) {
+				if (block_owner(b) == game.active && !is_reserve(b)) {
 					if (game.location[b] == game.where && !game.storming.includes(b)) {
-						gen_action(view, 'battle_storm', b);
+						gen_action(view, 'storm', b);
 						gen_action(view, 'block', b);
 					}
 				}
@@ -2129,7 +2129,7 @@ states.declare_storm = {
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},
-	battle_storm: storm_with_block,
+	storm: storm_with_block,
 	block: storm_with_block,
 	next: function () {
 		clear_undo();
@@ -2139,7 +2139,7 @@ states.declare_storm = {
 			log(game.active + " decline to storm.");
 			goto_declare_sally();
 		} else {
-			goto_storm_battle();
+			goto_siege_battle();
 		}
 	},
 	undo: pop_undo
@@ -2170,9 +2170,9 @@ states.declare_sally = {
 			return view.prompt = "Siege Declaration: Waiting for " + game.active + " to declare sally.";
 		view.prompt = "Siege Declaration: Declare which blocks should sally onto the field.";
 		for (let b in BLOCKS) {
-			if (block_owner(b) == game.active && !is_battle_reserve(b) && is_block_in_castle(b)) {
+			if (block_owner(b) == game.active && !is_reserve(b) && is_block_in_castle(b)) {
 				if (game.location[b] == game.where && !game.sallying.includes(b)) {
-					gen_action(view, 'battle_sally', b);
+					gen_action(view, 'sally', b);
 					gen_action(view, 'block', b);
 				}
 			}
@@ -2180,7 +2180,7 @@ states.declare_sally = {
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},
-	battle_sally: sally_with_block,
+	sally: sally_with_block,
 	block: sally_with_block,
 	next: function () {
 		clear_undo();
@@ -2335,7 +2335,7 @@ function goto_siege_attrition() {
 	}
 }
 
-// FIELD AND STORM BATTLE HELPERS
+// FIELD AND SIEGE BATTLE HELPERS
 
 function filter_battle_blocks(ci, is_candidate) {
 	let output = null;
@@ -2405,8 +2405,11 @@ function resume_field_battle() {
 		return goto_regroup();
 	}
 
-	if (!is_contested_battle_field())
+	if (!is_contested_battle_field()) {
+		console.log("won in battle round, swap att/def!");
+		// TODO swap defender/attacker if applicable
 		return next_combat_round();
+	}
 
 	game.state = 'field_battle';
 	pump_battle_step(is_field_attacker, is_field_defender);
@@ -2420,89 +2423,89 @@ states.field_battle = {
 		view.prompt = "Field Battle: Choose a combat action.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'block', b); // take default action
-			gen_action(view, 'battle_fire', b);
+			gen_action(view, 'fire', b);
 			if (game.sallying.includes(b)) {
 				// Only sallying forces may withdraw into the castle
-				gen_action(view, 'battle_withdraw', b);
+				gen_action(view, 'withdraw', b);
 			} else {
 				if (can_block_retreat(b)) {
-					gen_action(view, 'battle_retreat', b);
+					gen_action(view, 'retreat', b);
 					// Turcopoles and Nomads can Harry (fire and retreat)
 					if (block_type(b) == 'turcopoles' || block_type(b) == 'nomads')
-						gen_action(view, 'battle_harry', b);
+						gen_action(view, 'harry', b);
 				}
 
 				// Defender can withdraw into castle if friendly and there is room.
 				if (game.active != game.attacker[game.where] && game.active == game.castle_owner) {
 					// TODO: allow swapping place of sallying block, leaving it to die if it cannot withdraw?
 					if (game.sallying.length + count_blocks_in_castle(game.where) < castle_limit(game.where))
-						gen_action(view, 'battle_withdraw', b);
+						gen_action(view, 'withdraw', b);
 				}
 			}
 			// All Frank B blocks are knights who can Charge
 			if (block_owner(b) == FRANKS && block_initiative(b) == 'B')
-				gen_action(view, 'battle_charge', b);
+				gen_action(view, 'charge', b);
 		}
 	},
 	block: field_fire_with_block,
-	battle_fire: field_fire_with_block,
-	battle_withdraw: field_withdraw_with_block,
-	battle_charge: charge_with_block,
-	battle_harry: harry_with_block,
-	battle_retreat: retreat_with_block,
+	fire: field_fire_with_block,
+	withdraw: field_withdraw_with_block,
+	charge: charge_with_block,
+	harry: harry_with_block,
+	retreat: retreat_with_block,
 }
 
-// STORM BATTLE
+// SIEGE BATTLE
 
-function goto_storm_battle() {
+function goto_siege_battle() {
 	game.attacker[game.where] = besieging_player(game.where);
-	console.log("STORM BATTLE", game.attacker[game.where]);
-	resume_storm_battle();
+	console.log("SIEGE BATTLE", game.attacker[game.where]);
+	resume_siege_battle();
 }
 
-function resume_storm_battle() {
+function resume_siege_battle() {
 	game.active = game.attacker[game.where];
 
 	if (is_friendly_town(game.where)) {
-		console.log("STORM BATTLE WON BY ATTACKER", game.active);
+		console.log("SIEGE BATTLE WON BY ATTACKER", game.active);
 		log("Siege battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
 	if (is_enemy_town(game.where)) {
-		console.log("STORM BATTLE WON BY DEFENDER", ENEMY[game.active]);
+		console.log("SIEGE BATTLE WON BY DEFENDER", ENEMY[game.active]);
 		game.halfhit = null;
 		log("Storming repulsed.");
 		return goto_regroup();
 	}
 
 	if (game.storming.length == 0) {
-		console.log("STORM BATTLE WON BY DEFENDER", ENEMY[game.active]);
+		console.log("SIEGE BATTLE WON BY DEFENDER", ENEMY[game.active]);
 		game.halfhit = null;
 		log("Storming repulsed.");
 		return next_combat_round();
 	}
 
-	game.state = 'storm_battle';
-	pump_battle_step(is_storm_attacker, is_storm_defender);
+	game.state = 'siege_battle';
+	pump_battle_step(is_siege_attacker, is_siege_defender);
 }
 
-states.storm_battle = {
+states.siege_battle = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Storm: Waiting for " + game.active + ".";
-		view.prompt = "Storm: Choose a combat action.";
+			return view.prompt = "Siege Battle: Waiting for " + game.active + ".";
+		view.prompt = "Siege Battle: Choose a combat action.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'block', b); // take default action
-			gen_action(view, 'battle_fire', b);
+			gen_action(view, 'fire', b);
 			if (game.storming.includes(b))
-				gen_action(view, 'battle_retreat', b);
+				gen_action(view, 'retreat', b);
 		}
 	},
-	block: storm_fire_with_block,
-	battle_fire: storm_fire_with_block,
-	battle_retreat: storm_withdraw_with_block,
+	block: siege_fire_with_block,
+	fire: siege_fire_with_block,
+	retreat: siege_withdraw_with_block,
 }
 
 // FIELD BATTLE HITS
@@ -2535,11 +2538,11 @@ states.field_battle_hits = {
 			return view.prompt = "Field Battle: Waiting for " + game.active + " to assign hits.";
 		view.prompt = "Field Battle: Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
-			gen_action(view, 'battle_hit', b);
+			gen_action(view, 'hit', b);
 			gen_action(view, 'block', b);
 		}
 	},
-	battle_hit: apply_field_battle_hit,
+	hit: apply_field_battle_hit,
 	block: apply_field_battle_hit,
 }
 
@@ -2561,47 +2564,47 @@ function apply_field_battle_hit(who) {
 	}
 }
 
-// STORM BATTLE HITS
+// SIEGE BATTLE HITS
 
-function goto_storm_battle_hits() {
+function goto_siege_battle_hits() {
 	game.active = ENEMY[game.active];
-	game.battle_list = list_storm_victims();
+	game.battle_list = list_siege_victims();
 	if (game.battle_list.length == 0)
-		resume_storm_battle();
+		resume_siege_battle();
 	else
-		game.state = 'storm_battle_hits';
+		game.state = 'siege_battle_hits';
 }
 
-function list_storm_victims() {
+function list_siege_victims() {
 	if (game.halfhit && block_owner(game.halfhit) == game.active)
 		return [ game.halfhit ];
 	let max = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == game.active && is_storm_combatant(b) && game.steps[b] > max)
+		if (block_owner(b) == game.active && is_siege_combatant(b) && game.steps[b] > max)
 			max = game.steps[b];
 	let list = [];
 	for (let b in BLOCKS)
-		if (block_owner(b) == game.active && is_storm_combatant(b) && game.steps[b] == max)
+		if (block_owner(b) == game.active && is_siege_combatant(b) && game.steps[b] == max)
 			list.push(b);
 	return list;
 }
 
-states.storm_battle_hits = {
+states.siege_battle_hits = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Storm: Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Storm: Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+			return view.prompt = "Siege Battle: Waiting for " + game.active + " to assign hits.";
+		view.prompt = "Siege Battle: Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
-			gen_action(view, 'battle_hit', b);
+			gen_action(view, 'hit', b);
 			gen_action(view, 'block', b);
 		}
 	},
-	battle_hit: apply_storm_battle_hit,
-	block: apply_storm_battle_hit,
+	hit: apply_siege_battle_hit,
+	block: apply_siege_battle_hit,
 }
 
-function apply_storm_battle_hit(who) {
+function apply_siege_battle_hit(who) {
 	if (block_plural(who))
 		game.flash = block_name(who) + " take a hit.";
 	else
@@ -2618,11 +2621,11 @@ function apply_storm_battle_hit(who) {
 	game.hits--;
 
 	if (game.hits == 0) {
-		resume_storm_battle();
+		resume_siege_battle();
 	} else {
-		game.battle_list = list_storm_victims();
+		game.battle_list = list_siege_victims();
 		if (game.battle_list.length == 0) {
-			resume_storm_battle();
+			resume_siege_battle();
 		} else {
 			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
 		}
@@ -2699,16 +2702,16 @@ function field_fire_with_block(b) {
 	}
 }
 
-function storm_fire_with_block(b) {
+function siege_fire_with_block(b) {
 	game.moved[b] = true;
 	if (block_plural(b))
 		roll_attack(game.active, b, "fire", 0);
 	else
 		roll_attack(game.active, b, "fires", 0);
 	if (game.hits > 0) {
-		goto_storm_battle_hits();
+		goto_siege_battle_hits();
 	} else {
-		resume_storm_battle();
+		resume_siege_battle();
 	}
 }
 
@@ -2737,7 +2740,7 @@ function field_withdraw_with_block(b) {
 	resume_field_battle();
 }
 
-function storm_withdraw_with_block(b) {
+function siege_withdraw_with_block(b) {
 	if (block_plural(b))
 		game.flash = b + " withdraw.";
 	else
@@ -2745,7 +2748,7 @@ function storm_withdraw_with_block(b) {
 	log(game.active[0] + ": " + game.flash);
 	game.moved[b] = true;
 	remove_from_array(game.storming, b);
-	resume_storm_battle();
+	resume_siege_battle();
 }
 
 function harry_with_block(b) {
@@ -3266,14 +3269,14 @@ function make_battle_view() {
 		// cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
 	}
 
-	fill_cell(battle.FR, FRANKS, b => is_battle_reserve(b));
+	fill_cell(battle.FR, FRANKS, b => is_reserve(b));
 	fill_cell(battle.FC, FRANKS, b => is_block_in_castle(b));
 	fill_cell(battle.FF, FRANKS, b => is_block_in_field(b) && !game.storming.includes(b));
 	fill_cell(battle.FF, SARACENS, b => is_block_in_field(b) && game.storming.includes(b));
 	fill_cell(battle.SF, FRANKS, b => is_block_in_field(b) && game.storming.includes(b));
 	fill_cell(battle.SF, SARACENS, b => is_block_in_field(b) && !game.storming.includes(b));
 	fill_cell(battle.SC, SARACENS, b => is_block_in_castle(b));
-	fill_cell(battle.SR, SARACENS, b => is_battle_reserve(b));
+	fill_cell(battle.SR, SARACENS, b => is_reserve(b));
 
 	return battle;
 }

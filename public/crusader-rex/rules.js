@@ -3,7 +3,9 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: pause after battle ends (ui maybe?)
+// TODO: can sea move into fortified port that is under attack but not yet besieged?
+// TODO: pause after battle ends to show final result/action
+
 
 exports.scenarios = [
 	"Third Crusade"
@@ -330,6 +332,10 @@ function road_was_last_used_by_enemy(from, to) {
 	return game.last_used[road_id(from, to)] == enemy(game.active);
 }
 
+function road_was_last_used_by_friendly(from, to) {
+	return game.last_used[road_id(from, to)] == game.active;
+}
+
 function road_type(a, b) {
 	return ROADS[road_id(a,b)];
 }
@@ -532,6 +538,14 @@ function castle_limit(where) {
 	return TOWNS[where].rating;
 }
 
+function is_more_room_in_castle(where) {
+	return count_blocks_in_castle(where) < castle_limit(where);
+}
+
+function is_within_castle_limit(where) {
+	return count_friendly(where) <= Math.max(1, castle_limit(where));
+}
+
 function is_castle_town(where) {
 	return castle_limit(where) > 0;
 }
@@ -649,12 +663,10 @@ function can_use_richards_sea_legs(who, to) {
 	// If combined with another attack, the English must be the Main Attacker.
 	if (is_contested_or_enemy_town(to)) {
 		if (is_english_crusader(who)) {
-			if (game.attacker[to] == FRANKS) {
-				let road = game.main_road[to];
-				if (road)
-					return (road == "England");
-			}
-			return true;
+			if (!game.attacker[to])
+				return true;
+			if (game.attacker[to] == FRANKS)
+				return (game.main_road[to] == "England");
 		}
 	}
 	return false;
@@ -734,8 +746,12 @@ function can_block_continue(who, from, to) {
 }
 
 function can_block_retreat_to(who, to) {
+	let from = game.location[who];
+	if (block_owner(who) == game.attacker[from]) {
+		if (!road_was_last_used_by_friendly(from, to))
+			return false;
+	}
 	if (is_friendly_field(to) || is_vacant_town(to)) {
-		let from = game.location[who];
 		if (can_block_use_road(from, to)) {
 			if (road_was_last_used_by_enemy(from, to))
 				return false;
@@ -1656,7 +1672,7 @@ states.sea_move_to = {
 
 			remove_from_array(game.castle, game.who);
 
-			if (besieged_player(to) == game.active) {
+			if (besieged_player(to) == game.active && is_more_room_in_castle(to)) {
 				// Move into besieged fortified port
 				game.castle.push(game.who);
 				log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
@@ -1937,8 +1953,9 @@ function start_combat() {
 			game.state = 'combat_deployment';
 		} else {
 			game.castle_owner = besieged_player(game.where);
-			game.attacker[game.where] = enemy(game.castle_owner);
-			console.log("CONTINUE SIEGE");
+			if (!game.attacker[game.where])
+				game.attacker[game.where] = enemy(game.castle_owner);
+			console.log("CONTINUE SIEGE", game.attacker[game.where]);
 			log("Existing siege continues.");
 			next_combat_round();
 		}
@@ -2191,6 +2208,7 @@ states.declare_storm = {
 		let n = game.storming.length;
 		console.log("STORM DECLARATION", n);
 		if (n == 0) {
+			game.flash = game.active + " decline to storm.";
 			log(game.active + " decline to storm.");
 			goto_declare_sally();
 		} else {
@@ -2241,8 +2259,10 @@ states.declare_sally = {
 		clear_undo();
 		let n = game.sallying.length;
 		console.log("SALLY DECLARATION", n);
-		if (n == 0)
+		if (n == 0) {
+			game.flash = game.active + " decline to sally.";
 			log(game.active + " decline to sally.");
+		}
 		if (is_contested_battle_field()) {
 			if (!game.was_contested) {
 				log(game.active + " are now the attacker.");
@@ -3072,10 +3092,6 @@ function eliminate_besieging_blocks(owner) {
 
 // WINTER SUPPLY
 
-function is_within_castle_limit(where) {
-	return count_friendly(where) <= Math.max(1, castle_limit(where));
-}
-
 function need_winter_supply_check() {
 	for (let town in TOWNS) {
 		if (town == game.winter_campaign)
@@ -3308,7 +3324,7 @@ function make_battle_view() {
 		show_castle: game.storming.length > 0 && game.state != 'declare_storm',
 	};
 
-	if (is_under_siege(game.where))
+	if (is_under_siege(game.where) && !is_contested_battle_field(game.where))
 		battle.title = enemy(game.castle_owner) + " besiege " + game.where;
 	else
 		battle.title = game.attacker[game.where] + " attack " + game.where;

@@ -158,8 +158,8 @@ body.shift .block.known:hover {
 .simple-labels .block.Caesar { background-color: #b22; border: 2px solid #822; }
 .simple-labels .block.Pompeius { background-color: #eb2; border: 2px solid #862; }
 .simple-labels .block.Cleopatra { background-color: #09b; border: 2px solid #067; }
-.simple-labels .block.highlight { border: 2px solid white; }
-.simple-labels .block.selected { border: 2px solid yellow; }
+.simple-labels .block.highlight { border: 2px solid white !important ; }
+.simple-labels .block.selected { border: 2px solid yellow !important ; }
 .simple-labels .block.moved { filter: grayscale(70%); }
 
 .columbia-labels .block{ width: 56px; height: 56px; border-radius: 6px; }
@@ -170,8 +170,8 @@ body.shift .block.known:hover {
 .columbia-labels .block.known.Caesar { background-color: #822; }
 .columbia-labels .block.known.Pompeius { background-color: #862; }
 .columbia-labels .block.known.Cleopatra { background-color: #067; }
-.columbia-labels .block.highlight { border: 3px solid white; }
-.columbia-labels .block.selected { border: 3px solid yellow; }
+.columbia-labels .block.highlight { border: 3px solid white !important ; }
+.columbia-labels .block.selected { border: 3px solid yellow !important ; }
 .columbia-labels .block.moved { filter: grayscale(70%); }
 
 .columbia-labels .block.r0 { transform: rotate(0deg); }
@@ -189,6 +189,18 @@ body.shift .block.known:hover {
 	background-size: 80%;
 	background-position: center;
 }
+.block.jupiter:not(.known) {
+	background-image: url("jupiter.svg");
+	background-size: 80%;
+	background-position: center;
+}
+
+.Observer ~ .grid_center .simple-labels .known.jupiter.Caesar { border: 2px solid #862; }
+.Observer ~ .grid_center .simple-labels .known.jupiter.Pompeius { border: 2px solid #822; }
+.Observer ~ .grid_center .simple-labels .known.jupiter.Cleopatra { border: 2px solid #822; }
+.Observer ~ .grid_center .columbia-labels .known.jupiter.Caesar { border: 3px solid #862; }
+.Observer ~ .grid_center .columbia-labels .known.jupiter.Pompeius { border: 3px solid #822; }
+.Observer ~ .grid_center .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822; }
 
 .block { box-shadow: 0px 0px 4px 0px black; }
 

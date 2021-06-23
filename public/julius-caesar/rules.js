@@ -2452,23 +2452,22 @@ exports.view = function(state, current) {
 	}
 
 	for (let b in BLOCKS) {
+		let jupiter = (BLOCKS[b].owner != block_owner(b)) ? 1 : 0;
 		if (game.state == 'game_over') {
 			if (game.location[b] != LEVY)
-				view.known[b] = [ game.location[b], game.steps[b], 0 ];
+				view.known[b] = [ game.location[b], game.steps[b], 0, jupiter ];
 		} else if (block_owner(b) == current || game.location[b] == DEAD) {
-			view.known[b] = [ game.location[b], game.steps[b], game.moved[b]?1:0 ];
+			view.known[b] = [ game.location[b], game.steps[b], game.moved[b]?1:0, jupiter ];
 		} else {
-			let o = BLOCKS[b].owner;
 			let a = game.location[b];
+			let o = BLOCKS[b].owner;
 			if (b == CLEOPATRA)
 				o = CLEOPATRA;
 			if (a != LEVY) {
 				let list = view.secret[o];
 				if (!(a in list))
-					list[a] = [0, 0];
-				list[a][0]++;
-				if (game.moved[b])
-					list[a][1]++;
+					list[a] = [];
+				list[a].push([game.moved[b]?1:0, jupiter]);
 			}
 		}
 	}

@@ -2,6 +2,7 @@
 
 const DEAD = "Dead";
 const LEVY = "Levy";
+const ENEMY = { "Caesar": "Pompeius", "Pompeius": "Caesar" };
 
 let label_style = window.localStorage['julius-caesar/label-style'] || 'columbia';
 let label_layout = window.localStorage['julius-caesar/label-layout'] || 'spread';
@@ -310,8 +311,8 @@ function layout_blocks_spread(location, secret, known) {
 		++i;
 	}
 
-	// Break early if secret and known fit in exactly two rows, and more than three blocks total
-	if (s > 0 && s <= wrap && k > 0 && k <= wrap && n > 3)
+	// Break early if secret and known fit in exactly two rows and more than two blocks.
+	if (s > 0 && s <= wrap && k > 0 && k <= wrap && n > 2)
 		new_line();
 
 	while (known.length > 0) {
@@ -384,14 +385,14 @@ function update_map() {
 	let layout = {};
 
 	for (let s in SPACES)
-		layout[s] = { secret: [], known: [] };
+		layout[s] = { Caesar: [], Pompeius: [] };
 
 	// Move secret blocks to overflow queue if there are too many in a location
 	for (let s in SPACES) {
 		for (let color of [CAESAR, POMPEIUS, CLEOPATRA]) {
 			let max = 0;
 			if (game.secret[color] && game.secret[color][s])
-				max = game.secret[color][s][0];
+				max = game.secret[color][s].length;
 			while (ui.secret[color][s].length > max)
 				overflow[color].push(ui.secret[color][s].pop());
 		}
@@ -402,7 +403,7 @@ function update_map() {
 		for (let color of [CAESAR, POMPEIUS, CLEOPATRA]) {
 			let max = 0;
 			if (game.secret[color] && game.secret[color][s])
-				max = game.secret[color][s][0];
+				max = game.secret[color][s].length;
 			while (ui.secret[color][s].length < max) {
 				if (overflow[color].length > 0) {
 					ui.secret[color][s].push(overflow[color].pop());
@@ -438,49 +439,52 @@ function update_map() {
 	}
 
 	// Add secret blocks to layout
-	for (let location in SPACES) {
-		for (let color of [CAESAR, POMPEIUS, CLEOPATRA]) {
-			if (location != LEVY) {
-				let i = 0, n = 0, m = 0;
-				if (game.secret[color] && game.secret[color][location]) {
-					n = game.secret[color][location][0];
-					m = game.secret[color][location][1];
-				}
-				// Preserve block stacking order, but lets the user track block identities...
-				if (label_layout == 'stack')
-					ui.secret[color][location].sort((a,b) => a.secret_index - b.secret_index);
-				for (let element of ui.secret[color][location]) {
-					if (i++ < n - m)
-						element.classList.remove('moved');
-					else
-						element.classList.add('moved');
-
-					if (color == game.mars && location == game.surprise)
-						element.classList.add("mars");
-					else
-						element.classList.remove("mars");
-					if (color == game.neptune && location == game.surprise)
-						element.classList.add("neptune");
-					else
-						element.classList.remove("neptune");
-
-					element.style.visibility = 'visible';
-					layout[location].secret.push(element);
-				}
+	for (let color in game.secret) {
+		for (let location in game.secret[color]) {
+			let i = 0;
+			for (let [moved, jupiter] of game.secret[color][location]) {
+				let element = ui.secret[color][location][i++];
+				if (moved)
+					element.classList.add('moved');
+				else
+					element.classList.remove('moved');
+				if (jupiter)
+					element.classList.add('jupiter');
+				else
+					element.classList.remove('jupiter');
+				if (color == game.mars && location == game.surprise)
+					element.classList.add("mars");
+				else
+					element.classList.remove("mars");
+				if (color == game.neptune && location == game.surprise)
+					element.classList.add("neptune");
+				else
+					element.classList.remove("neptune");
+				let owner = color;
+				if (owner == CLEOPATRA)
+					owner = POMPEIUS;
+				if (jupiter)
+					owner = ENEMY[owner];
+				layout[location][owner].push(element);
+				element.style.visibility = 'visible';
 			}
 		}
 	}
 
 	// Add known blocks to layout
 	for (let block in game.known) {
+		let element = ui.known[block];
 		let location = game.known[block][0];
 		let steps = game.known[block][1];
 		let moved = game.known[block][2];
-		let element = ui.known[block];
+		let jupiter = game.known[block][3];
+		let color = BLOCKS[block].owner;
+		if (jupiter)
+			color = ENEMY[color];
 
 		element.style.visibility = 'visible';
 
-		layout[location].known.push(element);
+		layout[location][color].push(element);
 
 		let old_location = ui.map_location[block];
 		update_steps(ui.map_steps, block, steps, element, location == old_location);
@@ -490,13 +494,17 @@ function update_map() {
 			element.classList.add("moved");
 		else
 			element.classList.remove("moved");
+		if (jupiter)
+			element.classList.add("jupiter");
+		else
+			element.classList.remove("jupiter");
 
 		ui.seen.add(block);
 	}
 
 	// Layout blocks on map
 	for (let location in SPACES)
-		layout_blocks(location, layout[location].secret, layout[location].known);
+		layout_blocks(location, layout[location].Caesar, layout[location].Pompeius);
 
 	// Mark selections and highlights
 

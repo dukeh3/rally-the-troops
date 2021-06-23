@@ -103,7 +103,8 @@ function block_owner(who) { return BLOCKS[who].owner; }
 
 function on_focus_map_block(evt) {
 	let info = BLOCKS[evt.target.block];
-	if (info.owner == player || info.owner == ASSASSINS) {
+	let where = game.location[evt.target.block];
+	if ((info.owner == player || info.owner == ASSASSINS) && where != S_POOL && where != F_POOL) {
 		let text = info.name + " ";
 		if (info.move)
 			text += info.move + "-";

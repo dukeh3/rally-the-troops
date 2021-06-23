@@ -481,7 +481,7 @@ function update_map() {
 	document.getElementById("turn").setAttribute("class", "turn year_" + game.year);
 
 	for (let area in AREAS)
-		layout[area] = { secret: [], known: [] };
+		layout[area] = { Scotland: [], England: [] };
 
 	// Move secret blocks to overflow queue if there are too many in a location
 	for (let area in AREAS) {
@@ -542,7 +542,7 @@ function update_map() {
 					element.classList.remove("moved");
 				else
 					element.classList.add("moved");
-				layout[area].secret.push(element);
+				layout[area][color].push(element);
 			}
 		}
 	}
@@ -554,8 +554,9 @@ function update_map() {
 			let steps = game.known[b][1];
 			let moved = game.known[b][2];
 			let element = ui.known[b];
+			let color = BLOCKS[b].owner;
 
-			layout[area].known.push(element);
+			layout[area][color].push(element);
 
 			show_block(element);
 			update_steps(b, steps, element);
@@ -568,12 +569,8 @@ function update_map() {
 	}
 
 	// Layout blocks on map
-	for (let area in AREAS) {
-		if (player == ENGLAND)
-			layout_blocks(area, layout[area].secret, layout[area].known);
-		else
-			layout_blocks(area, layout[area].known, layout[area].secret);
-	}
+	for (let area in AREAS)
+		layout_blocks(area, layout[area].Scotland, layout[area].England);
 
 	// Mark selections and highlights
 

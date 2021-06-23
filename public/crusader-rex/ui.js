@@ -11,6 +11,18 @@ const ENGLAND = "England";
 const FRANCE = "France";
 const GERMANIA = "Germania";
 
+const KINGDOM = {
+	"Syria": "Syria",
+	"Jerusalem": "Kingdom of Jerusalem",
+	"Antioch": "Principality of Antioch",
+	"Tripoli": "County of Tripoli",
+};
+
+const VICTORY_TOWNS = [
+	"Aleppo", "Damascus", "Egypt",
+	"Antioch", "Tripoli", "Acre", "Jerusalem"
+];
+
 let label_layout = window.localStorage['crusader-rex/label-layout'] || 'spread';
 
 function set_spread_layout() {
@@ -65,6 +77,11 @@ function on_focus_town(evt) {
 	let text = where;
 	if (where in SHIELDS)
 		text += " \u2014 " + SHIELDS[where].join(", ");
+	let kingdom = KINGDOM[TOWNS[where].region];
+	if (kingdom)
+		text += " \u2014 " + kingdom;
+	if (VICTORY_TOWNS.includes(where))
+		text += " \u2014 1 VP";
 	document.getElementById("status").textContent = text;
 }
 

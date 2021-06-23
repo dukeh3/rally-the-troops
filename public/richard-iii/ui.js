@@ -489,7 +489,7 @@ function update_map() {
 		"\nPretender: " + block_name(game.pretender);
 
 	for (let area in AREAS)
-		layout[area] = { secret: [], known: [] };
+		layout[area] = { Lancaster: [], York: [] };
 
 	// Move secret blocks to overflow queue if there are too many in a area
 	for (let area in AREAS) {
@@ -550,7 +550,10 @@ function update_map() {
 					element.classList.remove("moved");
 				else
 					element.classList.add("moved");
-				layout[area].secret.push(element);
+				if (color == REBEL)
+					layout[area][game.pretender].push(element);
+				else
+					layout[area][color].push(element);
 			}
 		}
 	}
@@ -562,9 +565,12 @@ function update_map() {
 			let steps = game.known[b][1];
 			let moved = game.known[b][2];
 			let element = ui.known[b];
+			let color = BLOCKS[b].owner;
+			if (color == REBEL)
+				color = game.pretender;
 
 			show_block(element);
-			layout[area].known.push(element);
+			layout[area][color].push(element);
 			update_steps(b, steps, element);
 
 			if (moved)
@@ -576,7 +582,7 @@ function update_map() {
 
 	// Layout blocks on map
 	for (let area in AREAS)
-		layout_blocks(area, layout[area].secret, layout[area].known);
+		layout_blocks(area, layout[area].Lancaster, layout[area].York);
 
 	for (let where in AREAS) {
 		if (ui.areas[where]) {

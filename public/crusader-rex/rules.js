@@ -3,8 +3,6 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: sort blocks in battle screen!
-
 // TODO: pause after battle ends (ui maybe?)
 
 exports.scenarios = [
@@ -790,6 +788,14 @@ function is_contested_battle_field() {
 	let f = count_friendly_in_field_excluding_reserves(game.where);
 	let e = count_enemy_in_field_excluding_reserves(game.where);
 	return f > 0 && e > 0;
+}
+
+function is_friendly_battle_field() {
+	return count_enemy_in_field_excluding_reserves(game.where) == 0;
+}
+
+function is_enemy_battle_field() {
+	return count_friendly_in_field_excluding_reserves(game.where) == 0;
 }
 
 function count_reserves(where) {
@@ -2056,9 +2062,23 @@ function next_combat_round() {
 }
 
 function bring_on_reserves(reserves) {
-	for (let b in BLOCKS)
-		if (game.location[b] == game.where)
-			remove_from_array(reserves, b);
+	let f = 0;
+	let s = 0;
+	for (let b in BLOCKS) {
+		if (game.location[b] == game.where) {
+			if (reserves.includes(b)) {
+				if (block_owner(b) == FRANKS)
+					++f;
+				else
+					++s;
+				remove_from_array(reserves, b);
+			}
+		}
+	}
+	if (f > 0)
+		log(f + " Frank " + (f==1 ? "reserve arrives." : "reserves arrive."));
+	if (s > 0)
+		log(s + " Saracen " + (s==1 ? "reserve arrives." : "reserves arrive."));
 }
 
 function goto_combat_round(combat_round) {
@@ -2225,6 +2245,7 @@ function goto_retreat_after_combat() {
 		game.castle.push(b);
 	game.sallying.length = 0;
 
+	// TODO: 6.2 - In Sieges, the attacker /may/ retreat or stay on siege.
 	// withdraw all storming blocks to the field.
 	game.halfhit = null;
 	game.storming.length = 0;
@@ -2390,24 +2411,37 @@ function goto_field_battle() {
 }
 
 function resume_field_battle() {
-	game.active = game.p1;
+	game.active = game.attacker[game.where];
+
+	console.log("FIELD BATTLE ATTACKER=", game.attacker[game.where]);
 
 	if (is_friendly_field(game.where)) {
-		console.log("FIELD BATTLE WON BY", game.active);
+		console.log("FIELD BATTLE WON BY ATTACKER", game.active);
 		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
 	if (is_enemy_field(game.where)) {
 		game.active = ENEMY[game.active];
-		console.log("FIELD BATTLE WON BY", game.active);
+		console.log("FIELD BATTLE WON BY DEFENDER", game.active);
 		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
-	if (!is_contested_battle_field()) {
-		console.log("won in battle round, swap att/def!");
-		// TODO swap defender/attacker if applicable
+	if (is_enemy_battle_field()) {
+		log("Attacking main force was eliminated.");
+		console.log("ATTACKER ELIMINATED", game.active);
+		return next_combat_round();
+	}
+
+	if (is_friendly_battle_field()) {
+		console.log("DEFENDER ELIMINATED, SWAP ATTACKER/DEFENDER", game.active);
+		log("Defending main force was eliminated.");
+		log(game.active + " are now the defender.");
+		game.attacker[game.where] = ENEMY[game.active];
+		// The new defender takes control of the empty castle
+		if (!is_under_siege(game.where))
+			game.castle_owner = game.active;
 		return next_combat_round();
 	}
 

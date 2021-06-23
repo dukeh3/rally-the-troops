@@ -206,7 +206,7 @@ const PORTS = [];
 	frank(36, "Walter",		"Caesarea",	2,	3,	"B2",	"Outremers", 0);
 	frank(37, "Raymond",		"Tiberias",	2,	3,	"B2",	"Outremers", 0);
 
-	frank(41, "Turcopole",		"Antioch",	3,	3,	"A2",	"Turcopoles", 0);
+	frank(41, "Turcopoles",		"Antioch",	3,	3,	"A2",	"Turcopoles", 1);
 	frank(42, "Pilgrims",		"Genoa",	2,	4,	"C2",	"Pilgrims", 1);
 	frank(43, "Pilgrims",		"Sicily",	2,	3,	"C2",	"Pilgrims", 1);
 	frank(44, "King Guy",		"Jerusalem",	2,	4,	"B2",	"Outremers", 0);
@@ -214,7 +214,7 @@ const PORTS = [];
 	frank(46, "Bohemond",		"Antioch",	2,	4,	"B2",	"Outremers", 0);
 	frank(47, "Raymond",		"Tripoli",	2,	4,	"B2",	"Outremers", 0);
 
-	frank(51, "Turcopole",		"Beirut",	3,	3,	"A2",	"Turcopoles", 0);
+	frank(51, "Turcopoles",		"Beirut",	3,	3,	"A2",	"Turcopoles", 1);
 	frank(52, "Pilgrims",		"Brittany",	2,	4,	"C2",	"Pilgrims", 1);
 	frank(53, "Josselin",		"Saone",	2,	3,	"B2",	"Outremers", 0);
 

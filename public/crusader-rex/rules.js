@@ -997,7 +997,10 @@ states.saracen_deployment = {
 		game.who = null;
 		start_year();
 	},
-	pass: start_year
+	pass: function () {
+		game.who = SALADIN;
+		start_year();
+	}
 }
 
 // GAME TURN

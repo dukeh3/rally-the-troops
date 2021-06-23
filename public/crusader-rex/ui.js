@@ -235,7 +235,6 @@ function on_button_end_move_phase(evt) { send_action('end_move_phase'); }
 function on_button_end_regroup(evt) { send_action('end_regroup'); }
 function on_button_end_retreat(evt) { send_action('end_retreat'); }
 function on_button_eliminate(evt) { send_action('eliminate'); }
-function on_button_jihad(evt) { send_action('jihad'); }
 
 function build_battle_button(menu, b, c, click, enter, img_src) {
 	let img = new Image();
@@ -591,7 +590,8 @@ function update_map() {
 				element.classList = info.owner + known + " block" + image + steps + moved;
 			} else {
 				let besieging = (game.sieges[town] == info.owner) ? " besieging" : "";
-				element.classList = info.owner + " block" + moved + besieging;
+				let jihad = (game.jihad == town) ? " jihad" : "";
+				element.classList = info.owner + " block" + moved + besieging + jihad;
 			}
 			if (info.owner == FRANKS)
 				layout[town].north.push(element);
@@ -750,6 +750,10 @@ function update_battle() {
 				ui.battle_block[block].classList.add("moved");
 			else
 				ui.battle_block[block].classList.remove("moved");
+			if (!show && (game.battle.jihad == block_owner(block)))
+				ui.battle_block[block].classList.add("jihad");
+			else
+				ui.battle_block[block].classList.remove("jihad");
 		}
 
 		for (let b in BLOCKS) {
@@ -794,7 +798,6 @@ function on_update() {
 	show_action_button("#end_move_phase_button", "end_move_phase");
 	show_action_button("#end_regroup_button", "end_regroup");
 	show_action_button("#end_retreat_button", "end_retreat");
-	show_action_button("#jihad_button", "jihad");
 	show_action_button("#eliminate_button", "eliminate");
 
 	document.getElementById("frank_vp").textContent = game.f_vp;

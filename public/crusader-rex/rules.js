@@ -5,7 +5,7 @@
 
 // TODO: can sea move into fortified port that is under attack but not yet besieged?
 // TODO: pause after battle ends to show final result/action
-
+// TODO: optional retreat after combat round 3 if storming
 
 exports.scenarios = [
 	"Third Crusade"
@@ -3357,8 +3357,10 @@ function make_battle_view() {
 		battle.title += " \u2014 Combat Deployment";
 	else
 		battle.title += " \u2014 Round " + game.combat_round;
-	if (game.where == game.jihad)
+	if (game.where == game.jihad) {
+		battle.jihad = game.attacker[game.where];
 		battle.title += " \u2014 Jihad!";
+	}
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)
@@ -3469,6 +3471,9 @@ exports.view = function(state, current) {
 		prompt: null,
 		actions: null,
 	};
+
+	if (game.jihad && game.jihad != game.p1)
+		view.jihad = game.jihad;
 
 	states[game.state].prompt(view, current);
 

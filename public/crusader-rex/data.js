@@ -110,7 +110,7 @@ const TOWNS = {
 	"Latakia":{"x":401,"y":445},
 	"Legio":{"x":587,"y":1658},
 	"Margat":{"x":540,"y":567},
-	"Masyaf":{"x":758,"y":604},
+	"Masyaf":{"x":756,"y":608},
 	"Monterrand":{"x":920,"y":603},
 	"Nablus":{"x":643,"y":1787},
 	"Qaddas":{"x":1145,"y":916},

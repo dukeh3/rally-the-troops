@@ -809,6 +809,7 @@ function start_turn() {
 	game.active = "Both";
 	game.state = 'play_card';
 	game.show_cards = false;
+	game.surprise = 0;
 	log("");
 	log("Start Turn ", game.turn, " of Year ", game.year, ".");
 }
@@ -1090,6 +1091,41 @@ states.vulcan = {
 		if (is_contested_city(city)) {
 			game.attacker[city] = game.active;
 		}
+		end_player_turn();
+	},
+}
+
+function goto_mars_and_neptune() {
+	game.surprise_list = [];
+	for (let where in SPACES)
+		if (is_map_space(where) && is_contested_space(where))
+			game.surprise_list.push(where);
+	if (game.surprise_list.length == 0) {
+		delete game.surprise_list;
+		return end_player_turn();
+	}
+	if (game.surprise_list.length == 1) {
+		game.surprise = game.surprise_list[0];
+		log("Surprise attack in " + game.surprise + ".");
+		delete game.surprise_list;
+		return end_player_turn();
+	}
+	game.state = 'mars_and_neptune';
+}
+
+states.mars_and_neptune = {
+	prompt: function (view, current) {
+		let god = game.mars == game.active ? "Mars: " : "Neptune: ";
+		if (is_inactive_player(current))
+			return view.prompt = god + ": Waiting for " + game.active + ".";
+		view.prompt = god + "Select battle for surprise attack.";
+		for (let space of game.surprise_list)
+			gen_action(view, 'space', space);
+	},
+	space: function (where) {
+		game.surprise = where;
+		log("Surprise attack in " + game.surprise + ".");
+		delete game.surprise_list;
 		end_player_turn();
 	},
 }
@@ -1386,10 +1422,10 @@ states.mercury_move_3 = {
 function end_movement() {
 	print_turn_log("moves");
 
-	if (game.pluto == game.active ||
-		game.mars == game.active ||
-		game.neptune == game.active ||
-		game.mercury == game.active)
+	if (game.mars == game.active || game.neptune == game.active)
+		return goto_mars_and_neptune();
+
+	if (game.pluto == game.active || game.mercury == game.active)
 		return end_player_turn();
 
 	game.who = null;
@@ -1500,35 +1536,8 @@ states.pick_battle = {
 	},
 	space: function (where) {
 		game.where = where;
-		if (game.mars == game.attacker[where]) {
-			game.state = 'use_battle_event';
-		} else if (game.neptune == game.attacker[where]) {
-			game.state = 'use_battle_event';
-		} else {
-			start_battle(false);
-		}
+		start_battle();
 	},
-}
-
-states.use_battle_event = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to pick a battle...";
-		if (game.mars)
-			view.prompt = "Do you want to use the surprise attack granted by Mars?";
-		else
-			view.prompt = "Do you want to use the surprise attack granted by Neptune?";
-		gen_action(view, 'surprise');
-		gen_action_pass(view, "No");
-	},
-	surprise: function () {
-		delete game.mars; /* Used up the event! */
-		delete game.neptune; /* Used up the event! */
-		start_battle(true);
-	},
-	pass: function () {
-		start_battle(false);
-	}
 }
 
 function is_attacker(b) {
@@ -1561,12 +1570,11 @@ function count_defenders() {
 	return count;
 }
 
-function start_battle(surprise) {
-	game.surprise = surprise;
+function start_battle() {
 	game.battle_round = 0;
 	game.flash = "";
 	log("");
-	if (game.surprise)
+	if (game.surprise == game.where)
 		log("Surprise attack in ", game.where, ".");
 	else
 		log("Battle in ", game.where, ".");
@@ -1609,7 +1617,8 @@ function start_battle_round() {
 		game.moved = {};
 
 		if (game.battle_round == 2) {
-			game.surprise = false;
+			if (game.surprise == game.where)
+				game.surprise = 0;
 			if (count_defenders() == 0) {
 				log("Defending main force was eliminated.");
 				log("Defending reserves are disrupted.");
@@ -1664,7 +1673,7 @@ function pump_battle_round() {
 		let attacker = game.attacker[game.where];
 		let defender = enemy(attacker);
 
-		if (game.surprise) {
+		if (game.surprise == game.where) {
 			if (battle_step(attacker, 'A', is_attacker)) return;
 			if (battle_step(attacker, 'B', is_attacker)) return;
 			if (battle_step(attacker, 'C', is_attacker)) return;
@@ -1689,6 +1698,8 @@ function pump_battle_round() {
 }
 
 function end_battle() {
+	if (game.surprise == game.where)
+		game.surprise = 0;
 	game.flash = "";
 	game.battle_round = 0;
 	reset_road_limits();
@@ -2369,7 +2380,7 @@ function make_battle_view() {
 	};
 
 	bv.title = game.attacker[game.where];
-	if (game.surprise && game.battle_round == 1)
+	if (game.surprise == game.where)
 		bv.title += " surprise attacks ";
 	else
 		bv.title += " attacks ";
@@ -2430,6 +2441,15 @@ exports.view = function(state, current) {
 
 	if (states[game.state].show_battle)
 		view.battle = make_battle_view();
+
+	if (game.mars && game.surprise) {
+		view.mars = game.p1;
+		view.surprise = game.surprise;
+	}
+	if (game.neptune && game.surprise) {
+		view.neptune = game.p1;
+		view.surprise = game.surprise;
+	}
 
 	for (let b in BLOCKS) {
 		if (game.state == 'game_over') {

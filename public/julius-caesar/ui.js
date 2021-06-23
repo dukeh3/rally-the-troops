@@ -454,8 +454,17 @@ function update_map() {
 						element.classList.remove('moved');
 					else
 						element.classList.add('moved');
-					element.style.visibility = 'visible';
 
+					if (color == game.mars && location == game.surprise)
+						element.classList.add("mars");
+					else
+						element.classList.remove("mars");
+					if (color == game.neptune && location == game.surprise)
+						element.classList.add("neptune");
+					else
+						element.classList.remove("neptune");
+
+					element.style.visibility = 'visible';
 					layout[location].secret.push(element);
 				}
 			}
@@ -679,49 +688,6 @@ function on_update() {
 	for (let b in BLOCKS)
 		if (!ui.seen.has(b))
 			ui.battle_steps[b] = 0;
-
-	if (game.spaceList) {
-		if (game.actionList.includes("secret")) {
-			for (let o in ui.secret) {
-				for (let s in ui.secret[o]) {
-					if (game.spaceList.includes(s)) {
-						for (let e of ui.secret[o][s])
-							e.classList.add("highlight");
-					} else {
-						for (let e of ui.secret[o][s])
-							e.classList.remove("highlight");
-					}
-				}
-			}
-			for (let s in SPACES)
-				if (game.spaceList.includes(s))
-					ui.spaces[s].classList.remove("highlight");
-		} else {
-			for (let o in ui.secret)
-				for (let s in ui.secret[o])
-					for (let e of ui.secret[o][s])
-						e.classList.remove("highlight");
-			for (let s in SPACES) {
-				if (game.spaceList.includes(s))
-					ui.spaces[s].classList.add("highlight");
-				else
-					ui.spaces[s].classList.remove("highlight");
-			}
-		}
-	}
-
-	if (game.blockList) {
-		for (let b in BLOCKS) {
-			if (game.blockList.includes(b))
-				ui.known[b].classList.add("highlight");
-			else
-				ui.known[b].classList.remove("highlight");
-			if (b == game.who)
-				ui.known[b].classList.add("selected");
-			else
-				ui.known[b].classList.remove("selected");
-		}
-	}
 }
 
 function select_card(c) {

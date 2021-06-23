@@ -3356,7 +3356,7 @@ function make_battle_view() {
 	if (game.combat_round == 0)
 		battle.title += " \u2014 Combat Deployment";
 	else
-		battle.title += " \u2014 Round " + game.combat_round;
+		battle.title += " \u2014 Round " + game.combat_round + " of 3";
 	if (game.where == game.jihad) {
 		battle.jihad = game.attacker[game.where];
 		battle.title += " \u2014 Jihad!";

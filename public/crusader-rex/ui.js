@@ -572,12 +572,14 @@ function update_map() {
 				if ((town == S_POOL || town == F_POOL) && b != game.who)
 					known = "";
 				element.classList = info.owner + known + " block" + image + steps + moved;
-				layout[town].south.push(element);
 			} else {
 				let besieging = (game.sieges[town] == info.owner) ? " besieging" : "";
 				element.classList = info.owner + " block" + moved + besieging;
-				layout[town].north.push(element);
 			}
+			if (info.owner == FRANKS)
+				layout[town].north.push(element);
+			else
+				layout[town].south.push(element);
 			show_block(element);
 		} else {
 			hide_block(element);

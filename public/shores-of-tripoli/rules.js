@@ -961,7 +961,6 @@ function end_pirate_raid() {
 
 function interception_roll(harbor, us_dice) {
 	let patrol_zone = PATROL_ZONE_OF_HARBOR[harbor];
-	console.log("interception_roll", SPACES[harbor], SPACES[patrol_zone], "us_dice=", us_dice);
 	let n_se = count_swedish_frigates(patrol_zone);
 	let n_us = count_american_frigates(patrol_zone);
 	if (n_se + n_us > 0) {

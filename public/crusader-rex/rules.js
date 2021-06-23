@@ -1343,6 +1343,40 @@ function goto_jihad() {
 	game.summary = [];
 }
 
+function goto_select_jihad() {
+	game.jihad_list = [];
+	for (let where in TOWNS)
+		if (is_contested_town(where))
+			game.jihad_list.push(where);
+	if (game.jihad_list.length == 0) {
+		delete game.jihad_list;
+		return end_player_turn();
+	}
+	if (game.jihad_list.length == 1) {
+		game.jihad = game.jihad_list[0];
+		log("Jihad in " + game.jihad + ".");
+		delete game.jihad_list;
+		return end_player_turn();
+	}
+	game.state = 'select_jihad';
+}
+
+states.select_jihad = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Jihad: Waiting for " + game.active + ".";
+		view.prompt = "Jihad: Select battle for Jihad.";
+		for (let town of game.jihad_list)
+			gen_action(view, 'town', town);
+	},
+	town: function (where) {
+		game.jihad = where;
+		log("Jihad in " + game.jihad + ".");
+		delete game.jihad_list;
+		end_player_turn();
+	},
+}
+
 function goto_manna() {
 	game.state = 'manna';
 	game.moves = 3;
@@ -1429,7 +1463,10 @@ function end_move_phase() {
 	game.who = null;
 	game.where = null;
 	game.moves = 0;
-	end_player_turn();
+	if (game.active == game.jihad)
+		goto_select_jihad();
+	else
+		end_player_turn();
 }
 
 function format_moves(phase, prompt) {
@@ -1903,34 +1940,9 @@ states.combat_phase = {
 	},
 	town: function (where) {
 		remove_from_array(game.combat_list, where);
-		let attacker = game.attacker[where] || besieging_player(where);
-		if (attacker == game.jihad) {
-			game.active = game.attacker[where];
-			game.state = 'use_jihad_event';
-			game.where = where;
-		} else {
-			game.where = where;
-			start_combat();
-		}
-	},
-}
-
-states.use_jihad_event = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Combat Phase: Waiting for " + game.active + ".";
-		view.prompt = "Do you want to use the surprise attack granted by Jihad?";
-		gen_action(view, 'jihad');
-		gen_action(view, 'pass');
-	},
-	jihad: function () {
-		log(game.active + " activate Jihad.");
-		game.jihad = game.where;
+		game.where = where;
 		start_combat();
 	},
-	pass: function () {
-		start_combat();
-	}
 }
 
 function start_combat() {
@@ -2176,9 +2188,13 @@ function goto_combat_round(combat_round) {
 // DECLARE STORM
 
 function goto_declare_storm() {
+	game.active = besieging_player(game.where);
+	// Castle is full.
 	if (game.storming.length == castle_limit(game.where))
 		return goto_siege_battle();
-	game.active = besieging_player(game.where);
+	// Field is empty.
+	if (count_friendly(game.where) - game.storming.length == 0)
+		return goto_siege_battle();
 	game.state = 'declare_storm';
 }
 
@@ -2563,8 +2579,9 @@ function resume_siege_battle() {
 
 	if (is_enemy_town(game.where)) {
 		console.log("SIEGE BATTLE WON BY DEFENDER", enemy(game.active));
+		game.active = enemy(game.active);
 		game.halfhit = null;
-		log("Storming repulsed.");
+		log("Siege battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 

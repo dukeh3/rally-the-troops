@@ -267,6 +267,20 @@ function list_seats(who) {
 	return list;
 }
 
+function is_home_seat(where, who) {
+	if (is_saladin_family(who))
+		who = SALADIN;
+	switch (block_type(who)) {
+	case 'nomads': return [ block_home(who) ];
+	case 'turcopoles': who = "Turcopoles"; break;
+	case 'military_orders': who = BLOCKS[who].name; break;
+	}
+	for (let town in SHIELDS)
+		if (SHIELDS[town].includes(who))
+			return true;
+	return false;
+}
+
 function block_pool(who) {
 	if (BLOCKS[who].owner == FRANKS)
 		return F_POOL;
@@ -2986,19 +3000,18 @@ states.draw_phase = {
 			view.prompt = "Draw Phase: Place " + BLOCKS[game.who].name + " at full strength in "
 				+ list_seats(game.who).join(", ") + " or at strength 1 in any friendly town.";
 			for (let town in TOWNS)
-				if (is_friendly_town(town))
+				if (is_friendly_field(town)) // TODO: FAQ claims besieger controls town for draw purposes
 					gen_action(view, 'town', town);
 			break;
 		}
 	},
 	town: function (where) {
 		let type = block_type(game.who);
-		let home = block_home(game.who);
 
 		log(game.active + " arrive in " + where + ".");
 
 		game.location[game.who] = where;
-		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && (where != home))
+		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && is_home_seat(where, game.who));
 			game.steps[game.who] = 1;
 		else
 			game.steps[game.who] = block_max_steps(game.who);

@@ -3,7 +3,7 @@
 exports.scenarios = [
 	"Historical",
 	"Tournament",
-	// TODO: Free Deployment
+	"Free Deployment",
 	// TODO: Avalon Digital scenarios?
 ];
 
@@ -336,6 +336,11 @@ function is_pinned(who) {
 function is_city(where) {
 	let t = SPACES[where].type;
 	return t == 'city' || t == 'major-port' || t == 'port';
+}
+
+function is_port(where) {
+	let t = SPACES[where].type;
+	return t == 'major-port' || t == 'port';
 }
 
 function is_sea(where) {
@@ -678,6 +683,109 @@ function can_levy(b) {
 
 let states = {};
 let events = {};
+
+function start_free_deployment() {
+	game.active = CAESAR;
+	game.setup_limit = {};
+	for (let space in SPACES) {
+		if (is_map_space(space)) {
+			let n = count_friendly(space) + count_enemy(space);
+			if (n > 0)
+				game.setup_limit[space] = n;
+		}
+	}
+	validate_free_deployment();
+	game.state = 'free_deployment';
+	clear_undo();
+}
+
+function validate_free_deployment() {
+	game.setup_error = [];
+	for (let space in SPACES) {
+		if (is_friendly_city(space)) {
+			let n = count_friendly(space);
+			let d = n - game.setup_limit[space];
+			if (d > 0)
+				game.setup_error.push(space + " +" + d);
+			else if (d < 0)
+				game.setup_error.push(space + " " + d);
+		}
+	}
+}
+
+function format_deployment_error(view) {
+	view.prompt = "Free Deployment: " + game.setup_error.join(", ");
+}
+
+states.free_deployment = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to redeploy blocks...";
+		gen_action_undo(view);
+		if (game.setup_error.length == 0) {
+			view.prompt = "Free Deployment: You may rearrange blocks on the map.";
+			gen_action_pass(view, "End deployment");
+		} else {
+			format_deployment_error(view);
+		}
+		for (let b in BLOCKS)
+			if (block_owner(b) == game.active && is_map_space(game.location[b]))
+				gen_action(view, 'block', b);
+	},
+	block: function (who) {
+		push_undo();
+		game.who = who;
+		game.state = 'free_deployment_to';
+	},
+	pass: function () {
+		if (game.active == CAESAR) {
+			clear_undo();
+			game.moved = {};
+			game.active = POMPEIUS;
+		} else {
+			game.moved = {};
+			delete game.setup_limit;
+			delete game.setup_error;
+			start_year();
+		}
+	},
+	undo: pop_undo
+}
+
+states.free_deployment_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Waiting for " + game.active + " to redeploy blocks...";
+		if (game.setup_error.length == 0) {
+			view.prompt = "Free Deployment: You may rearrange blocks on the map.";
+		} else {
+			format_deployment_error(view);
+		}
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		for (let space in SPACES) {
+			if (space in game.setup_limit && space != game.location[game.who]) {
+				if (!is_enemy_city(space)) {
+					if (block_type(game.who) == 'navis') {
+						if (is_port(space))
+							gen_action(view, 'space', space);
+					} else {
+						gen_action(view, 'space', space);
+					}
+				}
+			}
+		}
+	},
+	space: function (where) {
+		game.location[game.who] = where;
+		game.moved[game.who] = 1;
+		validate_free_deployment();
+		game.who = null;
+		game.state = 'free_deployment';
+	},
+	block: pop_undo,
+	undo: pop_undo
+}
 
 function start_year() {
 	log("");
@@ -2278,6 +2386,10 @@ exports.ready = function (scenario, players) {
 exports.setup = function (scenario, players) {
 	game = {
 		tournament: (scenario == "Tournament"),
+		c_hand: [],
+		p_hand: [],
+		c_card: 0,
+		p_card: 0,
 		state: null,
 		show_cards: false,
 		year: 705,
@@ -2294,7 +2406,10 @@ exports.setup = function (scenario, players) {
 		log: [],
 	};
 	setup_historical_deployment();
-	start_year();
+	if (scenario == "Free Deployment")
+		start_free_deployment();
+	else
+		start_year();
 	return game;
 }
 

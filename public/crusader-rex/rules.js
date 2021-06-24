@@ -3,9 +3,10 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: can sea move into fortified port that is under attack but not yet besieged?
-// TODO: pause after battle ends to show final result/action
+// TODO: can sea move into fortified port that is under attack but not yet besieged? no...
+// TODO: pause after battle ends to show final result/action?
 // TODO: optional retreat after combat round 3 if storming
+// TODO: new combat deployment in round 2/3 if defenders are wiped out? maybe...
 
 exports.scenarios = [
 	"Third Crusade"
@@ -256,9 +257,14 @@ function list_seats(who) {
 	if (is_saladin_family(who))
 		who = SALADIN;
 	switch (block_type(who)) {
-	case 'nomads': return [ block_home(who) ];
-	case 'turcopoles': who = "Turcopoles"; break;
-	case 'military_orders': who = BLOCKS[who].name; break;
+	case 'nomads':
+		return [ block_home(who) ];
+	case 'turcopoles':
+		who = "Turcopoles";
+		break;
+	case 'military_orders':
+		who = BLOCKS[who].name;
+		break;
 	}
 	let list = [];
 	for (let town in SHIELDS)
@@ -271,9 +277,14 @@ function is_home_seat(where, who) {
 	if (is_saladin_family(who))
 		who = SALADIN;
 	switch (block_type(who)) {
-	case 'nomads': return [ block_home(who) ];
-	case 'turcopoles': who = "Turcopoles"; break;
-	case 'military_orders': who = BLOCKS[who].name; break;
+	case 'nomads':
+		return where == block_home(who);
+	case 'turcopoles':
+		who = "Turcopoles";
+		break;
+	case 'military_orders':
+		who = BLOCKS[who].name;
+		break;
 	}
 	for (let town in SHIELDS)
 		if (SHIELDS[town].includes(who))
@@ -482,6 +493,9 @@ function is_friendly_or_vacant_town(where) {
 function is_contested_or_enemy_town(where) {
 	return is_contested_town(where) || is_enemy_town(where);
 }
+function is_enemy_occupied_town(where) {
+	return count_enemy(where) > 0;
+}
 
 /* Field queries exclude castles. */
 function is_friendly_field(where) {
@@ -675,8 +689,8 @@ function can_block_land_move(who) {
 function can_use_richards_sea_legs(who, to) {
 	// English Crusaders may attack by sea.
 	// If combined with another attack, the English must be the Main Attacker.
-	if (is_contested_or_enemy_town(to)) {
-		if (is_english_crusader(who)) {
+	if (is_english_crusader(who)) {
+		if (is_enemy_field(to)) {
 			if (!game.attacker[to])
 				return true;
 			if (game.attacker[to] == FRANKS)
@@ -787,7 +801,7 @@ function can_block_retreat(who) {
 
 function can_block_regroup_to(who, to) {
 	// regroup during winter campaign
-	if (is_winter() && is_contested_or_enemy_town(to))
+	if (is_winter() && is_enemy_occupied_town(to))
 		return false;
 	if (is_friendly_field(to) || is_vacant_town(to)) {
 		let from = game.location[who];
@@ -1028,7 +1042,7 @@ states.saracen_deployment = {
 		start_year();
 	},
 	pass: function () {
-		game.who = SALADIN;
+		game.who = null;
 		start_year();
 	}
 }
@@ -1477,6 +1491,11 @@ function end_move_phase() {
 	game.who = null;
 	game.where = null;
 	game.moves = 0;
+
+	// declined to use winter campaign
+	if (game.winter_campaign == game.active)
+		delete game.winter_campaign;
+
 	if (game.active == game.jihad)
 		goto_select_jihad();
 	else
@@ -1484,18 +1503,18 @@ function end_move_phase() {
 }
 
 function format_moves(phase, prompt) {
-	if (game.moves == 0)
-		return phase + "No moves left.";
-	if (game.moves == 1)
-		return phase + prompt + " \u2014 1 move left.";
-	return phase + prompt + " \u2014 " + game.moves + " moves left.";
 }
 
 states.move_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = format_moves("Move Phase: ", "Group Move, Sea Move, or Muster");
+		if (game.moves == 0)
+			view.prompt = "Move Phase: No moves left.";
+		else if (game.moves == 1)
+			view.prompt = "Move Phase: 1 move left.";
+		else
+			view.prompt = "Move Phase: " + game.moves + " moves left.";
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
@@ -1504,7 +1523,14 @@ states.move_phase = {
 				gen_action(view, 'sea_move');
 			if (can_muster_anywhere())
 				gen_action(view, 'muster');
+			if (game.winter_campaign == game.active)
+				gen_action(view, 'winter_campaign');
 		}
+	},
+	winter_campaign: function () {
+		push_undo();
+		--game.moves;
+		game.state = 'winter_campaign';
 	},
 	group_move: function () {
 		push_undo();
@@ -1604,13 +1630,13 @@ states.group_move_to = {
 		let from = game.location[game.who];
 		if (game.distance > 0) {
 			// cannot start or reinforce battles in winter
-			if (!(is_winter() && is_contested_or_enemy_town(from)))
+			if (!(is_winter() && is_enemy_occupied_town(from)))
 				gen_action(view, 'town', from);
 		}
 		for (let to of TOWNS[from].exits) {
 			if (to != game.last_from && can_block_land_move_to(game.who, from, to)) {
 				// cannot start or reinforce battles in winter
-				if (is_winter() && is_contested_or_enemy_town(to)) {
+				if (is_winter() && is_enemy_occupied_town(to)) {
 					// but can move through friendly sieges
 					if (!is_friendly_field(to))
 						continue;
@@ -1666,7 +1692,7 @@ states.sea_move = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = format_moves("Sea Move: ", "Choose a block to sea move");
+		view.prompt = "Sea Move: Choose a block to move.";
 		gen_action_undo(view);
 		for (let b in BLOCKS)
 			if (can_block_sea_move(b))
@@ -1756,7 +1782,7 @@ states.muster = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = "Muster: Choose one friendly or vacant muster town.";
+		view.prompt = "Muster: Choose a friendly muster town.";
 		gen_action_undo(view);
 		for (let where in TOWNS) {
 			// cannot start or reinforce battles in winter
@@ -1916,6 +1942,26 @@ function end_muster_move() {
 	game.moved[game.who] = 1;
 	game.who = null;
 	game.state = 'muster_who';
+}
+
+// WINTER CAMPAIGN
+
+states.winter_campaign = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
+		view.prompt = "Winter Campaign: Select a siege to maintain over the winter.";
+		gen_action_undo(view);
+		for (let town in TOWNS)
+			if (is_friendly_field(town) && is_under_siege(town))
+				gen_action(view, 'town', town);
+	},
+	town: function (where) {
+		log(game.active + " winter campaign in " + where + ".");
+		game.winter_campaign = where;
+		game.state = 'move_phase';
+	},
+	undo: pop_undo
 }
 
 // COMBAT PHASE
@@ -2094,7 +2140,7 @@ states.regroup = {
 		clear_undo();
 		print_summary(game.active + " regroup:");
 		if (is_winter())
-			end_winter_campaign();
+			goto_winter_2();
 		else if (is_contested_town(game.where))
 			next_combat_round();
 		else
@@ -3008,10 +3054,10 @@ states.draw_phase = {
 	town: function (where) {
 		let type = block_type(game.who);
 
-		log(game.active + " arrive in " + where + ".");
+		log(game.active + " draw to " + where + ".");
 
 		game.location[game.who] = where;
-		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && is_home_seat(where, game.who));
+		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && is_home_seat(where, game.who))
 			game.steps[game.who] = 1;
 		else
 			game.steps[game.who] = block_max_steps(game.who);
@@ -3035,7 +3081,7 @@ function end_draw_phase() {
 
 function end_game_turn() {
 	if (is_winter()) {
-		goto_winter_campaign();
+		goto_winter_1();
 	} else {
 		if (check_sudden_death())
 			return;
@@ -3044,64 +3090,45 @@ function end_game_turn() {
 	}
 }
 
-// WINTER CAMPAIGN
+// WINTER SUPPLY
 
-function goto_winter_campaign() {
+function goto_winter_1() {
 	log("");
-	if (game.winter_campaign) {
-		log("Start Winter Campaign.");
-		game.active = game.winter_campaign;
-		game.state = 'winter_campaign';
+	log("Start Winter of " + game.year + ".");
+	if (game.winter_campaign)
+		winter_siege_attrition();
+	else
+		goto_winter_2();
+}
+
+function winter_siege_attrition() {
+	log(game.active + " winter campaign in " + game.winter_campaign + ".");
+	game.where = game.winter_campaign;
+
+	let target = (game.where == TYRE || game.where == TRIPOLI) ? 2 : 4;
+	for (let b in BLOCKS) {
+		if (is_block_in_castle_in(b, game.where)) {
+			let die = roll_d6();
+			if (die <= target) {
+				log("Attrition roll " + DIE_HIT[die] + ".");
+				reduce_block(b);
+			} else {
+				log("Attrition roll " + DIE_MISS[die] + ".");
+			}
+		}
+	}
+
+	if (!is_under_siege(game.where)) {
+		log(game.where + " falls to siege attrition.");
+		goto_regroup();
 	} else {
-		log("Start Winter.");
-		end_winter_campaign();
+		log("Siege continues.");
+		game.where = null;
+		goto_winter_2();
 	}
 }
 
-states.winter_campaign = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Winter Campaign: Waiting for " + game.active + ".";
-		view.prompt = "Winter Campaign: Select a siege to maintain over the winter.";
-		gen_action(view, 'pass');
-		for (let town in TOWNS)
-			if (is_friendly_field(town) && is_under_siege(town))
-				gen_action(view, 'town', town);
-	},
-	town: function (where) {
-		log(game.active + " maintain siege of " + where + ".");
-		game.winter_campaign = where;
-		game.where = where;
-
-		let target = (game.where == TYRE || game.where == TRIPOLI) ? 2 : 4;
-		for (let b in BLOCKS) {
-			if (is_block_in_castle_in(b, game.where)) {
-				let die = roll_d6();
-				if (die <= target) {
-					log("Attrition roll " + DIE_HIT[die] + ".");
-					reduce_block(b);
-				} else {
-					log("Attrition roll " + DIE_MISS[die] + ".");
-				}
-			}
-		}
-
-		if (!is_under_siege(game.where)) {
-			log(game.where + " falls to siege attrition.");
-			goto_regroup();
-		} else {
-			log("Siege continues.");
-			end_winter_campaign();
-		}
-	},
-	pass: function () {
-		log(game.active + " decline to winter campaign.");
-		game.winter_campaign = null;
-		end_winter_campaign();
-	},
-}
-
-function end_winter_campaign() {
+function goto_winter_2() {
 	eliminate_besieging_blocks(FRANKS);
 	eliminate_besieging_blocks(SARACENS);
 	lift_all_sieges();
@@ -3127,8 +3154,6 @@ function eliminate_besieging_blocks(owner) {
 	else
 		game.summary = null;
 }
-
-// WINTER SUPPLY
 
 function need_winter_supply_check() {
 	for (let town in TOWNS) {
@@ -3468,6 +3493,7 @@ exports.view = function(state, current) {
 		year: game.year,
 		turn: game.turn,
 		active: game.active,
+		p1: game.p1,
 		f_vp: game.f_vp,
 		s_vp: game.s_vp,
 		f_card: (game.show_cards || current == FRANKS) ? game.f_card : 0,
@@ -3487,6 +3513,8 @@ exports.view = function(state, current) {
 
 	if (game.jihad && game.jihad != game.p1)
 		view.jihad = game.jihad;
+	if (game.winter_campaign && game.winter_campaign != game.p1 && game.winter_campaign != game.p2)
+		view.winter_campaign = game.winter_campaign;
 
 	states[game.state].prompt(view, current);
 

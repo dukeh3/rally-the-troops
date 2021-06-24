@@ -226,6 +226,7 @@ function on_click_card(evt) {
 function on_button_next(evt) { send_action('next'); }
 function on_button_pass(evt) { send_action('pass'); }
 function on_button_undo(evt) { send_action('undo'); }
+function on_button_winter_campaign(evt) { send_action('winter_campaign'); }
 function on_button_group_move(evt) { send_action('group_move'); }
 function on_button_end_group_move(evt) { send_action('end_group_move'); }
 function on_button_sea_move(evt) { send_action('sea_move'); }
@@ -590,8 +591,16 @@ function update_map() {
 					known = "";
 				element.classList = info.owner + known + " block" + image + steps + moved;
 			} else {
-				let besieging = (game.sieges[town] == info.owner) ? " besieging" : "";
-				let jihad = (game.jihad == town) ? " jihad" : "";
+				let besieging = "";
+				if (game.sieges[town] == info.owner) {
+					if (game.winter_campaign == town)
+						besieging = " winter_campaign";
+					else
+						besieging = " besieging";
+				}
+				let jihad = "";
+				if (game.jihad == town && info.owner == game.p1)
+					jihad = " jihad";
 				element.classList = info.owner + " block" + moved + besieging + jihad;
 			}
 			if (info.owner == FRANKS)
@@ -626,10 +635,8 @@ function update_map() {
 		if (game.who)
 			ui.blocks[game.who].classList.add('selected');
 	}
-	for (let b of game.castle) {
+	for (let b of game.castle)
 		ui.blocks[b].classList.add('castle');
-		ui.battle_block[b].classList.add('castle');
-	}
 }
 
 function update_card_display(element, card, prior_card) {
@@ -790,6 +797,7 @@ function on_update() {
 	show_action_button("#next_button", "next");
 	show_action_button("#pass_button", "pass");
 	show_action_button("#undo_button", "undo");
+	show_action_button("#winter_campaign_button", "winter_campaign");
 	show_action_button("#group_move_button", "group_move");
 	show_action_button("#end_group_move_button", "end_group_move");
 	show_action_button("#sea_move_button", "sea_move");

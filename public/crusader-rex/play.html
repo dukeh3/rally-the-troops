@@ -188,33 +188,50 @@ body.shift .block.known:hover {
 .block.Franks.selected { border-color: gold; }
 .block.Saracens.selected { border-color: gold; }
 .block.Assassins.selected { border-color: hotpink; }
+.block.Franks.highlight:not(.selected) { box-shadow: 0 0 3px white; }
 
 .block.highlight { cursor: pointer; }
 .block.moved { filter: brightness(80%) grayscale(40%); }
 .block.highlight.moved { filter: brightness(95%) grayscale(40%); }
+
 .map .block.castle.known { filter: grayscale(50%); }
 .map.stack_layout .block.castle { filter: grayscale(90%); }
 
-.map .block.castle:not(.known) {
-	background-image: url("/crusader-rex/besieged.svg");
+.block.castle:not(.known) {
+	background-image: url("badges/stone-tower.svg");
 	background-size: 60%;
 	background-position: center;
 }
-.map .block.besieging:not(.known) {
-	background-image: url("/crusader-rex/besieging.svg");
+.block.besieging:not(.known) {
+	background-image: url("badges/trebuchet.svg");
 	background-size: 60%;
 	background-position: center;
 }
-
+.block.winter_campaign:not(.known) {
+	background-image: url("badges/camping-tent.svg");
+	background-size: 60%;
+	background-position: center;
+}
 .block.Franks.jihad {
-	background-image: url("/crusader-rex/jihad-christian.svg");
+	background-image: url("badges/Cross_of_the_Knights_Templar.svg");
 	background-size: 60%;
 	background-position: center;
 }
 .block.Saracen.jihad {
-	background-image: url("/crusader-rex/jihad-muslim.svg");
+	background-image: url("badges/Star_and_Crescent.svg");
 	background-size: 60%;
 	background-position: center;
+}
+
+.block.besieging.Franks.jihad:not(.known) {
+	background-image: url("badges/trebuchet.svg"), url("badges/Cross_of_the_Knights_Templar.svg");
+	background-size: 60%, 40%;
+	background-position: 30% 80%, 85% 15%;
+}
+.block.besieging.Saracens.jihad:not(.known) {
+	background-image: url("badges/trebuchet.svg"), url("badges/Star_and_Crescent.svg");
+	background-size: 60%, 40%;
+	background-position: 30% 80%, 85% 15%;
 }
 
 .block.r0 { transform: rotate(0deg); }
@@ -398,10 +415,11 @@ body.shift .block.known:hover {
 		<div id="prompt" class="prompt">$PROMPT</div>
 
 		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
-		<button id="group_move_button" class="hide" onclick="on_button_group_move()">Group move</button>
-		<button id="end_group_move_button" class="hide" onclick="on_button_end_group_move()">End group move</button>
+		<button id="winter_campaign_button" class="hide" onclick="on_button_winter_campaign()">Winter campaign</button>
 		<button id="sea_move_button" class="hide" onclick="on_button_sea_move()">Sea move</button>
 		<button id="end_sea_move_button" class="hide" onclick="on_button_end_sea_move()">End sea move</button>
+		<button id="group_move_button" class="hide" onclick="on_button_group_move()">Group move</button>
+		<button id="end_group_move_button" class="hide" onclick="on_button_end_group_move()">End group move</button>
 		<button id="muster_button" class="hide" onclick="on_button_muster()">Muster</button>
 		<button id="end_muster_button" class="hide" onclick="on_button_end_muster()">End muster</button>
 		<button id="end_retreat_button" class="hide" onclick="on_button_end_retreat()">End retreat</button>

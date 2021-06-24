@@ -1905,7 +1905,6 @@ function can_play_us_supplies_run_low() {
 
 function play_us_supplies_run_low() {
 	game.state = 'us_supplies_run_low';
-	game.where = MALTA;
 }
 
 states.us_supplies_run_low = {

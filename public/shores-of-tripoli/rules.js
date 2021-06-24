@@ -1531,9 +1531,6 @@ states.land_battle_bombardment_results = {
 	next: function (card) {
 		delete game.flash;
 
-		move_all_pieces(US_FRIGATES, game.where, MALTA);
-		move_all_pieces(US_GUNBOATS, game.where, MALTA);
-
 		log("Land Battle in " + SPACES[game.where] + ".");
 
 		goto_land_battle();
@@ -1541,6 +1538,8 @@ states.land_battle_bombardment_results = {
 }
 
 function goto_land_battle() {
+	move_all_pieces(US_FRIGATES, game.where, MALTA);
+	move_all_pieces(US_GUNBOATS, game.where, MALTA);
 	goto_land_battle_american_card();
 }
 

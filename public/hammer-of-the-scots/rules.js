@@ -1227,6 +1227,7 @@ states.pillage_builds = {
 		// if (game.pillage == 0) end_pillage(game.from);
 	},
 	end_pillage: function () {
+		clear_undo();
 		while (game.pillage > 0) {
 			--game.pillage;
 			game.turn_log.push([game.from]);
@@ -1799,6 +1800,7 @@ states.retreat = {
 			gen_action(view, 'end_retreat');
 	},
 	end_retreat: function () {
+		clear_undo();
 		for (let b in BLOCKS)
 			if (game.location[b] == game.where && block_owner(b) == game.active)
 				eliminate_block(b, 'retreat');
@@ -2711,6 +2713,7 @@ states.english_builds = {
 		++game.steps[who];
 	},
 	end_builds: function () {
+		clear_undo();
 		print_turn_log("builds");
 		game.rp = null;
 		goto_english_feudal_levy();

@@ -433,9 +433,9 @@ function can_block_retreat_to(who, to) {
 }
 
 function can_block_retreat(who) {
-	if (who == NORSE)
-		return true;
 	if (block_owner(who) == game.active) {
+		if (who == NORSE)
+			return true;
 		let from = game.location[who];
 		for (let to of AREAS[from].exits)
 			if (can_block_retreat_to(who, to))

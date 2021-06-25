@@ -3057,7 +3057,7 @@ states.draw_phase = {
 		log(game.active + " draw to " + where + ".");
 
 		game.location[game.who] = where;
-		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && is_home_seat(where, game.who))
+		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && !is_home_seat(where, game.who))
 			game.steps[game.who] = 1;
 		else
 			game.steps[game.who] = block_max_steps(game.who);

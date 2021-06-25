@@ -565,9 +565,7 @@ function update_map() {
 			let steps = game.known[b][1];
 			let moved = game.known[b][2];
 			let element = ui.known[b];
-			let color = BLOCKS[b].owner;
-			if (color == REBEL)
-				color = game.pretender;
+			let color = block_owner(b);
 
 			show_block(element);
 			layout[area][color].push(element);

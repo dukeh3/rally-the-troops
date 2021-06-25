@@ -2271,9 +2271,11 @@ states.game_over = {
 	},
 }
 
+exports.ready = function (scenario, players) {
+	return players.length === 2;
+}
+
 exports.setup = function (scenario, players) {
-	if (players.length != 2)
-		throw new Error("Invalid player count: " + players.length);
 	game = {
 		tournament: (scenario == "Tournament"),
 		state: null,

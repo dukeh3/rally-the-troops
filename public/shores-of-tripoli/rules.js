@@ -2757,9 +2757,11 @@ states.game_over = {
 
 // SETUP
 
+exports.ready = function (scenario, players) {
+	return players.length === 2;
+}
+
 exports.setup = function (scenario, players) {
-	if (players.length != 2)
-		throw new Error("Invalid player count: " + players.length);
 	game = {
 		state: null,
 		year: 1801,

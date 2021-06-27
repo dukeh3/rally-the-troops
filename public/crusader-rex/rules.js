@@ -79,6 +79,10 @@ function log(...args) {
 	game.log.push(s);
 }
 
+function active_adjective() {
+	return (game.active == FRANKS ? "Frank" : "Saracen");
+}
+
 function log_move_start(from) {
 	game.move_buf = [ from ];
 }
@@ -1266,7 +1270,7 @@ function reveal_cards() {
 
 function start_player_turn() {
 	log("");
-	log("Start " + game.active + " turn.");
+	log("Start " + active_adjective() + " turn.");
 	reset_road_limits();
 	game.main_road = {};
 	let card = CARDS[game.active == FRANKS ? game.f_card : game.s_card];
@@ -3069,7 +3073,7 @@ states.draw_phase = {
 	town: function (where) {
 		let type = block_type(game.who);
 
-		log(game.active + " draw to " + where + ".");
+		log(game.active + " place drawn block in " + where + ".");
 
 		game.location[game.who] = where;
 		if (type == 'outremers' || type == 'emirs' || type == 'nomads') {
@@ -3313,7 +3317,7 @@ states.winter_replacements = {
 }
 
 function end_winter_replacements() {
-	print_summary(game.active + " replace:");
+	print_summary(active_adjective() + " replacements:");
 	if (game.active == FRANKS) {
 		game.active = SARACENS;
 		game.summary = [];

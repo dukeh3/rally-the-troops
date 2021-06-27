@@ -258,10 +258,6 @@ function block_home(who) {
 }
 
 function list_seats(who) {
-	if (is_saladin_family(who))
-		who = SALADIN;
-	if (who == "Raymond (Tiberias)" || who == "Raymond (Tripoli)")
-		who = "Raymond";
 	switch (block_type(who)) {
 	case 'nomads':
 		return [ block_home(who) ];
@@ -272,6 +268,10 @@ function list_seats(who) {
 		who = BLOCKS[who].name;
 		break;
 	}
+	if (is_saladin_family(who))
+		who = SALADIN;
+	if (who == "Raymond (Tiberias)" || who == "Raymond (Tripoli)")
+		who = "Raymond";
 	let list = [];
 	for (let town in SHIELDS)
 		if (SHIELDS[town].includes(who))

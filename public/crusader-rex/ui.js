@@ -553,14 +553,27 @@ function hide_block(element) {
 		ui.offmap_element.appendChild(element);
 }
 
+function is_known_block(info, who) {
+	if (info.owner == player || info.owner == ASSASSINS || who == game.assassinate)
+		return true;
+	let town = game.location[who];
+	if (town == ENGLAND || town == FRANCE || town == GERMANIA)
+		return true;
+	return false;
+}
+
 function update_map() {
 	let layout = {};
 
 	document.getElementById("frank_vp").textContent = game.f_vp + " VP";
 	document.getElementById("saracen_vp").textContent = game.s_vp + " VP";
 	document.getElementById("timeline").className = "year_" + game.year;
-	document.getElementById("turn").textContent =
-		"Turn " + game.turn + " of Year " + game.year;
+	if (game.turn < 6)
+		document.getElementById("turn").textContent =
+			"Turn " + game.turn + " of Year " + game.year;
+	else
+		document.getElementById("turn").textContent =
+			"Winter Turn of Year " + game.year;
 
 	for (let town in TOWNS)
 		layout[town] = { north: [], south: [] };
@@ -583,7 +596,7 @@ function update_map() {
 			let moved = game.moved[b] ? " moved" : "";
 			if (town == DEAD)
 				moved = " moved";
-			if (info.owner == player || info.owner == ASSASSINS || b == game.assassinate) {
+			if (is_known_block(info, b)) {
 				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
 				let known = " known"
@@ -632,9 +645,11 @@ function update_map() {
 		if (game.actions && game.actions.block)
 			for (let b of game.actions.block)
 				ui.blocks[b].classList.add('highlight');
-		if (game.who)
-			ui.blocks[game.who].classList.add('selected');
 	}
+	if (game.who && !game.battle)
+		ui.blocks[game.who].classList.add('selected');
+	if (game.assassinate)
+		ui.blocks[game.assassinate].classList.add('selected');
 	for (let b of game.castle)
 		ui.blocks[b].classList.add('castle');
 }

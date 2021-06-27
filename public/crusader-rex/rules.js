@@ -256,6 +256,8 @@ function block_home(who) {
 function list_seats(who) {
 	if (is_saladin_family(who))
 		who = SALADIN;
+	if (who == "Raymond (Tiberias)" || who == "Raymond (Tripoli)")
+		who = "Raymond";
 	switch (block_type(who)) {
 	case 'nomads':
 		return [ block_home(who) ];
@@ -286,9 +288,8 @@ function is_home_seat(where, who) {
 		who = BLOCKS[who].name;
 		break;
 	}
-	for (let town in SHIELDS)
-		if (SHIELDS[town].includes(who))
-			return true;
+	if (SHIELDS[where].includes(who))
+		return true;
 	return false;
 }
 
@@ -610,7 +611,7 @@ function is_port(where) {
 }
 
 function is_friendly_port(where) {
-	return TOWNS[where].port && is_friendly_town(where);
+	return TOWNS[where].port && is_friendly_field(where);
 }
 
 function can_activate(who) {
@@ -663,6 +664,7 @@ function can_block_use_road(from, to) {
 }
 
 function can_block_land_move_to(who, from, to) {
+	// TODO: check winter
 	if (can_block_use_road(from, to)) {
 		if (count_pinning(from) > 0)
 			if (road_was_last_used_by_enemy(from, to))
@@ -1067,15 +1069,27 @@ function is_enemy_town_for_vp(town) {
 
 function count_victory_points() {
 	let save_active = game.active;
-	game.active = FRANKS;
+
 	game.f_vp = 0;
-	game.s_vp = 0;
+	game.active = FRANKS;
 	for (let town of VICTORY_TOWNS) {
-		if (is_friendly_town_for_vp(town))
+		if (is_friendly_town_for_vp(town)) {
+			console.log("VP", town, "friendly", game.active);
 			++ game.f_vp;
-		else if (is_enemy_town_for_vp(town))
-			++ game.s_vp;
+		} else
+			console.log("VP", town, "enemy", game.active);
 	}
+
+	game.s_vp = 0;
+	game.active = SARACENS;
+	for (let town of VICTORY_TOWNS) {
+		if (is_friendly_town_for_vp(town)) {
+			console.log("VP", town, "friendly", game.active);
+			++ game.s_vp;
+		} else
+			console.log("VP", town, "enemy", game.active);
+	}
+
 	game.active = save_active;
 }
 
@@ -1313,10 +1327,10 @@ states.assassins = {
 
 states.assassins_show_1 = {
 	prompt: function (view, current) {
+		view.assassinate = game.who;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
 		view.prompt = "Assassins: The assassins target " + game.who + " in " + game.where + ".";
-		view.assassinate = game.who;
 		gen_action(view, 'next');
 	},
 	next: function () {
@@ -1327,10 +1341,10 @@ states.assassins_show_1 = {
 
 states.assassins_show_2 = {
 	prompt: function (view, current) {
+		view.assassinate = game.who;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
 		view.prompt = "Assassins: The assassins hit " + game.who + " in " + game.where + ".";
-		view.assassinate = game.who;
 		gen_action(view, 'next');
 	},
 	next: function () {
@@ -1374,7 +1388,7 @@ function goto_jihad() {
 function goto_select_jihad() {
 	game.jihad_list = [];
 	for (let where in TOWNS)
-		if (is_contested_town(where))
+		if (is_contested_field(where))
 			game.jihad_list.push(where);
 	if (game.jihad_list.length == 0) {
 		delete game.jihad_list;
@@ -1500,9 +1514,6 @@ function end_move_phase() {
 		goto_select_jihad();
 	else
 		end_player_turn();
-}
-
-function format_moves(phase, prompt) {
 }
 
 states.move_phase = {
@@ -1653,7 +1664,6 @@ states.group_move_to = {
 			end_move();
 			return;
 		}
-		lift_siege(from);
 		if (game.distance == 0)
 			log_move_start(from);
 		let mark = move_block(game.who, from, to);
@@ -1661,6 +1671,7 @@ states.group_move_to = {
 			log_move_continue(to + mark);
 		else
 			log_move_continue(to);
+		lift_siege(from);
 		game.last_from = from;
 		if (!can_block_continue(game.who, from, to))
 			end_move();
@@ -1967,8 +1978,10 @@ states.winter_campaign = {
 // COMBAT PHASE
 
 function goto_combat_phase() {
-	if (is_winter())
+	if (is_winter()) {
+		game.moved = {};
 		return end_game_turn();
+	}
 
 	game.moved = {};
 	game.combat_list = [];
@@ -2285,6 +2298,8 @@ states.declare_storm = {
 		console.log("STORM DECLARATION", n);
 		if (n == 0) {
 			game.flash = game.active + " decline to storm.";
+			if (game.jihad == game.where)
+				game.jihad = null;
 			log(game.active + " decline to storm.");
 			goto_declare_sally();
 		} else {
@@ -3057,10 +3072,15 @@ states.draw_phase = {
 		log(game.active + " draw to " + where + ".");
 
 		game.location[game.who] = where;
-		if ((type == 'outremers' || type == 'emirs' || type == 'nomads') && !is_home_seat(where, game.who))
-			game.steps[game.who] = 1;
-		else
+		if (type == 'outremers' || type == 'emirs' || type == 'nomads') {
+			console.log("DRAW", type, where, game.who, is_home_seat(where, game.who));
+			if (is_home_seat(where, game.who))
+				game.steps[game.who] = block_max_steps(game.who);
+			else
+				game.steps[game.who] = 1;
+		} else {
 			game.steps[game.who] = block_max_steps(game.who);
+		}
 
 		game.who = null;
 		end_draw_phase();
@@ -3134,6 +3154,8 @@ function goto_winter_2() {
 	lift_all_sieges();
 	if (check_sudden_death())
 		return;
+	if (game.year === 1192)
+		return goto_year_end();
 	goto_winter_supply();
 }
 

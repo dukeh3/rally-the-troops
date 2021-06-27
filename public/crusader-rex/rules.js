@@ -2085,16 +2085,20 @@ states.combat_deployment = {
 		view.prompt = "Deploy blocks on the field and in the castle.";
 		let max = castle_limit(game.where);
 		let n = count_blocks_in_castle(game.where);
+		let have_options = false;
 		if (n < max) {
 			for (let b in BLOCKS) {
 				if (block_owner(b) == game.active && !is_reserve(b)) {
 					if (game.location[b] == game.where && !game.castle.includes(b)) {
 						gen_action(view, 'withdraw', b);
 						gen_action(view, 'block', b);
+						have_options = true;
 					}
 				}
 			}
 		}
+		if (!have_options)
+			view.flash_next = "Click Next when you're done.";
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},
@@ -2281,16 +2285,20 @@ states.declare_storm = {
 		if (is_inactive_player(current))
 			return view.prompt = "Siege Declaration: Waiting for " + game.active + " to declare storm.";
 		view.prompt = "Siege Declaration: Declare which blocks should storm the castle.";
+		let have_options = false;
 		if (game.storming.length < castle_limit(game.where)) {
 			for (let b in BLOCKS) {
 				if (block_owner(b) == game.active && !is_reserve(b)) {
 					if (game.location[b] == game.where && !game.storming.includes(b)) {
 						gen_action(view, 'storm', b);
 						gen_action(view, 'block', b);
+						have_options = true;
 					}
 				}
 			}
 		}
+		if (!have_options)
+			view.flash_next = "Click Next when you're done.";
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},
@@ -2337,14 +2345,18 @@ states.declare_sally = {
 		if (is_inactive_player(current))
 			return view.prompt = "Siege Declaration: Waiting for " + game.active + " to declare sally.";
 		view.prompt = "Siege Declaration: Declare which blocks should sally onto the field.";
+		let have_options = false;
 		for (let b in BLOCKS) {
 			if (block_owner(b) == game.active && !is_reserve(b) && is_block_in_castle(b)) {
 				if (game.location[b] == game.where && !game.sallying.includes(b)) {
 					gen_action(view, 'sally', b);
 					gen_action(view, 'block', b);
+					have_options = true;
 				}
 			}
 		}
+		if (!have_options)
+			view.flash_next = "Click Next when you're done.";
 		gen_action_undo(view);
 		gen_action(view, 'next');
 	},

@@ -808,6 +808,24 @@ function update_battle() {
 	}
 }
 
+let flash_timer = 0;
+function start_flash() {
+	let element = document.querySelector(".battle_message");
+	let tick = true;
+	if (flash_timer)
+		return;
+	flash_timer = setInterval(function () {
+		if (!game.flash_next) {
+			element.textContent = game.battle.flash;
+			clearInterval(flash_timer);
+			flash_timer = 0;
+		} else {
+			element.textContent = tick ? game.battle.flash : game.flash_next;
+			tick = !tick;
+		}
+	}, 1000);
+}
+
 function on_update() {
 	show_action_button("#next_button", "next");
 	show_action_button("#pass_button", "pass");
@@ -833,6 +851,8 @@ function on_update() {
 	if (game.battle) {
 		document.querySelector(".battle_header").textContent = game.battle.title;
 		document.querySelector(".battle_message").textContent = game.battle.flash;
+		if (game.flash_next)
+			start_flash();
 		document.querySelector(".battle").classList.add("show");
 		update_battle();
 	} else {

@@ -2403,6 +2403,7 @@ function sally_with_block(who) {
 
 function goto_retreat_after_combat() {
 	console.log("RETREAT AFTER COMBAT");
+	game.moved = {};
 
 	// withdraw all sallying blocks to castle.
 	for (let b of game.sallying)

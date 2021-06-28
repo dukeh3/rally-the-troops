@@ -241,7 +241,9 @@ function block_plural(who) {
 }
 
 function block_name(who) {
-	return who; // BLOCKS[who].name;
+	if (BLOCKS[who].type == 'nomads')
+		return BLOCKS[who].name;
+	return who;
 }
 
 function block_type(who) {
@@ -1334,7 +1336,7 @@ states.assassins_show_1 = {
 		view.assassinate = game.who;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
-		view.prompt = "Assassins: The assassins target " + game.who + " in " + game.where + ".";
+		view.prompt = "Assassins: The assassins target " + block_name(game.who) + " in " + game.where + ".";
 		gen_action(view, 'next');
 	},
 	next: function () {
@@ -1348,7 +1350,7 @@ states.assassins_show_2 = {
 		view.assassinate = game.who;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
-		view.prompt = "Assassins: The assassins hit " + game.who + " in " + game.where + ".";
+		view.prompt = "Assassins: The assassins hit " + block_name(game.who) + " in " + game.where + ".";
 		gen_action(view, 'next');
 	},
 	next: function () {
@@ -1372,7 +1374,7 @@ function assassinate(who, where) {
 		}
 	}
 	hits = Math.min(hits, game.steps[who]);
-	log("Assassins hit " + who + " in " + where + ": " + rolls.join("") + ".");
+	log("Assassins hit " + block_name(who) + " in " + where + ": " + rolls.join("") + ".");
 	for (let i = 0; i < hits; ++i)
 		reduce_block(who);
 }
@@ -2325,9 +2327,9 @@ function storm_with_block(who) {
 	push_undo();
 	game.storming.push(who);
 	if (block_plural(who))
-		game.flash = who + " storm.";
+		game.flash = block_name(who) + " storm.";
 	else
-		game.flash = who + " storms.";
+		game.flash = block_name(who) + " storms.";
 	log(game.active[0] + ": " + game.flash);
 }
 
@@ -2391,9 +2393,9 @@ function sally_with_block(who) {
 	remove_from_array(game.castle, who);
 	game.sallying.push(who);
 	if (block_plural(who))
-		game.flash = who + " sally.";
+		game.flash = block_name(who) + " sally.";
 	else
-		game.flash = who + " sallies.";
+		game.flash = block_name(who) + " sallies.";
 	log(game.active[0] + ": " + game.flash);
 }
 
@@ -3061,11 +3063,11 @@ states.draw_phase = {
 		gen_action(view, 'next');
 		switch (block_type(game.who)) {
 		case 'crusaders':
-			view.prompt = "Draw Phase: Place " + game.who + " in the staging area.";
+			view.prompt = "Draw Phase: Place " + block_name(game.who) + " in the staging area.";
 			gen_action(view, 'town', block_home(game.who));
 			break;
 		case 'pilgrims':
-			view.prompt = "Draw Phase: Place " + game.who + " in a friendly port.";
+			view.prompt = "Draw Phase: Place " + block_name(game.who) + " in a friendly port.";
 			for (let town in TOWNS)
 				if (is_friendly_port(town) || can_enter_besieged_port(town))
 					gen_action(view, 'town', town);

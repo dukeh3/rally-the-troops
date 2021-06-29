@@ -6,7 +6,8 @@
 // TODO: can sea move into fortified port that is under attack but not yet besieged? no...
 // TODO: pause after battle ends to show final result/action?
 // TODO: optional retreat after combat round 3 if storming
-// TODO: new combat deployment in round 2/3 if defenders are wiped out? maybe...
+// TODO: new combat deployment in round 2/3 if defenders are wiped out and reserves are coming?
+//		see https://boardgamegeek.com/thread/423599/article/3731006
 
 exports.scenarios = [
 	"Third Crusade"

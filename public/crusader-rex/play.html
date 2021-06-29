@@ -251,18 +251,34 @@ body.shift .block.known:hover {
 
 /* BATTLE BOARD */
 
-.battle { background-color: tan; }
-.battle .battle_message { background-color: gainsboro; }
-.battle .battle_header { background-color: #224467; color: white; font-weight: bold; }
+.battle {
+	background-color: tan;
+	min-width: 700px;
+}
+.battle .battle_message {
+	background-color: gainsboro;
+	text-align: center;
+	border-top: 1px solid black;
+}
+.battle .battle_header {
+	Xbackground-color: #224467;
+	background-color: steelblue;
+	color: white;
+	font-weight: bold;
+	text-align: center;
+	border-bottom: 1px solid black;
+}
+.battle .battle_menu {
+	margin: 10px 5px;
+}
+
+#FF, #FC, #FR, #EF, #EC, #ER { margin: 0px auto; padding: 5px; }
 #EC .battle_menu_list { min-height: 0; }
-.battle_line > td { min-width: 700px; }
+#ER .battle_menu_list { min-height: 0; }
+#FR .battle_menu_list { min-height: 0; }
 
-.battle td { border: none; }
-#FA, #FB, #FC, #FD, #FR, #EA, #EB, #EC, #ER { margin: 0px auto; padding: 5px; }
-.battle .battle_menu { margin: 10px 5px; }
-
-#ER { background-image: linear-gradient(to bottom, skyblue, tan); }
-#FR { background-image: linear-gradient(to bottom, tan, darkseagreen); }
+X#ER { background-image: linear-gradient(-2deg, tan 30%, skyblue 35%); }
+X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 #FC, #EC {
 	background-color: gray;
 	border-top: 5px dashed tan;
@@ -270,7 +286,8 @@ body.shift .block.known:hover {
 }
 
 #FC, #EC, #FF, #EF { min-height: 120px; }
-#FR, #ER { min-height: 40px; }
+#ER { min-height: 15px; }
+#FR { min-height: 15px; }
 
 #FC.c0, #EC.c0 { display: none; }
 #FC.c1, #EC.c1 { width: 90px; }
@@ -367,18 +384,16 @@ body.shift .block.known:hover {
 <form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<table class="battle">
-<tr>
-<th class="battle_header" colspan=4></th>
-<tr class="battle_reserves enemy"><td><div id="ER"></div></td>
-<tr class="battle_line enemy"><td><div id="EC"></div></td>
-<tr class="battle_line enemy"><td><div id="EF"></div></td>
-<tr class="battle_line friendly"><td><div id="FF"></div></td>
-<tr class="battle_line friendly"><td><div id="FC"></div></td>
-<tr class="battle_reserves friendly"><td><div id="FR"></div></td>
-<tr>
-<th class="battle_message" colspan=4></th>
-</table>
+<div class="battle">
+<div class="battle_header"></div>
+<div id="ER"></div>
+<div id="EC"></div>
+<div id="EF"></div>
+<div id="FF"></div>
+<div id="FC"></div>
+<div id="FR"></div>
+<div class="battle_message"></div>
+</div>
 
 <div class="grid_window">
 

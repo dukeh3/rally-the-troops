@@ -769,7 +769,7 @@ function update_battle() {
 				ui.battle_block[block].classList.add("known");
 			else
 				ui.battle_block[block].classList.remove("known");
-			if (game.moved[block])
+			if (game.moved[block] || (name === "ER" || name === "FR"))
 				ui.battle_block[block].classList.add("moved");
 			else
 				ui.battle_block[block].classList.remove("moved");

@@ -11,6 +11,7 @@ const { CARDS, SPACES, EDGES, BLOCKS } = require('./data');
 
 const APOLLO = 1;
 
+const BOTH = "Both";
 const CAESAR = "Caesar";
 const POMPEIUS = "Pompeius";
 const CLEOPATRA = "Cleopatra";
@@ -98,11 +99,11 @@ function print_turn_log(verb) {
 }
 
 function is_active_player(current) {
-	return (current == game.active) || (game.active == "Both" && (current == CAESAR || current == POMPEIUS));
+	return (current == game.active) || (game.active == BOTH && (current == CAESAR || current == POMPEIUS));
 }
 
 function is_inactive_player(current) {
-	return current == "Observer" || (game.active != current && game.active != "Both");
+	return current == "Observer" || (game.active != current && game.active != BOTH);
 }
 
 function remove_from_array(array, item) {
@@ -800,7 +801,7 @@ function start_year() {
 	game.p_card = 0;
 	game.c_discard = 0;
 	game.p_discard = 0;
-	game.active = "Both";
+	game.active = BOTH;
 	game.state = 'discard_and_play_card';
 	game.show_cards = false;
 }
@@ -813,7 +814,7 @@ function resume_discard_and_play_card() {
 	else if (game.p_card)
 		game.active = CAESAR;
 	else
-		game.active = "Both";
+		game.active = BOTH;
 }
 
 states.discard_and_play_card = {
@@ -914,7 +915,7 @@ function start_turn() {
 	game.reserves = [];
 	game.c_card = 0;
 	game.p_card = 0;
-	game.active = "Both";
+	game.active = BOTH;
 	game.state = 'play_card';
 	game.show_cards = false;
 	game.surprise = 0;
@@ -930,7 +931,7 @@ function resume_play_card() {
 	else if (game.p_card)
 		game.active = CAESAR;
 	else
-		game.active = "Both";
+		game.active = BOTH;
 }
 
 states.play_card = {

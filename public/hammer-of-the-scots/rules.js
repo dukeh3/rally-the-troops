@@ -2631,19 +2631,28 @@ states.scottish_builds = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for Scotland to build.";
-		view.prompt = "Scottish Builds: Deploy or reinforce armies.";
 		gen_action_undo(view);
 		gen_action(view, 'end_builds');
+		let can_build = false;
 		for (let where in game.rp) {
 			let rp = game.rp[where];
 			if (rp > 0) {
-				for (let b in BLOCKS)
-					if (game.location[b] == where && game.steps[b] < block_max_steps(b))
+				for (let b in BLOCKS) {
+					if (game.location[b] == where && game.steps[b] < block_max_steps(b)) {
 						gen_action(view, 'block', b);
-				if (is_under_castle_limit(where))
+						can_build = true;
+					}
+				}
+				if (is_under_castle_limit(where) && count_blocks_in_area(S_BAG) > 0) {
 					gen_action(view, 'area', where);
+					can_build = true;
+				}
 			}
 		}
+		if (can_build)
+			view.prompt = "Scottish Builds: Deploy or reinforce armies.";
+		else
+			view.prompt = "Scottish Builds: Deploy or reinforce armies \u2014 done.";
 	},
 	area: function (where) {
 		let who;
@@ -2689,21 +2698,27 @@ states.english_builds = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for England to build.";
-		view.prompt = "English Builds: Reinforce armies.";
 		gen_action_undo(view);
 		gen_action(view, 'end_builds');
+		let can_build = false;
 		for (let where in game.rp) {
 			let rp = game.rp[where];
 			if (rp > 0) {
 				for (let b in BLOCKS) {
 					if (game.location[b] == where && game.steps[b] < block_max_steps(b)) {
 						let type = block_type(b);
-						if (type == 'nobles' || type == 'infantry')
+						if (type == 'nobles' || type == 'infantry') {
 							gen_action(view, 'block', b);
+							can_build = true;
+						}
 					}
 				}
 			}
 		}
+		if (can_build)
+			view.prompt = "English Builds: Reinforce armies.";
+		else
+			view.prompt = "English Builds: Reinforce armies \u2014 done.";
 	},
 	block: function (who) {
 		push_undo();

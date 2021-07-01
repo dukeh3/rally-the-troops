@@ -319,7 +319,7 @@ div.block {
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">$PROMPT</div>
+		<div id="prompt" class="prompt">Connecting...</div>
 
 		<button id="execute_clarence_button" onclick="on_button_execute_clarence()" class="hide">
 			Execute Clarence
@@ -365,18 +365,24 @@ div.block {
 	<div class="grid_role">
 
 		<div class="role one">
-			<div class="role_vp" id="lancaster_vp"></div>
-			<div class="role_name">Lancaster (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">
+				Lancaster
+				<div class="role_vp" id="lancaster_vp"></div>
+				<div class="role_user">-</div>
+			</div>
 			<div class="role_info"><div class="small_card card_back" id="lancaster_card"></div></div>
 		</div>
 
 		<div class="role two">
-			<div class="role_vp" id="york_vp"></div>
-			<div class="role_name">York (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">
+				York
+				<div class="role_vp" id="york_vp"></div>
+				<div class="role_user">-</div>
+			</div>
 			<div class="role_info"><div class="small_card card_back" id="york_card"></div></div>
 		</div>
 
-		<div id="turn">$TURN</div>
+		<div id="turn">-</div>
 
 	</div>
 

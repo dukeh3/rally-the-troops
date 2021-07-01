@@ -66,8 +66,8 @@
 }
 
 .role_info {
-	padding: 5px 20px;
-	white-space: pre-wrap;
+	padding: 5px 15px;
+	white-space: pre-line;
 }
 
 #tooltip.card {
@@ -299,7 +299,7 @@ svg circle, .piece {
 		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">$PROMPT</div>
+		<div id="prompt" class="prompt">Connecting...</div>
 
 		<button id="button_pass" onclick="on_pass()" class="hide">Pass</button>
 		<button id="button_next" onclick="on_next()" class="hide">Next</button>
@@ -311,14 +311,20 @@ svg circle, .piece {
 
 	<div class="grid_role">
 		<div class="role one">
-			<div class="role_vp" id="us_score">30</div>
-			<div class="role_name">United States (<span class="role_user">$USER</span>)</div>
-			<div class="role_info" id="us_info">0 cards in hand</div>
+			<div class="role_name">
+				United States
+				<div class="role_vp" id="us_score">30</div>
+				<div class="role_user">-</div>
+			</div>
+			<div class="role_info" id="us_info">Hand:&#x0a;Draw:&#x0a;Discard:</div>
 		</div>
 		<div class="role two">
-			<div class="role_vp" id="tr_score">0</div>
-			<div class="role_name">Tripolitania (<span class="role_user">$USER</span>)</div>
-			<div class="role_info" id="tr_info">0 cards in hand</div>
+			<div class="role_name">
+				Tripolitania
+				<div class="role_vp" id="tr_score">0</div>
+				<div class="role_user">-</div>
+			</div>
+			<div class="role_info" id="tr_info">Hand:&#x0a;Draw:&#x0a;Discard:</div>
 		</div>
 		<div class="role_info card_info"><div id="active_card" class="card show blank"></div></div>
 	</div>

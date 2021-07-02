@@ -2576,7 +2576,7 @@ states.sea_retreat_to = {
 	area: function (to) {
 		let sea = game.location[game.who];
 		game.turn_log.push([game.active, sea, to]);
-		game.flash = block_name(game.who) + " retreats by sea.";
+		game.flash = block_name(game.who) + " retreats.";
 		log_battle(game.flash);
 		game.location[game.who] = to;
 		resume_battle();

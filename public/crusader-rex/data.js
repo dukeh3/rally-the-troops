@@ -128,8 +128,9 @@ const TOWNS = {
 	"Germania":{"x":140,"y":272},
 	"France":{"x":140,"y":573},
 	"England":{"x":140,"y":873},
+	"Sea":{"x":320,"y":900},
 	"FP":{"x":50,"y":2150},
-	"SP":{"x":50,"y":2150},
+	"SP":{"x":125,"y":2150},
 	"Dead":{"x":50,"y":80},
 };
 
@@ -266,6 +267,7 @@ const PORTS = [];
 	town('Y', 0.0, 0.0, 30,	"Pool", "FP", 0, "pool");
 	town('Y', 0.0, 0.0, 30,	"Pool", "SP", 0, "pool");
 	town('Y', 1.0, 1.0, 30,	"Pool", "Dead", 0, "pool");
+	town('Y', 1.0, 1.0, 30,	"Pool", "Sea", 0, "pool");
 
 	town('Y', 1.0, 0.5, 3,	"Staging", 		"England", 	3, "staging");
 	town('Y', 1.0, 0.5, 3,	"Staging", 		"France", 	3, "staging");

@@ -375,7 +375,16 @@ function build_map() {
 
 	for (let name in TOWNS) {
 		let town = TOWNS[name];
-		ui.towns[name] = build_town(name, town);
+		if (name == "Sea") {
+			element = document.getElementById("svgmap").getElementById("sea");
+			element.town = "Sea";
+			element.addEventListener("mouseenter", on_focus_town);
+			element.addEventListener("mouseleave", on_blur_town);
+			element.addEventListener("click", on_click_town);
+			ui.towns[name] = element;
+		} else {
+			ui.towns[name] = build_town(name, town);
+		}
 	}
 
 	for (let b in BLOCKS) {

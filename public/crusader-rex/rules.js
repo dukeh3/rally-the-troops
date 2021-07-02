@@ -23,6 +23,7 @@ const BOTH = "Both";
 const DEAD = "Dead";
 const F_POOL = "FP";
 const S_POOL = "SP";
+const SEA = "Sea";
 const ENGLAND = "England";
 const FRANCE = "France";
 const GERMANIA = "Germania";
@@ -70,6 +71,7 @@ const NO_MARK = "";
 delete TOWNS[DEAD];
 delete TOWNS[F_POOL];
 delete TOWNS[S_POOL];
+delete TOWNS[SEA];
 
 let states = {};
 
@@ -1536,9 +1538,10 @@ states.move_phase = {
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
-			gen_action(view, 'group_move');
-			if (can_sea_move_anywhere())
-				gen_action(view, 'sea_move');
+			let sea_moves_allowed = (game.active != game.guide && game.active != game.jihad);
+			for (let b in BLOCKS)
+				if (can_block_land_move(b) || (sea_moves_allowed && can_block_sea_move(b)))
+					gen_action(view, 'block', b);
 			if (can_muster_anywhere())
 				gen_action(view, 'muster');
 			if (game.winter_campaign == game.active)
@@ -1550,31 +1553,88 @@ states.move_phase = {
 		--game.moves;
 		game.state = 'winter_campaign';
 	},
-	group_move: function () {
-		push_undo();
-		--game.moves;
-		game.state = 'group_move_first';
-		game.summary = [];
-	},
-	sea_move: function () {
-		push_undo();
-		game.state = 'sea_move';
-	},
 	muster: function () {
 		push_undo();
 		--game.moves;
 		game.state = 'muster';
 	},
+	block: function (who) {
+		game.summary = [];
+		push_undo();
+		game.who = who;
+		game.where = game.location[who];
+		if (game.where == GERMANIA || game.where == FRANCE || game.where == ENGLAND) {
+			game.state = 'sea_move_to';
+		} else {
+			game.state = 'move_phase_to';
+		}
+	},
 	end_move_phase: end_move_phase,
+	undo: pop_undo
+}
+
+// Start new group move or sea move.
+states.move_phase_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
+		view.prompt = "Move Phase: Move " + block_name(game.who);
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		let from = game.location[game.who];
+		let can_group_move = false;
+		let can_sea_move = false;
+		for (let to of TOWNS[from].exits) {
+			if (can_block_land_move_to(game.who, from, to)) {
+				gen_action(view, 'town', to);
+				can_group_move = true;
+			}
+		}
+		if (can_block_sea_move(game.who)) {
+			gen_action(view, 'town', SEA);
+			can_sea_move = true;
+		}
+		if (can_group_move && can_sea_move)
+			view.prompt += " by road or by sea.";
+		else if (can_sea_move)
+			view.prompt += " by sea.";
+		else
+			view.prompt += " by road.";
+	},
+	town: function (to) {
+		let from = game.location[game.who];
+		if (to == SEA) {
+			log_move_start(from);
+			log_move_continue(to);
+			game.location[game.who] = SEA;
+			game.state = 'sea_move_to';
+			return;
+		}
+		-- game.moves;
+		game.distance = 0;
+		log_move_start(from);
+		let mark = move_block(game.who, from, to);
+		if (mark)
+			log_move_continue(to + mark);
+		else
+			log_move_continue(to);
+		lift_siege(from);
+		game.last_from = from;
+		if (!can_block_continue(game.who, from, to))
+			end_move();
+		else {
+			game.state = 'group_move_to';
+		}
+	},
+	block: pop_undo,
 	undo: pop_undo
 }
 
 // GROUP MOVE
 
-function group_move_phase(inactive = 0) {
+function group_move_name(inactive = 0) {
 	if (game.active == game.jihad) return "Jihad: ";
 	if (game.active == game.guide) return "Guide: ";
-	if (inactive) return "Move Phase: ";
 	return "Group Move: ";
 }
 
@@ -1589,8 +1649,8 @@ function can_group_move_more() {
 states.group_move_first = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
-		view.prompt = group_move_phase(0) + "Choose a block to group move.";
+			return view.prompt = group_move_name(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_name(0) + "Choose a block to group move.";
 		gen_action_undo(view);
 		if (game.active == game.guide || game.active == game.jihad)
 			gen_action(view, 'end_move_phase');
@@ -1613,8 +1673,8 @@ states.group_move_first = {
 states.group_move_who = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
-		view.prompt = group_move_phase(0) + "Choose a block to group move.";
+			return view.prompt = group_move_name(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_name(0) + "Move blocks from " + game.where + ".";
 		gen_action_undo(view);
 		if (game.active == game.guide || game.active == game.jihad)
 			gen_action(view, 'end_move_phase');
@@ -1640,8 +1700,8 @@ states.group_move_who = {
 states.group_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = group_move_phase(1) + "Waiting for " + game.active + ".";
-		view.prompt = group_move_phase(0) + "Move " + block_name(game.who) + ".";
+			return view.prompt = group_move_name(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_name(0) + "Move " + block_name(game.who) + ".";
 		gen_action_undo(view);
 		if (game.distance == 0)
 			gen_action(view, 'block', game.who);
@@ -1706,32 +1766,14 @@ function end_group_move() {
 
 // SEA MOVE
 
-states.sea_move = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
-		view.prompt = "Sea Move: Choose a block to move.";
-		gen_action_undo(view);
-		for (let b in BLOCKS)
-			if (can_block_sea_move(b))
-				gen_action(view, 'block', b);
-	},
-	end_sea_move: function () {
-		game.state = 'move_phase';
-	},
-	block: function (who) {
-		game.who = who;
-		game.state = 'sea_move_to';
-	},
-	undo: pop_undo
-}
-
 states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		if (is_english_crusader(game.who))
 			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a port.";
+		else if (game.where == GERMANIA)
+			view.prompt = "Move Phase: Move " + block_name(game.who) + " to Aleppo, Antioch, or St. Simeon.";
 		else
 			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a friendly port.";
 		gen_action_undo(view);
@@ -1744,7 +1786,7 @@ states.sea_move_to = {
 				gen_action(view, 'town', ST_SIMEON);
 		} else {
 			for (let to of PORTS)
-				if (to != from && can_block_sea_move_to(game.who, to))
+				if (to != game.where && can_block_sea_move_to(game.who, to))
 					gen_action(view, 'town', to);
 		}
 	},
@@ -1787,10 +1829,7 @@ states.sea_move_to = {
 		game.who = null;
 		game.state = 'move_phase';
 	},
-	block: function () {
-		game.who = null;
-		game.state = 'sea_move';
-	},
+	block: pop_undo,
 	undo: pop_undo,
 }
 

@@ -2132,6 +2132,11 @@ states.combat_deployment = {
 
 // REGROUP AFTER FIELD BATTLE/SIEGE VICTORY
 
+function print_retreat_summary() {
+	if (game.summary && game.summary.length > 0)
+		print_summary("Retreats from " + game.where + ":");
+}
+
 function goto_regroup() {
 	lift_siege(game.where);
 	console.log("REGROUP", game.active);
@@ -2199,6 +2204,7 @@ states.regroup_to = {
 
 function next_combat_round() {
 	console.log("NEXT COMBAT ROUND");
+	print_retreat_summary();
 	if (game.jihad == game.where && game.combat_round == 1)
 		game.jihad = null;
 	switch (game.combat_round) {
@@ -2232,6 +2238,7 @@ function bring_on_reserves(reserves) {
 function goto_combat_round(combat_round) {
 	game.combat_round = combat_round;
 	game.moved = {};
+	game.summary = [];
 
 	console.log("COMBAT ROUND", combat_round);
 	log("~ Combat Round " + combat_round + " ~");
@@ -2591,6 +2598,7 @@ function resume_field_battle() {
 
 	if (is_friendly_field(game.where)) {
 		console.log("FIELD BATTLE WON BY ATTACKER", game.active);
+		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
@@ -2598,18 +2606,21 @@ function resume_field_battle() {
 	if (is_enemy_field(game.where)) {
 		game.active = enemy(game.active);
 		console.log("FIELD BATTLE WON BY DEFENDER", game.active);
+		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
 	if (is_enemy_battle_field()) {
-		log("Attacking main force was eliminated.");
 		console.log("ATTACKER ELIMINATED", game.active);
+		print_retreat_summary();
+		log("Attacking main force was eliminated.");
 		return next_combat_round();
 	}
 
 	if (is_friendly_battle_field()) {
 		console.log("DEFENDER ELIMINATED, SWAP ATTACKER/DEFENDER", game.active);
+		print_retreat_summary();
 		log("Defending main force was eliminated.");
 		log(game.active + " are now the defender.");
 		game.attacker[game.where] = enemy(game.active);
@@ -2985,10 +2996,10 @@ states.harry = {
 	},
 	town: function (to) {
 		if (block_plural(game.who))
-			game.flash = block_name(game.who) + " retreat.";
+			game.flash += " " + block_name(game.who) + " retreat.";
 		else
-			game.flash = block_name(game.who) + " retreats.";
-		log(game.active + " retreat to " + to + ".");
+			game.flash += " " + block_name(game.who) + " retreats.";
+		game.summary.push([game.active, to]);
 		game.location[game.who] = to;
 		move_block(game.who, game.where, to);
 		game.who = null;
@@ -3017,7 +3028,8 @@ states.retreat_in_battle = {
 			game.flash = block_name(game.who) + " retreat.";
 		else
 			game.flash = block_name(game.who) + " retreats.";
-		log(game.active + " retreat to " + to + ".");
+		log(game.active[0] + ": " + game.flash);
+		game.summary.push([game.active, to]);
 		game.location[game.who] = to;
 		move_block(game.who, game.where, to);
 		game.who = null;

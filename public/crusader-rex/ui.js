@@ -364,7 +364,7 @@ function layout_blocks_spread(town, north, south) {
 	let wrap = TOWNS[town].wrap;
 	let rows = [];
 
-	if (north.length + south.length > wrap * 2) {
+	if ((north.length > wrap || south.length > wrap) || (north.length + south.length <= 3)) {
 		north = north.concat(south);
 		south = [];
 	}
@@ -381,52 +381,14 @@ function layout_blocks_spread(town, north, south) {
 	wrap_row(north);
 	wrap_row(south);
 
+	if (TOWNS[town].layout_minor > 0.5)
+		rows.reverse();
+
 	for (let r = 0; r < rows.length; ++r) {
 		let cols = rows[r];
 		for (let c = 0; c < cols.length; ++c)
 			position_block(town, r, rows.length, c, cols.length, cols[c]);
 	}
-}
-
-function layout_blocks_spread_old(town, secret, known) {
-	let wrap = TOWNS[town].wrap;
-	let s = secret.length;
-	let k = known.length;
-	let n = s + k;
-	let row, rows = [];
-	let i = 0;
-
-	function new_line() {
-		rows.push(row = []);
-		i = 0;
-	}
-
-	new_line();
-
-	while (secret.length > 0) {
-		if (i == wrap)
-			new_line();
-		row.push(secret.shift());
-		++i;
-	}
-
-	// Break early if secret and known fit in exactly two rows, and more than three blocks total
-	if (s > 0 && s <= wrap && k > 0 && k <= wrap && n > 3)
-		new_line();
-
-	while (known.length > 0) {
-		if (i == wrap)
-			new_line();
-		row.push(known.shift());
-		++i;
-	}
-
-	if (TOWNS[town].layout_minor > 0.5)
-		rows.reverse();
-
-	for (let j = 0; j < rows.length; ++j)
-		for (i = 0; i < rows[j].length; ++i)
-			position_block(town, j, rows.length, i, rows[j].length, rows[j][i]);
 }
 
 function position_block(town, row, n_rows, col, n_cols, element) {
@@ -556,17 +518,27 @@ function update_map() {
 					jihad = " jihad";
 				element.classList = info.owner + " block" + moved + besieging + jihad;
 			}
-			if (town == F_POOL || town == S_POOL)
-				layout[F_POOL].north.push(element);
-			else if (town == DEAD)
-				layout[DEAD].north.push(element);
-			else if (info.owner == FRANKS)
-				layout[town].north.push(element);
-			else
-				layout[town].south.push(element);
+			if (town != DEAD) {
+				if (info.owner == FRANKS)
+					layout[town].north.push(element);
+				else
+					layout[town].south.push(element);
+			}
 			show_block(element);
 		} else {
 			hide_block(element);
+		}
+	}
+
+	for (let b in game.location) {
+		let info = BLOCKS[b];
+		let element = ui.blocks[b];
+		let town = game.location[b];
+		if (town == DEAD) {
+			if (info.owner == FRANKS)
+				layout[F_POOL].north.unshift(element);
+			else
+				layout[S_POOL].south.unshift(element);
 		}
 	}
 

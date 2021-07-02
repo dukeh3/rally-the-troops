@@ -375,6 +375,8 @@ function build_map() {
 
 	for (let name in TOWNS) {
 		let town = TOWNS[name];
+		if (name == F_POOL || name == S_POOL || name == DEAD)
+			continue;
 		if (name == "Sea") {
 			element = document.getElementById("svgmap").getElementById("sea");
 			element.town = "Sea";
@@ -383,7 +385,11 @@ function build_map() {
 			element.addEventListener("click", on_click_town);
 			ui.towns[name] = element;
 		} else {
-			ui.towns[name] = build_town(name, town);
+			element = ui.towns[name] = build_town(name, town);
+			let xo = Math.round(element.offsetWidth/2);
+			let yo = Math.round(element.offsetHeight/2);
+			element.style.left = (town.x - xo) + "px";
+			element.style.top = (town.y - yo) + "px";
 		}
 	}
 
@@ -392,8 +398,6 @@ function build_map() {
 		ui.blocks[b] = build_map_block(b, block);
 		build_battle_block(b, block);
 	}
-
-	update_map_layout();
 }
 
 function update_steps(b, steps, element) {
@@ -595,15 +599,6 @@ function update_map() {
 		let element = ui.blocks[b];
 		let town = game.location[b];
 
-		if ((town == F_POOL && player != FRANKS) || (town == S_POOL && player != SARACENS)) {
-			hide_block(element);
-			continue;
-		}
-		if (town == DEAD && player != info.owner) {
-			hide_block(element)
-			continue;
-		}
-
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
 			if (town == DEAD)
@@ -628,7 +623,11 @@ function update_map() {
 					jihad = " jihad";
 				element.classList = info.owner + " block" + moved + besieging + jihad;
 			}
-			if (info.owner == FRANKS)
+			if (town == F_POOL || town == S_POOL)
+				layout[F_POOL].north.push(element);
+			else if (town == DEAD)
+				layout[DEAD].north.push(element);
+			else if (info.owner == FRANKS)
 				layout[town].north.push(element);
 			else
 				layout[town].south.push(element);

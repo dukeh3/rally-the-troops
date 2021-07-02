@@ -673,11 +673,20 @@ function can_block_use_road(from, to) {
 }
 
 function can_block_land_move_to(who, from, to) {
-	// TODO: check winter
 	if (can_block_use_road(from, to)) {
 		if (count_pinning(from) > 0)
 			if (road_was_last_used_by_enemy(from, to))
 				return false;
+
+		// cannot start or reinforce battles in winter
+		if (is_winter() && is_enemy_occupied_town(to)) {
+			// but can move through friendly sieges
+			if (!is_friendly_field(to))
+				return false;
+			if (game.distance + 1 >= block_move(game.who))
+				return false;
+		}
+
 		return true;
 	}
 	return false;
@@ -1713,14 +1722,6 @@ states.group_move_to = {
 		}
 		for (let to of TOWNS[from].exits) {
 			if (to != game.last_from && can_block_land_move_to(game.who, from, to)) {
-				// cannot start or reinforce battles in winter
-				if (is_winter() && is_enemy_occupied_town(to)) {
-					// but can move through friendly sieges
-					if (!is_friendly_field(to))
-						continue;
-					if (game.distance + 1 >= block_move(game.who))
-						continue;
-				}
 				gen_action(view, 'town', to);
 			}
 		}

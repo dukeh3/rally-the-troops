@@ -2397,6 +2397,7 @@ exports.setup = function (scenario, players) {
 		state: null,
 		show_cards: false,
 		year: 705,
+		turn: 0,
 		location: {},
 		steps: {},
 		owner: {},

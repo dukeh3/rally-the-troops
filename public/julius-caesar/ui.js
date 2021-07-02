@@ -668,6 +668,10 @@ function on_update() {
 	document.getElementById("turn").className = "year_" + game.year;
 	document.getElementById("caesar_vp").textContent = game.c_vp + " VP";
 	document.getElementById("pompeius_vp").textContent = game.p_vp + " VP";
+	if (game.turn < 1)
+		document.querySelector(".turn_info").textContent = `Year ${game.year}`;
+	else
+		document.querySelector(".turn_info").textContent = `Turn ${game.turn} of Year ${game.year}`;
 
 	show_action_button("#undo_button", "undo");
 	show_action_button("#surprise_button", "surprise");

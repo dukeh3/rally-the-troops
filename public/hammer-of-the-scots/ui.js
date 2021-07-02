@@ -721,6 +721,7 @@ function on_update() {
 
 	document.getElementById("england_vp").textContent = game.e_vp;
 	document.getElementById("scotland_vp").textContent = game.s_vp;
+	document.querySelector(".turn_info").textContent = `Turn ${game.turn} of Year ${game.year}`;
 
 	update_cards();
 	update_map();

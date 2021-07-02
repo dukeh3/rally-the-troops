@@ -483,7 +483,7 @@ function update_map() {
 	let overflow = { Lancaster: [], York: [], Rebel: [] };
 	let layout = {};
 
-	document.getElementById("turn").textContent =
+	document.querySelector(".turn_info").textContent =
 		"Campaign " + game.campaign +
 		"\nKing: " + block_name(game.king) +
 		"\nPretender: " + block_name(game.pretender);

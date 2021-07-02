@@ -2887,6 +2887,7 @@ exports.view = function(state, current) {
 	let view = {
 		log: game.log,
 		year: game.year,
+		turn: 6 - (game.e_hand.length + (game.e_card ? 1 : 0)),
 		edward: game.edward,
 		e_vp: count_english_nobles(),
 		s_vp: count_scottish_nobles(),

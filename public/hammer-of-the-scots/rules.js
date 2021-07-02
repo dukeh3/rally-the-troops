@@ -6,8 +6,6 @@ exports.scenarios = [
 	"Campaign",
 ];
 
-// TODO: delay retreats to end of battle initiative step so they are hidden
-
 const { CARDS, BLOCKS, AREAS, BORDERS } = require('./data');
 
 const ENEMY = { Scotland: "England", England: "Scotland" }
@@ -64,11 +62,11 @@ function print_turn_log_no_count(text) {
 	delete game.turn_log;
 }
 
-function print_turn_log(verb) {
+
+function print_turn_log_no_active(text) {
 	function print_move(last) {
 		return "\n" + n + " " + last.join(" \u2192 ");
 	}
-	let text = game.active + " " + verb + ":";
 	game.turn_log.sort();
 	let last = game.turn_log[0];
 	let n = 0;
@@ -86,6 +84,10 @@ function print_turn_log(verb) {
 		text += "\nnothing.";
 	log(text);
 	delete game.turn_log;
+}
+
+function print_turn_log(verb) {
+	print_turn_log_no_active(game.active + " " + verb + ":");
 }
 
 function is_active_player(current) {
@@ -1536,6 +1538,9 @@ function resume_battle() {
 }
 
 function end_battle() {
+	if (game.turn_log && game.turn_log.length > 0)
+		print_turn_log_no_active("Retreats from " + game.where + ":");
+
 	game.flash = "";
 	game.battle_round = 0;
 	reset_border_limits();
@@ -1560,6 +1565,10 @@ function bring_on_reserves() {
 
 function start_battle_round() {
 	if (++game.battle_round <= 3) {
+		if (game.turn_log && game.turn_log.length > 0)
+			print_turn_log_no_active("Retreats from " + game.where + ":");
+		game.turn_log = [];
+
 		log("~ Battle Round " + game.battle_round + " ~");
 
 		reset_border_limits();
@@ -1882,13 +1891,14 @@ states.retreat_in_battle = {
 		}
 	},
 	area: function (to) {
+		game.turn_log.push([game.active, to]);
 		if (game.who == NORSE) {
 			game.flash = "Norse retreat to " + to + ".";
-			log("The Norse retreat to " + to + ".");
+			log_battle(game.flash);
 			game.location[game.who] = to;
 		} else {
 			game.flash = block_name(game.who) + " retreats.";
-			log(game.active + " retreats to " + to + ".");
+			log_battle(game.flash);
 			move_block(game.who, game.where, to);
 		}
 		game.who = null;

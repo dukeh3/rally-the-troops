@@ -74,11 +74,10 @@ function log_levy(where) {
 	game.turn_log.push([where]);
 }
 
-function print_turn_log(verb) {
+function print_turn_log_no_active(text) {
 	function print_move(last) {
 		return "\n" + n + " " + last.join(" \u2192 ");
 	}
-	let text = game.active + " " + verb + ":";
 	game.turn_log.sort();
 	let last = game.turn_log[0];
 	let n = 0;
@@ -96,6 +95,10 @@ function print_turn_log(verb) {
 		text += "\nnothing.";
 	log(text);
 	delete game.turn_log;
+}
+
+function print_turn_log(verb) {
+	print_turn_log_no_active(game.active + " " + verb + ":");
 }
 
 function is_active_player(current) {
@@ -1697,14 +1700,6 @@ function resume_battle() {
 	pump_battle_round();
 }
 
-function end_battle() {
-	game.flash = "";
-	game.battle_round = 0;
-	reset_road_limits();
-	game.moved = {};
-	goto_regroup();
-}
-
 function disrupt_attacking_reserves() {
 	for (let b in BLOCKS)
 		if (game.location[b] == game.where && block_owner(b) == game.attacker[game.where])
@@ -1722,6 +1717,10 @@ function bring_on_reserves() {
 
 function start_battle_round() {
 	if (++game.battle_round <= 4) {
+		if (game.turn_log && game.turn_log.length > 0)
+			print_turn_log_no_active("Retreats from " + game.where + ":");
+		game.turn_log = [];
+
 		reset_road_limits();
 		game.moved = {};
 
@@ -1807,6 +1806,8 @@ function pump_battle_round() {
 }
 
 function end_battle() {
+	if (game.turn_log && game.turn_log.length > 0)
+		print_turn_log_no_active("Retreats from " + game.where + ":");
 	if (game.surprise == game.where)
 		game.surprise = 0;
 	game.flash = "";
@@ -2029,9 +2030,10 @@ states.retreat = {
 			game.sea_retreated = true;
 			game.state = 'sea_retreat';
 		} else {
-			logp("retreats to " + to + ".");
 			move_to(game.who, from, to);
-			game.flash = block_name(game.who) + " retreats to " + to + ".";
+			game.flash = block_name(game.who) + " retreats.";
+			log_battle(game.flash);
+			game.turn_log.push([game.active, to]);
 			game.moved[game.who] = true;
 			resume_battle();
 		}
@@ -2064,8 +2066,9 @@ states.sea_retreat = {
 	},
 	space: function (to) {
 		let from = game.location[game.who];
-		logp("sea retreats to " + to + ".");
-		game.flash = block_name(game.who) + " sea retreats to " + to + ".";
+		game.flash = block_name(game.who) + " retreats by sea.";
+		log_battle(game.flash);
+		game.turn_log.push([game.active, from, to]);
 		move_to(game.who, from, to);
 		game.moved[game.who] = true;
 		resume_battle();

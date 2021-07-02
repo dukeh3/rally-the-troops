@@ -1973,6 +1973,8 @@ function resume_battle() {
 }
 
 function end_battle() {
+	if (game.turn_log && game.turn_log.length > 0)
+		print_turn_log("Retreats from " + game.where + ":");
 	free_henry_vi();
 	game.flash = "";
 	game.battle_round = 0;
@@ -2033,6 +2035,10 @@ function bring_on_reserves(owner, moved) {
 
 function start_battle_round() {
 	if (++game.battle_round <= 4) {
+		if (game.turn_log && game.turn_log.length > 0)
+			print_turn_log("Retreats from " + game.where + ":");
+		game.turn_log = [];
+
 		log("~ Battle Round " + game.battle_round + " ~");
 
 		reset_border_limits();
@@ -2534,8 +2540,9 @@ states.retreat_in_battle = {
 			game.location[game.who] = to;
 			game.state = 'sea_retreat_to';
 		} else {
-			game.flash = block_name(game.who) + " retreats to " + to + ".";
-			logp("retreats to " + to + ".");
+			game.flash = block_name(game.who) + " retreats.";
+			log_battle(game.flash);
+			game.turn_log.push([game.active, to]);
 			use_border(game.where, to);
 			game.location[game.who] = to;
 			resume_battle();
@@ -2567,8 +2574,10 @@ states.sea_retreat_to = {
 				gen_action(view, 'area', to);
 	},
 	area: function (to) {
+		let sea = game.location[game.who];
+		game.turn_log.push([game.active, sea, to]);
 		game.flash = block_name(game.who) + " retreats by sea.";
-		logp("sea retreats to " + to + ".");
+		log_battle(game.flash);
 		game.location[game.who] = to;
 		resume_battle();
 	},

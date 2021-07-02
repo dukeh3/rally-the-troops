@@ -86,6 +86,13 @@ function active_adjective() {
 	return (game.active == FRANKS ? "Frank" : "Saracen");
 }
 
+function join(list, conj = "or") {
+	if (list.length == 0) return "";
+	if (list.length == 1) return list[0];
+	if (list.length == 2) return `${list[0]} ${conj} ${list[1]}`;
+	return `${list.slice(0,-1).join(", ")}, ${conj} ${list[list.length-1]}`;
+}
+
 function log_move_start(from) {
 	game.move_buf = [ from ];
 }
@@ -976,10 +983,11 @@ function reduce_block(who) {
 // DEPLOYMENT
 
 function is_valid_frank_deployment() {
+	let errors = [];
 	for (let town in TOWNS)
 		if (!is_within_castle_limit(town))
-			return false;
-	return true;
+			errors.push(town);
+	return errors;
 }
 
 function goto_frank_deployment() {
@@ -991,15 +999,19 @@ states.frank_deployment = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Deployment: Waiting for " + game.active + ".";
-		view.prompt = "Deployment: You may make seat adjustments.";
 		gen_action_undo(view);
-		if (is_valid_frank_deployment())
+		let errors = is_valid_frank_deployment();
+		if (errors.length == 0)
 			gen_action(view, 'next');
 		for (let b in BLOCKS) {
 			if (block_owner(b) == game.active && is_block_on_land(b))
 				if (list_seats(b).length > 1)
 					gen_action(view, 'block', b);
 		}
+		if (errors.length > 0)
+			view.prompt = "Deployment: Too many blocks in " + join(errors, "and") + ".";
+		else
+			view.prompt = "Deployment: You may make seat adjustments.";
 	},
 	block: function (who) {
 		push_undo();
@@ -1017,7 +1029,7 @@ states.frank_deployment_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Deployment: Waiting for " + game.active + ".";
-		view.prompt = "Deployment: You may make seat adjustments.";
+		view.prompt = "Deployment: Move " + game.who + " to " + join(list_seats(game.who), "or") + ".";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
@@ -1050,18 +1062,17 @@ states.saracen_deployment = {
 		if (is_inactive_player(current))
 			return view.prompt = "Deployment: Waiting for " + game.active + ".";
 		view.prompt = "Deployment: You may swap places with Saladin and any other block of his family."
-		gen_action(view, 'pass');
+		gen_action(view, 'next');
 		for (let b of SALADIN_FAMILY)
 			if (b != SALADIN && game.location[b] != game.location[SALADIN])
 				gen_action(view, 'block', b);
 	},
 	block: function (who) {
+		let saladin = game.location[SALADIN];
 		game.location[SALADIN] = game.location[who];
-		game.location[who] = DAMASCUS;
-		game.who = null;
-		start_year();
+		game.location[who] = saladin;
 	},
-	pass: function () {
+	next: function () {
 		game.who = null;
 		start_year();
 	}

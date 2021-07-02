@@ -568,11 +568,14 @@ function update_map() {
 	document.getElementById("frank_vp").textContent = game.f_vp + " VP";
 	document.getElementById("saracen_vp").textContent = game.s_vp + " VP";
 	document.getElementById("timeline").className = "year_" + game.year;
-	if (game.turn < 6)
-		document.getElementById("turn").textContent =
+	if (game.turn < 1)
+		document.querySelector(".turn_info").textContent =
+			"Year " + game.year;
+	else if (game.turn < 6)
+		document.querySelector(".turn_info").textContent =
 			"Turn " + game.turn + " of Year " + game.year;
 	else
-		document.getElementById("turn").textContent =
+		document.querySelector(".turn_info").textContent =
 			"Winter Turn of Year " + game.year;
 
 	for (let town in TOWNS)

@@ -427,7 +427,7 @@ X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
 		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">$PROMPT</div>
+		<div id="prompt" class="prompt">Connecting...</div>
 
 		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
 		<button id="winter_campaign_button" class="hide" onclick="on_button_winter_campaign()">Winter campaign</button>
@@ -449,18 +449,24 @@ X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 	<div class="grid_role">
 
 		<div class="role one">
-			<div class="role_vp" id="frank_vp"></div>
-			<div class="role_name">Franks (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">
+				Franks
+				<div class="role_vp" id="frank_vp"></div>
+				<div class="role_user">-</div>
+			</div>
 			<div class="role_info"><div class="small_card card_back" id="frank_card"></div></div>
 		</div>
 
 		<div class="role two">
-			<div class="role_vp" id="saracen_vp"></div>
-			<div class="role_name">Saracens (<span class="role_user">$USER</span>)</div>
+			<div class="role_name">
+				Saracens
+				<div class="role_vp" id="saracen_vp"></div>
+				<div class="role_user">-</div>
+			</div>
 			<div class="role_info"><div class="small_card card_back" id="saracen_card"></div></div>
 		</div>
 
-		<div id="turn">$TURN</div>
+		<div class="turn_info">-</div>
 
 	</div>
 

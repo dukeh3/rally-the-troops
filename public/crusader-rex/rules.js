@@ -3385,6 +3385,7 @@ states.game_over = {
 function setup_game() {
 	reset_blocks();
 	game.year = 1187;
+	game.turn = 0;
 	for (let b in BLOCKS) {
 		if (block_owner(b) == FRANKS) {
 			switch (block_type(b)) {

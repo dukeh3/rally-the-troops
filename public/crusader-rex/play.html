@@ -28,31 +28,16 @@
 
 .map #timeline {
 	position: absolute;
-}
-
-.map.tall #timeline {
 	width: 88px; height: 35px; top: 2410px;
 	background-image: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.3), rgba(255,255,255,0.8));
 }
 
-.map.wide #timeline {
-	width: 35px; height: 88px; left: 2410px;
-	background-image: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.3), rgba(255,255,255,0.8));
-}
-
-.map.tall #timeline.year_1187 { left: 702px; }
-.map.tall #timeline.year_1188 { left: 793px; width: 89px; }
-.map.tall #timeline.year_1189 { left: 885px; }
-.map.tall #timeline.year_1190 { left: 976px; width: 89px; }
-.map.tall #timeline.year_1191 { left: 1068px; }
-.map.tall #timeline.year_1192 { left: 1160px; width: 85px; }
-
-.map.wide #timeline.year_1187 { top: 30px; height: 86px; }
-.map.wide #timeline.year_1188 { top: 119px; }
-.map.wide #timeline.year_1189 { top: 211px; }
-.map.wide #timeline.year_1190 { top: 304px; }
-.map.wide #timeline.year_1191 { top: 393px; height: 89px; }
-.map.wide #timeline.year_1192 { top: 485px; }
+.map #timeline.year_1187 { left: 702px; }
+.map #timeline.year_1188 { left: 793px; width: 89px; }
+.map #timeline.year_1189 { left: 885px; }
+.map #timeline.year_1190 { left: 976px; width: 89px; }
+.map #timeline.year_1191 { left: 1068px; }
+.map #timeline.year_1192 { left: 1160px; width: 85px; }
 
 #turn {
 	padding: 8px 0px 8px 8px;
@@ -99,31 +84,10 @@
 
 .map {
 	position: relative;
-	background-repeat: no-repeat;
-}
-
-.map.tall {
 	width: 1275px;
 	height: 2475px;
+	background-repeat: no-repeat;
 	background-color: #224467;
-}
-
-.map.wide {
-	width: 2475px;
-	height: 1275px;
-	background-image: url("map-h.jpg");
-}
-
-.map.crop.tall {
-	width: 1215px;
-	height: 2378px;
-	background-position: -30px -30px;
-}
-
-.map.crop.wide {
-	width: 2378px;
-	height: 1215px;
-	background-position: -30px -30px;
 }
 
 .map.hide_blocks div.blocks {
@@ -412,9 +376,6 @@ X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 			<div class="menu_popup">
 				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
 				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="tall_map()">Tall Map</div>
-				<div class="menu_item" onclick="wide_map()">Wide Map</div>
-				<div class="menu_separator"></div>
 				<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
 				<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
 				<div class="menu_separator"></div>
@@ -487,7 +448,7 @@ X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 <div class="mapwrap" id="mapwrap">
 <div class="map" id="map">
 <svg id="svgmap" width="1275px" height="2475px" viewBox="0 0 1275 2475">
-<image href="map-v.jpg" x="0" y="0" width="1275" height="2475" />
+<image href="map.jpg" x="0" y="0" width="1275" height="2475" />
 <g transform="translate(0.000000,2475.000000) scale(1.000000,-1.000000)">
 
 <path id="sea" d="M29 1275 l0 -1171 3 0 c1 1 4 2 5 4 2 1 4 2 5 2 2 0 5 1 7 2 3 2 7 4

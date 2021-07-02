@@ -41,28 +41,6 @@ function toggle_blocks() {
 	document.getElementById("map").classList.toggle("hide_blocks");
 }
 
-let map_orientation = window.localStorage['crusader-rex/map-orientation'] || 'tall';
-
-function tall_map() {
-	map_orientation = 'tall';
-	document.querySelector(".map").classList.remove("wide");
-	document.querySelector(".map").classList.add("tall");
-	window.localStorage['crusader-rex/map-orientation'] = map_orientation;
-	update_map_layout();
-	update_map();
-	zoom_map();
-}
-
-function wide_map() {
-	map_orientation = 'wide';
-	document.querySelector(".map").classList.add("wide");
-	document.querySelector(".map").classList.remove("tall");
-	window.localStorage['crusader-rex/map-orientation'] = map_orientation;
-	update_map_layout();
-	update_map();
-	zoom_map();
-}
-
 let ui = {
 	cards: {},
 	towns: {},
@@ -312,34 +290,6 @@ function build_map_block(b, block) {
 	return element;
 }
 
-function town_x(t) {
-	if (map_orientation == 'tall')
-		return TOWNS[t].x;
-	else
-		return TOWNS[t].y;
-}
-
-function town_y(t) {
-	if (map_orientation == 'tall')
-		return TOWNS[t].y;
-	else
-		return 1275 - TOWNS[t].x;
-}
-
-function flip_x(x, y) {
-	if (map_orientation == 'tall')
-		return x;
-	else
-		return y;
-}
-
-function flip_y(x, y) {
-	if (map_orientation == 'tall')
-		return y;
-	else
-		return 1275 - x;
-}
-
 function build_town(t, town) {
 	let element = document.createElement("div");
 	element.town = t;
@@ -349,16 +299,6 @@ function build_town(t, town) {
 	element.addEventListener("click", on_click_town);
 	ui.towns_element.appendChild(element);
 	return element;
-}
-
-function update_map_layout() {
-	for (let t in TOWNS) {
-		let element = ui.towns[t];
-		let xo = Math.round(element.offsetWidth/2)
-		let yo = Math.round(element.offsetHeight/2)
-		element.style.left = (town_x(t) - xo) + "px";
-		element.style.top = (town_y(t) - yo) + "px";
-	}
 }
 
 function build_map() {
@@ -419,8 +359,6 @@ function layout_blocks(location, secret, known) {
 	else
 		layout_blocks_stacked(location, secret, known);
 }
-
-// function position_block(town, row, n_rows, col, n_cols, element) {
 
 function layout_blocks_spread(town, north, south) {
 	let wrap = TOWNS[town].wrap;
@@ -515,8 +453,8 @@ function position_block(town, row, n_rows, col, n_cols, element) {
 		x += row * offset;
 	}
 
-	element.style.left = ((flip_x(x,y) - block_size/2)|0)+"px";
-	element.style.top = ((flip_y(x,y) - block_size/2)|0)+"px";
+	element.style.left = ((x - block_size/2)|0)+"px";
+	element.style.top = ((y - block_size/2)|0)+"px";
 }
 
 function layout_blocks_stacked(location, secret, known) {
@@ -534,16 +472,10 @@ function layout_blocks_stacked(location, secret, known) {
 function position_block_stacked(location, i, c, k, element) {
 	let space = TOWNS[location];
 	let block_size = 60+6;
-	let x, y;
-	if (map_orientation == 'tall') {
-		x = space.x + (i - c) * 16 + k * 12;
-		y = space.y + (i - c) * 16 - k * 12;
-	} else {
-		x = space.x - (i - c) * 16 + k * 12;
-		y = space.y + (i - c) * 16 + k * 12;
-	}
-	element.style.left = ((flip_x(x,y) - block_size/2)|0)+"px";
-	element.style.top = ((flip_y(x,y) - block_size/2)|0)+"px";
+	let x = space.x + (i - c) * 16 + k * 12;
+	let y = space.y + (i - c) * 16 - k * 12;
+	element.style.left = ((x - block_size/2)|0)+"px";
+	element.style.top = ((y - block_size/2)|0)+"px";
 }
 
 function show_block(element) {
@@ -572,6 +504,8 @@ function is_known_block(info, who) {
 	let town = game.location[who];
 	if (town == ENGLAND || town == FRANCE || town == GERMANIA)
 		return true;
+	if (town == DEAD)
+		return true;
 	return false;
 }
 
@@ -598,7 +532,6 @@ function update_map() {
 		let info = BLOCKS[b];
 		let element = ui.blocks[b];
 		let town = game.location[b];
-
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
 			if (town == DEAD)
@@ -872,8 +805,6 @@ function on_update() {
 }
 
 build_map();
-
-document.querySelector(".map").classList.add(map_orientation);
 
 drag_element_with_mouse(".battle", ".battle_header");
 scroll_with_middle_mouse(".grid_center", 3);

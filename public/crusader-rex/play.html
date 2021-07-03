@@ -15,16 +15,15 @@
 <style>
 
 .grid_center { background-color: slategray; }
-.grid_role { background-color: gainsboro; }
+.grid_role { background-color: silver; }
 .grid_log { background-color: ghostwhite; }
 .grid_top { background-color: gainsboro; }
 .grid_top.your_turn { background-color: orange; }
 .grid_top.Franks.your_turn { background-color: #f7de46; /* 50% mix of khaki and gold */ }
 .grid_top.Saracens.your_turn { background-color: lightgreen; }
-.grid_top.disconnected { background-color: red; }
-.role_info { background-color: silver; }
 .one .role_name { background-color: khaki; }
 .two .role_name { background-color: darkseagreen; }
+.turn_info { background-color: gainsboro; }
 
 .map #timeline {
 	position: absolute;
@@ -59,19 +58,22 @@
 	transform: scale(1.1);
 }
 
-.small_card {
-	width: 90px;
-	height: 140px;
-	border-radius: 6px;
-}
-
 .small_card.prior {
 	filter: grayscale(100%) contrast(70%) brightness(120%);
 }
 
-.role_info {
-	display: flex;
-	justify-content: center;
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 5px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
+}
+
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 10px; }
 }
 
 /* MAP */
@@ -185,12 +187,12 @@ body.shift .block.known:hover {
 	background-size: 60%;
 	background-position: center;
 }
-.block.Franks.jihad {
+.block.Franks.jihad:not(.known) {
 	background-image: url("badges/Cross_of_the_Knights_Templar.svg");
 	background-size: 60%;
 	background-position: center;
 }
-.block.Saracens.jihad {
+.block.Saracens.jihad:not(.known) {
 	background-image: url("badges/Star_and_Crescent.svg");
 	background-size: 60%;
 	background-position: center;

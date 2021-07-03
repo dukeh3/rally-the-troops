@@ -17,12 +17,10 @@
 <style>
 
 .grid_center { background-color: #461145; }
-.grid_role { background-color: wheat; }
+.grid_role { background-color: tan; }
 .grid_log { background-color: wheat; }
 .grid_top { background-color: tan; }
 .grid_top.your_turn { background-color: orange; }
-.grid_top.disconnected { background-color: red; }
-.role_info { background-color: tan; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: #eb5; }
 .turn_info { background-color: burlywood; }
@@ -57,20 +55,25 @@
 	transform: scale(1.1);
 }
 
-.small_card {
-	background-color: white;
-	width: 90px;
-	height: 140px;
-	border-radius: 6px;
-}
-
 .small_card.prior {
 	filter: grayscale(100%);
 }
 
-.role_info {
-	display: flex;
-	justify-content: center;
+.card, .small_card { background-color: white; }
+.card_back { background-color: #822c1f; }
+
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 5px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 135px; height: 80px; border-radius: 8px 8px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
+}
+
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 10px; }
 }
 
 /* BATTLE BOARD */
@@ -101,7 +104,6 @@
 	height: 1275px;
 	background-image: url("map.jpg");
 	background-size: cover;
-	box-shadow: none;
 }
 
 #turn {
@@ -306,7 +308,9 @@ body.shift .block.known:hover {
 				<div class="role_vp" id="pompeius_vp">7 VP</div>
 				<div class="role_user">-</div>
 			</div>
-			<div class="role_info"><div class="small_card card_back" id="pompeius_card"></div></div>
+			<div class="role_info">
+				<div class="small_card card_back" id="pompeius_card"></div>
+			</div>
 		</div>
 
 		<div class="turn_info">-</div>

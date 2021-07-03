@@ -15,13 +15,12 @@
 <style>
 
 .grid_center { background-color: slategray; }
+.grid_role { background-color: gainsboro; }
+.card_info { background-color: silver; }
 .grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
 .grid_top.Tripolitania.your_turn { background-color: salmon; }
 .grid_top.United_States.your_turn { background-color: skyblue; }
-.grid_top.disconnected { background-color: red; }
-.role_info { background-color: gainsboro; }
-.role_info.card_info { background-color: silver; }
 .one .role_name { background-color: skyblue; }
 .two .role_name { background-color: salmon; }
 
@@ -58,8 +57,13 @@
 	transform: none !important;
 }
 
+.card_info {
+	border-bottom: 1px solid black;
+	padding: 10px 0;
+}
+
 .card_info .card {
-	margin: 15px auto;
+	margin: 0 auto;
 	width: 100px;
 	height: 140px;
 	border-radius: 5px;
@@ -68,6 +72,10 @@
 .role_info {
 	padding: 5px 15px;
 	white-space: pre-line;
+	font-family: "Source Serif SmText";
+	font-size: 12px;
+	line-height: 18px;
+	padding: 4px 8px;
 }
 
 #tooltip.card {
@@ -327,7 +335,7 @@ svg circle, .piece {
 			</div>
 			<div class="role_info" id="tr_info">Hand:&#x0a;Draw:&#x0a;Discard:</div>
 		</div>
-		<div class="role_info card_info"><div id="active_card" class="card show blank"></div></div>
+		<div class="card_info"><div id="active_card" class="card show blank"></div></div>
 	</div>
 
 	<div class="grid_log">

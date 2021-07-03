@@ -15,15 +15,14 @@
 <style>
 
 .grid_center { background-color: #788; }
-.grid_role { background-color: ghostwhite; }
+.grid_role { background-color: silver; }
 .grid_log { background-color: ghostwhite; }
 .grid_top { background-color: silver; }
 .grid_top.your_turn { background-color: orange; }
-.grid_top.disconnected { background-color: red; }
-.role_info { background-color: silver; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: ghostwhite; }
 .turn_info { background-color: gainsboro; }
+
 .battle_header { background-color: silver; }
 .battle_message { background-color: silver; }
 .battle_separator { background-color: silver; }
@@ -42,15 +41,18 @@
 	transform: scale(1.1);
 }
 
-.small_card {
-	width: 90px;
-	height: 140px;
-	border-radius: 6px;
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 5px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
 }
 
-.role_info {
-	display: flex;
-	justify-content: center;
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 10px; }
 }
 
 /* MAP */
@@ -181,6 +183,9 @@ div.block {
 .battle_d_cell > div { min-width: 90px; padding: 5px 10px; }
 
 /* CARD AND BLOCK IMAGES */
+
+.card, .small_card { background-color: #d3b37b; }
+.card_back { background-color: black; }
 
 .card_back{background-image:url('cards/card_back.jpg')}
 .card_force_march{background-image:url('cards/card_force_march.jpg')}

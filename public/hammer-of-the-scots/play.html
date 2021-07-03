@@ -23,6 +23,28 @@
 .two .role_name { background-color: skyblue; }
 .turn_info { background-color: gainsboro; }
 
+/* CARDS */
+
+.card_back {
+	background-image: url('cards/card_back.svg');
+	background-size: contain;
+	background-position: 0% 40%;
+	background-repeat: no-repeat;
+}
+
+.card_truce{background-image:url('cards/card_truce.jpg')}
+.card_herald{background-image:url('cards/card_herald.jpg')}
+.card_sea_move{background-image:url('cards/card_sea_move.jpg')}
+.card_pillage{background-image:url('cards/card_pillage.jpg')}
+.card_victuals{background-image:url('cards/card_victuals.jpg')}
+.card_1{background-image:url('cards/card_1.jpg')}
+.card_2{background-image:url('cards/card_2.jpg')}
+.card_3{background-image:url('cards/card_3.jpg')}
+
+.card, .small_card {
+	background-color: #893739;
+}
+
 .card {
 	width: 225px;
 	height: 350px;
@@ -34,15 +56,19 @@
 	transform: scale(1.1);
 }
 
-.small_card {
-	width: 90px;
-	height: 140px;
-	border-radius: 4px;
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 4px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 8px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 180px; height: 80px; border-radius: 8px 8px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 8px; margin-bottom: 15px; }
+	.small_card.card_back { background-image: unset; }
 }
 
-.role_info {
-	display: flex;
-	justify-content: center;
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 8px; }
 }
 
 /* MAP */
@@ -224,25 +250,6 @@ div.block {
 .battle_a_cell > div { min-width: 240px; }
 .battle_b_cell > div { min-width: 240px; }
 .battle_c_cell > div { min-width: 240px; }
-
-/* CARD AND MARKER IMAGES */
-
-div.card_back {
-	background-image: url('cards/card_back.svg');
-	background-color: gainsboro;
-	background-size: contain;
-	background-position: 0% 40%;
-	background-repeat: no-repeat;
-}
-
-div.card_truce{background-image:url('cards/card_truce.jpg')}
-div.card_herald{background-image:url('cards/card_herald.jpg')}
-div.card_sea_move{background-image:url('cards/card_sea_move.jpg')}
-div.card_pillage{background-image:url('cards/card_pillage.jpg')}
-div.card_victuals{background-image:url('cards/card_victuals.jpg')}
-div.card_1{background-image:url('cards/card_1.jpg')}
-div.card_2{background-image:url('cards/card_2.jpg')}
-div.card_3{background-image:url('cards/card_3.jpg')}
 
 </style>
 </head>

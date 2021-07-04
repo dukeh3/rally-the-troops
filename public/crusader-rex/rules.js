@@ -125,26 +125,28 @@ function print_summary_no_count(text) {
 	delete game.summary;
 }
 
-function print_summary(text) {
+function print_summary(text, skip_if_empty = false) {
+	let n = 0;
 	function print_move(last) {
 		return "\n" + n + " " + last.join(" \u2192 ");
 	}
-	game.summary.sort();
-	let last = game.summary[0];
-	let n = 0;
-	for (let entry of game.summary) {
-		if (entry.toString() != last.toString()) {
-			text += print_move(last);
-			n = 0;
+	if (!skip_if_empty || game.summary.length > 0) {
+		game.summary.sort();
+		let last = game.summary[0];
+		for (let entry of game.summary) {
+			if (entry.toString() != last.toString()) {
+				text += print_move(last);
+				n = 0;
+			}
+			++n;
+			last = entry;
 		}
-		++n;
-		last = entry;
+		if (n > 0)
+			text += print_move(last);
+		else
+			text += "\nnothing.";
+		log(text);
 	}
-	if (n > 0)
-		text += print_move(last);
-	else
-		text += "\nnothing.";
-	log(text);
 	delete game.summary;
 }
 
@@ -2225,7 +2227,7 @@ states.regroup = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to regroup.";
-		view.prompt = "Regroup: Choose an army to move.";
+		view.prompt = "Regroup: Choose a block to move.";
 		gen_action_undo(view);
 		gen_action(view, 'end_regroup');
 		for (let b in BLOCKS) {
@@ -2242,7 +2244,7 @@ states.regroup = {
 	},
 	end_regroup: function () {
 		clear_undo();
-		print_summary(game.active + " regroup:");
+		print_summary(game.active + " regroup:", true);
 		if (is_winter())
 			goto_winter_2();
 		else if (is_contested_town(game.where))
@@ -2257,7 +2259,7 @@ states.regroup_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to regroup.";
-		view.prompt = "Regroup: Move the army to a friendly or vacant town.";
+		view.prompt = "Regroup: Move the block to a friendly or vacant town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		for (let to of TOWNS[game.where].exits)
@@ -2532,7 +2534,7 @@ states.retreat = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
-		view.prompt = "Retreat: Choose an army to move.";
+		view.prompt = "Retreat: Choose a block to move.";
 		gen_action_undo(view);
 		let can_retreat = false;
 		for (let b in BLOCKS) {
@@ -2566,7 +2568,7 @@ states.retreat_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
-		view.prompt = "Retreat: Move the army to a friendly or neutral town.";
+		view.prompt = "Retreat: Move the block to a friendly or neutral town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let can_retreat = false;
@@ -3082,7 +3084,7 @@ states.harry = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Field Battle: Waiting for " + game.active + " to harry.";
-		view.prompt = "Harry: Move the army to a friendly or vacant town.";
+		view.prompt = "Harry: Move the block to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
 				gen_action(view, 'town', to);
@@ -3111,7 +3113,7 @@ states.retreat_in_battle = {
 			return view.prompt = "Retreat: Waiting for " + game.active + ".";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
-		view.prompt = "Retreat: Move the army to a friendly or vacant town.";
+		view.prompt = "Retreat: Move the block to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
 				gen_action(view, 'town', to);

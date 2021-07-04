@@ -3,13 +3,13 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: optional retreat after combat round 3 if storming
-
+// TODO: 6.2 - In Sieges, the attacker /may/ retreat or stay on siege.
 // TODO: new combat deployment in round 2/3 if defenders are wiped out and reserves are coming?
 //		see https://boardgamegeek.com/thread/423599/article/3731006
+// TODO: sea move into attacked fortified port as defender responder? -- not besieged yet
 
 exports.scenarios = [
-	"Third Crusade"
+	"Standard"
 ];
 
 const { CARDS, BLOCKS, TOWNS, PORTS, ROADS, SHIELDS } = require('./data');
@@ -1210,14 +1210,14 @@ function goto_card_phase() {
 states.play_card = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for players to play a card.";
+			return view.prompt = "Card Phase: Waiting for players to play a card.";
 		if (current == FRANKS) {
 			view.prior_s_card = game.prior_s_card;
 			if (game.f_card) {
-				view.prompt = "Waiting for Saracens to play a card.";
+				view.prompt = "Card Phase: Waiting for Saracens to play a card.";
 				gen_action(view, 'undo');
 			} else {
-				view.prompt = "Play a card.";
+				view.prompt = "Card Phase: Play a card.";
 				for (let c of game.f_hand)
 					if (game.turn > 1 || c != INTRIGUE)
 						gen_action(view, 'play', c);
@@ -1226,10 +1226,10 @@ states.play_card = {
 		if (current == SARACENS) {
 			view.prior_f_card = game.prior_f_card;
 			if (game.s_card) {
-				view.prompt = "Waiting for Franks to play a card.";
+				view.prompt = "Card Phase: Waiting for Franks to play a card.";
 				gen_action(view, 'undo');
 			} else {
-				view.prompt = "Play a card.";
+				view.prompt = "Card Phase: Play a card.";
 				for (let c of game.s_hand)
 					if (game.turn > 1 || c != INTRIGUE)
 						gen_action(view, 'play', c);
@@ -2132,8 +2132,8 @@ function resume_combat_phase() {
 states.combat_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Combat Phase: Waiting for " + game.active + ".";
-		view.prompt = "Combat Phase: Choose the next battle or siege!";
+			return view.prompt = "Battle Phase: Waiting for " + game.active + ".";
+		view.prompt = "Battle Phase: Choose the next battle or siege!";
 		for (let where of game.combat_list)
 			gen_action(view, 'town', where);
 	},
@@ -2205,8 +2205,8 @@ states.combat_deployment = {
 	show_battle: true,
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to deploy.";
-		view.prompt = "Deploy blocks on the field and in the castle.";
+			return view.prompt = "Battle: Waiting for " + game.active + ".";
+		view.prompt = "Battle: Deploy blocks on the field and in the castle.";
 		let max = castle_limit(game.where);
 		let n = count_blocks_in_castle(game.where);
 		let have_options = false;
@@ -2273,7 +2273,7 @@ function goto_regroup() {
 states.regroup = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to regroup.";
+			return view.prompt = "Regroup: Waiting for " + game.active + ".";
 		view.prompt = "Regroup: Choose a block to move.";
 		gen_action_undo(view);
 		gen_action(view, 'end_regroup');
@@ -2305,7 +2305,7 @@ states.regroup = {
 states.regroup_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to regroup.";
+			return view.prompt = "Regroup: Waiting for " + game.active + ".";
 		view.prompt = "Regroup: Move the block to a friendly or vacant town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
@@ -2590,7 +2590,7 @@ function goto_retreat_after_combat() {
 states.retreat = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to retreat.";
+			return view.prompt = "Retreat: Waiting for " + game.active + "";
 		view.prompt = "Retreat: Choose a block to move.";
 		gen_action_undo(view);
 		let can_retreat = false;
@@ -2624,7 +2624,7 @@ states.retreat = {
 states.retreat_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to retreat.";
+			return view.prompt = "Retreat: Waiting for " + game.active + ".";
 		view.prompt = "Retreat: Move the block to a friendly or neutral town.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
@@ -2659,25 +2659,47 @@ states.retreat_to = {
 function goto_siege_attrition() {
 	console.log("SIEGE ATTRITION");
 	log("~ Siege Attrition ~");
-	game.active = besieging_player(game.where);
-	let target = (game.where == TYRE || game.where == TRIPOLI) ? 1 : 3;
-	for (let b in BLOCKS) {
-		if (is_block_in_castle_in(b, game.where)) {
-			let die = roll_d6();
-			if (die <= target) {
-				log("Attrition roll " + DIE_HIT[die] + ".");
-				reduce_block(b);
-			} else {
-				log("Attrition roll " + DIE_MISS[die] + ".");
-			}
+	game.active = besieged_player(game.where);
+	game.state = 'siege_attrition';
+	game.attrition_list = [];
+	for (let b in BLOCKS)
+		if (is_block_in_castle_in(b, game.where))
+			game.attrition_list.push(b);
+}
+
+function resume_siege_attrition() {
+	if (game.attrition_list.length == 0) {
+		delete game.attrition_list;
+		if (!is_under_siege(game.where)) {
+			game.active = enemy(game.active);
+			log(game.where + " falls to siege attrition.");
+			goto_regroup();
+		} else {
+			log("Siege continues.");
+			end_combat();
 		}
 	}
-	if (!is_under_siege(game.where)) {
-		log(game.where + " falls to siege attrition.");
-		goto_regroup();
-	} else {
-		log("Siege continues.");
-		end_combat();
+}
+
+states.siege_attrition = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Siege Attrition: Waiting for " + game.active + ".";
+		view.prompt = "Siege Attrition: Roll for siege attrition in " + game.where + ".";
+		for (let b of game.attrition_list)
+			gen_action(view, 'block', b)
+	},
+	block: function (who) {
+		let target = (game.where == TYRE || game.where == TRIPOLI) ? 1 : 3;
+		let die = roll_d6();
+		if (die <= target) {
+			log("Attrition roll " + DIE_HIT[die] + ".");
+			reduce_block(who);
+		} else {
+			log("Attrition roll " + DIE_MISS[die] + ".");
+		}
+		remove_from_array(game.attrition_list, who);
+		resume_siege_attrition();
 	}
 }
 
@@ -3141,8 +3163,8 @@ function harry_with_block(b) {
 states.harry = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Field Battle: Waiting for " + game.active + " to harry.";
-		view.prompt = "Harry: Move the block to a friendly or vacant town.";
+			return view.prompt = "Field Battle: Waiting for " + game.active + " to retreat the harrying block.";
+		view.prompt = "Field Battle: Retreat the harrying block to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
 				gen_action(view, 'town', to);
@@ -3168,10 +3190,10 @@ function retreat_with_block(b) {
 states.retreat_in_battle = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Retreat: Waiting for " + game.active + ".";
+			return view.prompt = "Field Battle: Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
-		view.prompt = "Retreat: Move the block to a friendly or vacant town.";
+		view.prompt = "Field Battle: Retreat the block to a friendly or vacant town.";
 		for (let to of TOWNS[game.where].exits)
 			if (can_block_retreat_to(game.who, to))
 				gen_action(view, 'town', to);
@@ -3248,7 +3270,8 @@ states.draw_phase = {
 			for (let town in TOWNS) {
 				if (town == ENGLAND || town == FRANCE || town == GERMANIA)
 					continue;
-				if (is_friendly_field(town)) // TODO: FAQ claims besieger controls town for draw purposes
+				// FAQ claims besieger controls town for draw purposes
+				if (is_friendly_field(town))
 					gen_action(view, 'town', town);
 			}
 			break;

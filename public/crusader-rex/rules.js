@@ -2112,6 +2112,7 @@ function start_combat() {
 	game.halfhit = null;
 	game.storming = [];
 	game.sallying = [];
+	game.is_field_battle = 0;
 
 	if (is_castle_town(game.where)) {
 		if (!is_under_siege(game.where)) {
@@ -2148,6 +2149,7 @@ function end_combat() {
 	delete game.castle_owner;
 	delete game.storming;
 	delete game.sallying;
+	delete game.is_field_battle;
 	game.where = null;
 	game.flash = "";
 	game.combat_round = 0;
@@ -2215,6 +2217,7 @@ function print_retreat_summary() {
 }
 
 function goto_regroup() {
+	game.is_field_battle = 0;
 	lift_siege(game.where);
 	console.log("REGROUP", game.active);
 	reset_road_limits();
@@ -2284,6 +2287,7 @@ states.regroup_to = {
 // COMBAT ROUND
 
 function next_combat_round() {
+	game.is_field_battle = 0;
 	console.log("NEXT COMBAT ROUND");
 	print_retreat_summary();
 	if (game.jihad == game.where && game.combat_round == 1)
@@ -2675,6 +2679,7 @@ function pump_battle_step(is_candidate_attacker, is_candidate_defender) {
 // FIELD BATTLE
 
 function goto_field_battle() {
+	game.is_field_battle = 1;
 	resume_field_battle();
 }
 
@@ -3528,6 +3533,10 @@ function setup_game() {
 // VIEW
 
 function make_battle_view() {
+	let is_storming = game.storming.length > 0 && game.state != 'declare_storm';
+	let is_sallying = game.sallying.length > 0 && game.state != 'declare_sally';
+	let is_field_battle = game.is_field_battle;
+
 	let battle = {
 		FR: [], FC: [], FF: [],
 		SR: [], SC: [], SF: [],
@@ -3538,7 +3547,8 @@ function make_battle_view() {
 		halfhit: game.halfhit,
 		flash: game.flash,
 		round: game.combat_round,
-		show_castle: game.storming.length > 0 && game.state != 'declare_storm',
+		show_castle: is_storming,
+		show_field: is_field_battle || is_sallying,
 	};
 
 	if (is_under_siege(game.where) && !is_contested_battle_field(game.where))

@@ -229,12 +229,13 @@ function build_battle_button(menu, b, c, click, enter, img_src) {
 	menu.appendChild(img);
 }
 
+function battle_block_class_name(block) {
+	return `block block_${block.image} ${block.owner}`;
+}
+
 function build_battle_block(b, block) {
 	let element = document.createElement("div");
-	element.classList.add("block");
-	element.classList.add("known");
-	element.classList.add(BLOCKS[b].owner);
-	element.classList.add("block_" + block.image);
+	element.className = battle_block_class_name(block);
 	element.addEventListener("mouseenter", on_focus_battle_block);
 	element.addEventListener("mouseleave", on_blur_battle_block);
 	element.addEventListener("click", on_click_battle_block);
@@ -242,7 +243,7 @@ function build_battle_block(b, block) {
 	ui.battle_block[b] = element;
 
 	let menu_list = document.createElement("div");
-	menu_list.classList.add("battle_menu_list");
+	menu_list.className = "battle_menu_list";
 
 	build_battle_button(menu_list, b, "hit",
 		on_click_hit, on_focus_hit,
@@ -270,7 +271,7 @@ function build_battle_block(b, block) {
 		"/images/doorway.svg");
 
 	let menu = document.createElement("div");
-	menu.classList.add("battle_menu");
+	menu.className = "battle_menu";
 	menu.appendChild(element);
 	menu.appendChild(menu_list);
 	menu.block = b;
@@ -341,6 +342,7 @@ function build_map() {
 }
 
 function update_steps(b, steps, element) {
+	element.classList.remove("r0");
 	element.classList.remove("r1");
 	element.classList.remove("r2");
 	element.classList.remove("r3");
@@ -501,7 +503,7 @@ function update_map() {
 			if (is_known_block(info, b)) {
 				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
-				let known = " known"
+				let known = " known";
 				if ((town == S_POOL || town == F_POOL) && b != game.who)
 					known = "";
 				element.classList = info.owner + known + " block" + image + steps + moved;
@@ -637,23 +639,7 @@ function update_battle() {
 			if (!cell.contains(ui.battle_menu[block]))
 				insert_battle_block(cell, ui.battle_menu[block], block);
 
-			if (block == game.who)
-				ui.battle_block[block].classList.add("selected");
-			else
-				ui.battle_block[block].classList.remove("selected");
-
-			ui.battle_block[block].classList.remove("highlight");
-			ui.battle_menu[block].classList.remove('hit');
-			ui.battle_menu[block].classList.remove('charge');
-			ui.battle_menu[block].classList.remove('fire');
-			ui.battle_menu[block].classList.remove('harry');
-			ui.battle_menu[block].classList.remove('withdraw');
-			ui.battle_menu[block].classList.remove('storm');
-			ui.battle_menu[block].classList.remove('sally');
-			ui.battle_menu[block].classList.remove('retreat');
-
-			if (game.actions && game.actions.block && game.actions.block.includes(block))
-				ui.battle_block[block].classList.add("highlight");
+			ui.battle_menu[block].className = "battle_menu";
 			if (game.actions && game.actions.fire && game.actions.fire.includes(block))
 				ui.battle_menu[block].classList.add('fire');
 			if (game.actions && game.actions.retreat && game.actions.retreat.includes(block))
@@ -675,24 +661,26 @@ function update_battle() {
 			if (game.actions && game.actions.treachery && game.actions.treachery.includes(block))
 				ui.battle_menu[block].classList.add('treachery');
 
-			update_steps(block, game.steps[block], ui.battle_block[block], false);
-
+			let class_name = battle_block_class_name(BLOCKS[block]);
+			if (game.actions && game.actions.block && game.actions.block.includes(block))
+				class_name += " highlight";
+			if (game.moved[block])
+				class_name += " moved";
+			if (block == game.who)
+				class_name += " selected";
 			if (block == game.battle.halfhit)
-				ui.battle_block[block].classList.add("halfhit");
-			else
-				ui.battle_block[block].classList.remove("halfhit");
-			if (show)
-				ui.battle_block[block].classList.add("known");
-			else
-				ui.battle_block[block].classList.remove("known");
-			if (game.moved[block] || (name === "ER" || name === "FR"))
-				ui.battle_block[block].classList.add("moved");
-			else
-				ui.battle_block[block].classList.remove("moved");
-			if (!show && (game.battle.jihad == block_owner(block)))
-				ui.battle_block[block].classList.add("jihad");
-			else
-				ui.battle_block[block].classList.remove("jihad");
+				class_name += " halfhit";
+			if (game.battle.jihad == block_owner(block))
+				class_name += " jihad";
+
+			if (show || block_owner(block) == player) {
+				class_name += " known";
+				ui.battle_block[block].className = class_name;
+				update_steps(block, game.steps[block], ui.battle_block[block], false);
+			} else {
+				ui.battle_block[block].className = class_name;
+			}
+
 		}
 
 		for (let b in BLOCKS) {
@@ -706,17 +694,17 @@ function update_battle() {
 	if (player == FRANKS) {
 		fill_cell("FR", game.battle.FR, true);
 		fill_cell("FC", game.battle.FC, true);
-		fill_cell("FF", game.battle.FF, true);
-		fill_cell("EF", game.battle.SF, game.battle.round > 0);
-		fill_cell("EC", game.battle.SC, game.battle.show_castle);
+		fill_cell("FF", game.battle.FF, game.battle.show_castle); // saracens in frank castle
+		fill_cell("EF", game.battle.SF, game.battle.show_field); // saracens in field battle
+		fill_cell("EC", game.battle.SC, game.battle.show_castle); // saracens in saracen castle
 		fill_cell("ER", game.battle.SR, false);
 		document.getElementById("FC").className = "c" + game.battle.FCS;
 		document.getElementById("EC").className = "c" + game.battle.SCS;
 	} else {
 		fill_cell("ER", game.battle.FR, false);
 		fill_cell("EC", game.battle.FC, game.battle.show_castle);
-		fill_cell("EF", game.battle.FF, game.battle.round > 0);
-		fill_cell("FF", game.battle.SF, true);
+		fill_cell("EF", game.battle.FF, game.battle.show_field);
+		fill_cell("FF", game.battle.SF, game.battle.show_castle);
 		fill_cell("FC", game.battle.SC, true);
 		fill_cell("FR", game.battle.SR, true);
 		document.getElementById("EC").className = "c" + game.battle.FCS;

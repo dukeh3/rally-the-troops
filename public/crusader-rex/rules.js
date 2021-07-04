@@ -1490,24 +1490,43 @@ states.manna = {
 
 // MOVE PHASE
 
+function queue_attack(who, round) {
+	if (round == 1)
+		return ATTACK_MARK;
+	if (round == 2) {
+		game.reserves1.push(who);
+		return RESERVE_MARK_1;
+	}
+	if (round == 3) {
+		game.reserves2.push(who);
+		return RESERVE_MARK_2;
+	}
+}
+
 function move_block(who, from, to) {
 	game.location[who] = to;
 	game.road_limit[road_id(from, to)] = road_limit(from, to) + 1;
 	game.distance ++;
 	if (is_contested_field(to)) {
 		game.last_used[road_id(from, to)] = game.active;
+
+		// 6.56 Main Attack relief force by Player 2 arrives one round later than normal
+		let relief_delay = 0;
+		if (game.active == game.p2 && besieged_player(to) == game.p2) {
+			console.log("DELAYED RELIEF BY P2", who, from, to);
+			relief_delay = 1;
+		}
+
 		if (!game.attacker[to]) {
 			game.attacker[to] = game.active;
 			game.main_road[to] = from;
-			return ATTACK_MARK;
+			return queue_attack(who, 1 + relief_delay);
 		} else {
 			// Attacker main attack or reinforcements
 			if (game.attacker[to] == game.active) {
-				if (game.main_road[to] != from) {
-					game.reserves1.push(who);
-					return RESERVE_MARK_1;
-				}
-				return ATTACK_MARK;
+				if (game.main_road[to] != from)
+					return queue_attack(who, 2 + relief_delay);
+				return queue_attack(who, 1 + relief_delay);
 			}
 
 			// Defender reinforcements
@@ -1515,11 +1534,9 @@ function move_block(who, from, to) {
 				game.main_road[to] = from;
 
 			if (game.main_road[to] == from) {
-				game.reserves1.push(who);
-				return RESERVE_MARK_1;
+				return queue_attack(who, 2);
 			} else {
-				game.reserves2.push(who);
-				return RESERVE_MARK_2;
+				return queue_attack(who, 3);
 			}
 		}
 	}

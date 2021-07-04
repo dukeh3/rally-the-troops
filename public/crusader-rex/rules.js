@@ -44,6 +44,8 @@ const FRENCH_CRUSADERS = [ "Philippe", "Hugues", "Fileps" ];
 const GERMAN_CRUSADERS = [ "Barbarossa", "Frederik", "Leopold" ];
 const SALADIN_FAMILY = [ "Saladin", "Al Adil", "Al Aziz", "Al Afdal", "Al Zahir" ];
 
+const GERMAN_ROADS = [ ST_SIMEON, ANTIOCH, ALEPPO ];
+
 const KINGDOMS = {
 	Syria: SARACENS,
 	Antioch: FRANKS,
@@ -308,7 +310,7 @@ function is_home_seat(where, who) {
 	}
 	if (who == "Raymond (Tiberias)" || who == "Raymond (Tripoli)")
 		who = "Raymond";
-	if (SHIELDS[where].includes(who))
+	if (SHIELDS[where] && SHIELDS[where].includes(who))
 		return true;
 	return false;
 }
@@ -694,7 +696,7 @@ function can_block_land_move_to(who, from, to) {
 			// but can move through friendly sieges
 			if (!is_friendly_field(to))
 				return false;
-			if (game.distance + 1 >= block_move(game.who))
+			if (game.distance + 1 >= block_move(who))
 				return false;
 		}
 
@@ -710,6 +712,11 @@ function can_block_land_move(who) {
 			if (is_pinned(who, from))
 				return false;
 			for (let to of TOWNS[from].exits)
+				if (can_block_land_move_to(who, from, to))
+					return true;
+		}
+		if (from == GERMANIA) {
+			for (let to of GERMAN_ROADS)
 				if (can_block_land_move_to(who, from, to))
 					return true;
 		}
@@ -770,8 +777,6 @@ function can_block_sea_move_from(who, from) {
 		return are_crusaders_not_in_pool(ENGLISH_CRUSADERS);
 	if (from == FRANCE)
 		return are_crusaders_not_in_pool(FRENCH_CRUSADERS);
-	if (from == GERMANIA)
-		return are_crusaders_not_in_pool(GERMAN_CRUSADERS);
 	return false;
 }
 
@@ -1586,9 +1591,10 @@ states.move_phase = {
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
 			let sea_moves_allowed = (game.active != game.guide && game.active != game.jihad);
-			for (let b in BLOCKS)
+			for (let b in BLOCKS) {
 				if (can_block_land_move(b) || (sea_moves_allowed && can_block_sea_move(b)))
 					gen_action(view, 'block', b);
+			}
 			if (can_muster_anywhere())
 				gen_action(view, 'muster');
 			if (game.winter_campaign == game.active)
@@ -1631,10 +1637,12 @@ states.move_phase_to = {
 		let from = game.location[game.who];
 		let can_group_move = false;
 		let can_sea_move = false;
-		for (let to of TOWNS[from].exits) {
-			if (can_block_land_move_to(game.who, from, to)) {
-				gen_action(view, 'town', to);
-				can_group_move = true;
+		if (can_block_land_move(game.who)) {
+			for (let to of TOWNS[from].exits) {
+				if (can_block_land_move_to(game.who, from, to)) {
+					gen_action(view, 'town', to);
+					can_group_move = true;
+				}
 			}
 		}
 		if (can_block_sea_move(game.who)) {
@@ -1739,7 +1747,10 @@ states.group_move_who = {
 		game.last_from = null;
 		game.state = 'group_move_to';
 	},
-	end_move_phase: end_move_phase,
+	end_move_phase: function () {
+		end_group_move();
+		end_move_phase();
+	},
 	end_group_move: end_group_move,
 	undo: pop_undo
 }
@@ -1819,10 +1830,13 @@ states.sea_move_to = {
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
 		if (from == GERMANIA) {
-			gen_action(view, 'town', ALEPPO);
-			gen_action(view, 'town', ANTIOCH);
-			if (road_limit(GERMANIA, ST_SIMEON) < 2)
-				gen_action(view, 'town', ST_SIMEON);
+			if (!(is_winter() && is_enemy_occupied_town(ALEPPO)))
+				gen_action(view, 'town', ALEPPO);
+			if (!(is_winter() && is_enemy_occupied_town(ANTIOCH)))
+				gen_action(view, 'town', ANTIOCH);
+			if (!(is_winter() && is_enemy_occupied_town(ST_SIMEON)))
+				if (road_limit(GERMANIA, ST_SIMEON) < 2)
+					gen_action(view, 'town', ST_SIMEON);
 		} else {
 			for (let to of PORTS)
 				if (to != game.where && can_block_sea_move_to(game.who, to))
@@ -2220,6 +2234,8 @@ function goto_regroup() {
 	game.is_field_battle = 0;
 	lift_siege(game.where);
 	console.log("REGROUP", game.active);
+	if (!is_under_siege(game.where))
+		clear_reserves(); // no siege battle, reserves arrive before regroup
 	reset_road_limits();
 	reset_moved_for_combat();
 	game.state = 'regroup';
@@ -2318,6 +2334,15 @@ function bring_on_reserves(reserves) {
 		log(f + " Frank " + (f==1 ? "reserve arrives." : "reserves arrive."));
 	if (s > 0)
 		log(s + " Saracen " + (s==1 ? "reserve arrives." : "reserves arrive."));
+}
+
+function clear_reserves(where) {
+	for (let b in BLOCKS) {
+		if (game.location[b] == where) {
+			remove_from_array(game.reserves1, b);
+			remove_from_array(game.reserves2, b);
+		}
+	}
 }
 
 function reset_moved_for_combat() {

@@ -2066,7 +2066,6 @@ function goto_combat_phase() {
 		return end_game_turn();
 	}
 
-	game.moved = {};
 	game.combat_list = [];
 	for (let where in TOWNS)
 		if (is_contested_town(where))
@@ -2076,7 +2075,7 @@ function goto_combat_phase() {
 
 function resume_combat_phase() {
 	reset_road_limits();
-	game.moved = {};
+	reset_moved_for_combat();
 
 	if (game.combat_list.length > 0) {
 		game.active = game.p1;
@@ -2217,7 +2216,7 @@ function goto_regroup() {
 	lift_siege(game.where);
 	console.log("REGROUP", game.active);
 	reset_road_limits();
-	game.moved = {};
+	reset_moved_for_combat();
 	game.state = 'regroup';
 	game.summary = [];
 }
@@ -2266,6 +2265,10 @@ states.regroup_to = {
 				gen_action(view, 'town', to);
 	},
 	town: function (to) {
+		// We can regroup while reserves are still on the way...
+		remove_from_array(game.reserves1, game.who);
+		remove_from_array(game.reserves2, game.who);
+
 		let from = game.where;
 		game.summary.push([from, to]);
 		move_block(game.who, game.where, to);
@@ -2311,20 +2314,33 @@ function bring_on_reserves(reserves) {
 		log(s + " Saracen " + (s==1 ? "reserve arrives." : "reserves arrive."));
 }
 
-function goto_combat_round(combat_round) {
-	game.combat_round = combat_round;
-	game.moved = {};
-	game.summary = [];
+function reset_moved_for_combat() {
+	for (let b in game.moved) game.moved[b] = 0;
+	for (let b of game.reserves1) game.moved[b] = 1;
+	for (let b of game.reserves2) game.moved[b] = 1;
+}
 
-	console.log("COMBAT ROUND", combat_round);
-	log("~ Combat Round " + combat_round + " ~");
+function goto_combat_round(new_combat_round) {
+	game.combat_round = new_combat_round;
+	game.summary = [];
 
 	let was_contested = is_contested_battle_field();
 
-	if (combat_round == 2)
+	if (game.combat_round === 1 && count_friendly_in_field_excluding_reserves(game.where) === 0) {
+		log("Combat round skipped because main attack regrouped away.");
+		console.log("MAIN ATTACK REGROUPED AWAY, SKIP ROUND 1");
+		game.combat_round = 2;
+	}
+
+	console.log("COMBAT ROUND", game.combat_round);
+	log("~ Combat Round " + game.combat_round + " ~");
+
+	if (game.combat_round == 2)
 		bring_on_reserves(game.reserves1);
-	if (combat_round == 3)
+	if (game.combat_round == 3)
 		bring_on_reserves(game.reserves2);
+
+	reset_moved_for_combat();
 
 	if (is_contested_battle_field()) {
 		if (is_under_siege(game.where)) {
@@ -2487,7 +2503,7 @@ function sally_with_block(who) {
 
 function goto_retreat_after_combat() {
 	console.log("RETREAT AFTER COMBAT");
-	game.moved = {};
+	reset_moved_for_combat();
 
 	// withdraw all sallying blocks to castle.
 	for (let b of game.sallying)
@@ -2495,6 +2511,7 @@ function goto_retreat_after_combat() {
 	game.sallying.length = 0;
 
 	// TODO: 6.2 - In Sieges, the attacker /may/ retreat or stay on siege.
+
 	// withdraw all storming blocks to the field.
 	game.halfhit = null;
 	game.storming.length = 0;

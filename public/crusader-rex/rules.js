@@ -3,9 +3,8 @@
 // TODO: optional rule - iron bridge
 // TODO: optional rule - force marches
 
-// TODO: can sea move into fortified port that is under attack but not yet besieged? no...
-// TODO: pause after battle ends to show final result/action?
 // TODO: optional retreat after combat round 3 if storming
+
 // TODO: new combat deployment in round 2/3 if defenders are wiped out and reserves are coming?
 //		see https://boardgamegeek.com/thread/423599/article/3731006
 
@@ -705,6 +704,30 @@ function can_block_land_move_to(who, from, to) {
 	return false;
 }
 
+function can_germans_move(who) {
+	let from = game.location[who];
+	if (from == GERMANIA) {
+		if (can_activate(who)) {
+			for (let to of GERMAN_ROADS)
+				if (can_germans_move_to(who, to))
+					return true;
+		}
+	}
+	return false;
+}
+
+function can_germans_move_to(who, to) {
+	if (is_winter() && is_enemy_occupied_town(to))
+		return false;
+	if (to == ALEPPO)
+		return true;
+	if (to == ANTIOCH)
+		return true;
+	if (to == ST_SIMEON)
+		return road_limit(GERMANIA, ST_SIMEON) < 2;
+	return false;
+}
+
 function can_block_land_move(who) {
 	if (can_activate(who)) {
 		let from = game.location[who];
@@ -712,11 +735,6 @@ function can_block_land_move(who) {
 			if (is_pinned(who, from))
 				return false;
 			for (let to of TOWNS[from].exits)
-				if (can_block_land_move_to(who, from, to))
-					return true;
-		}
-		if (from == GERMANIA) {
-			for (let to of GERMAN_ROADS)
 				if (can_block_land_move_to(who, from, to))
 					return true;
 		}
@@ -1118,23 +1136,15 @@ function count_victory_points() {
 
 	game.f_vp = 0;
 	game.active = FRANKS;
-	for (let town of VICTORY_TOWNS) {
-		if (is_friendly_town_for_vp(town)) {
-			console.log("VP", town, "friendly", game.active);
+	for (let town of VICTORY_TOWNS)
+		if (is_friendly_town_for_vp(town))
 			++ game.f_vp;
-		} else
-			console.log("VP", town, "enemy", game.active);
-	}
 
 	game.s_vp = 0;
 	game.active = SARACENS;
-	for (let town of VICTORY_TOWNS) {
-		if (is_friendly_town_for_vp(town)) {
-			console.log("VP", town, "friendly", game.active);
+	for (let town of VICTORY_TOWNS)
+		if (is_friendly_town_for_vp(town))
 			++ game.s_vp;
-		} else
-			console.log("VP", town, "enemy", game.active);
-	}
 
 	game.active = save_active;
 }
@@ -1419,13 +1429,13 @@ function assassinate(who, where) {
 
 function goto_guide() {
 	game.guide = game.active;
-	game.state = 'group_move_first';
+	game.state = 'move_phase_event';
 	game.summary = [];
 }
 
 function goto_jihad() {
 	game.jihad = game.active;
-	game.state = 'group_move_first';
+	game.state = 'move_phase_event';
 	game.summary = [];
 }
 
@@ -1590,9 +1600,12 @@ states.move_phase = {
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
-			let sea_moves_allowed = (game.active != game.guide && game.active != game.jihad);
 			for (let b in BLOCKS) {
-				if (can_block_land_move(b) || (sea_moves_allowed && can_block_sea_move(b)))
+				if (can_block_land_move(b))
+					gen_action(view, 'block', b);
+				if (can_block_sea_move(b))
+					gen_action(view, 'block', b);
+				if (can_germans_move(b))
 					gen_action(view, 'block', b);
 			}
 			if (can_muster_anywhere())
@@ -1616,11 +1629,36 @@ states.move_phase = {
 		push_undo();
 		game.who = who;
 		game.where = game.location[who];
-		if (game.where == GERMANIA || game.where == FRANCE || game.where == ENGLAND) {
+		if (game.where == GERMANIA) {
+			game.state = 'german_move_to';
+		} else if (game.where == FRANCE || game.where == ENGLAND) {
 			game.state = 'sea_move_to';
 		} else {
 			game.state = 'move_phase_to';
 		}
+	},
+	end_move_phase: end_move_phase,
+	undo: pop_undo
+}
+
+states.move_phase_event = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = group_move_name(1) + "Waiting for " + game.active + ".";
+		view.prompt = group_move_name(0) + "Choose a block to group move.";
+		gen_action_undo(view);
+		gen_action(view, 'end_move_phase');
+		for (let b in BLOCKS)
+			if (can_block_land_move(b))
+				gen_action(view, 'block', b);
+	},
+	block: function (who) {
+		push_undo();
+		game.where = game.location[who];
+		game.who = who;
+		game.distance = 0;
+		game.last_from = null;
+		game.state = 'group_move_to';
 	},
 	end_move_phase: end_move_phase,
 	undo: pop_undo
@@ -1699,30 +1737,6 @@ function can_group_move_more() {
 			if (can_block_land_move(b))
 				return true;
 	return false;
-}
-
-states.group_move_first = {
-	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = group_move_name(1) + "Waiting for " + game.active + ".";
-		view.prompt = group_move_name(0) + "Choose a block to group move.";
-		gen_action_undo(view);
-		if (game.active == game.guide || game.active == game.jihad)
-			gen_action(view, 'end_move_phase');
-		for (let b in BLOCKS)
-			if (can_block_land_move(b))
-				gen_action(view, 'block', b);
-	},
-	block: function (who) {
-		push_undo();
-		game.where = game.location[who];
-		game.who = who;
-		game.distance = 0;
-		game.last_from = null;
-		game.state = 'group_move_to';
-	},
-	end_move_phase: end_move_phase,
-	undo: pop_undo
 }
 
 states.group_move_who = {
@@ -1816,27 +1830,50 @@ function end_group_move() {
 
 // SEA MOVE
 
+states.german_move_to = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
+		view.prompt = "Move Phase: Move " + block_name(game.who) + " to Aleppo, Antioch, or St. Simeon.";
+		gen_action_undo(view);
+		gen_action(view, 'block', game.who);
+		for (let to of GERMAN_ROADS)
+			if (can_germans_move_to(game.who, to))
+				gen_action(view, 'town', to);
+	},
+	town: function (to) {
+		--game.moves;
+		let from = GERMANIA;
+		game.location[game.who] = to;
+		game.moved[game.who] = 1;
+		game.distance = 0;
+		let mark = move_block(game.who, from, to);
+		if (mark)
+			log(game.active + " move:\n Germania \u2192 " + to + mark + ".");
+		else
+			log(game.active + " move:\n Germania \u2192 " + to + ".");
+		game.who = null;
+		game.state = 'move_phase';
+	},
+	block: pop_undo,
+	undo: pop_undo,
+}
+
 states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
 		if (is_english_crusader(game.who))
 			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a port.";
-		else if (game.where == GERMANIA)
-			view.prompt = "Move Phase: Move " + block_name(game.who) + " to Aleppo, Antioch, or St. Simeon.";
 		else
 			view.prompt = "Sea Move: Move " + block_name(game.who) + " to a friendly port.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
 		if (from == GERMANIA) {
-			if (!(is_winter() && is_enemy_occupied_town(ALEPPO)))
-				gen_action(view, 'town', ALEPPO);
-			if (!(is_winter() && is_enemy_occupied_town(ANTIOCH)))
-				gen_action(view, 'town', ANTIOCH);
-			if (!(is_winter() && is_enemy_occupied_town(ST_SIMEON)))
-				if (road_limit(GERMANIA, ST_SIMEON) < 2)
-					gen_action(view, 'town', ST_SIMEON);
+			for (let to of GERMAN_ROADS)
+				if (can_germans_move_to(game.who, to))
+					gen_action(view, 'town', to);
 		} else {
 			for (let to of PORTS)
 				if (to != game.where && can_block_sea_move_to(game.who, to))
@@ -1850,33 +1887,24 @@ states.sea_move_to = {
 		game.location[game.who] = to;
 		game.moved[game.who] = 1;
 
-		if (from == GERMANIA) {
-			game.distance = 0;
-			let mark = move_block(game.who, from, to);
-			if (mark)
-				log(game.active + " move:\n Germania \u2192 " + to + mark + ".");
-			else
-				log(game.active + " move:\n Germania \u2192 " + to + ".");
+		lift_siege(from);
+
+		remove_from_array(game.castle, game.who);
+
+		if (besieged_player(to) == game.active && is_more_room_in_castle(to)) {
+			// Move into besieged fortified port
+			game.castle.push(game.who);
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
+
+		} else if (!is_friendly_port(to)) {
+			// English Crusaders attack!
+			game.attacker[to] = FRANKS;
+			game.main_road[to] = "England";
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
+
 		} else {
-			lift_siege(from);
-
-			remove_from_array(game.castle, game.who);
-
-			if (besieged_player(to) == game.active && is_more_room_in_castle(to)) {
-				// Move into besieged fortified port
-				game.castle.push(game.who);
-				log(game.active + " sea move:\n" + from + " \u2192 " + to + " castle.");
-
-			} else if (!is_friendly_port(to)) {
-				// English Crusaders attack!
-				game.attacker[to] = FRANKS;
-				game.main_road[to] = "England";
-				log(game.active + " sea move:\n" + from + " \u2192 " + to + ATTACK_MARK + ".");
-
-			} else {
-				// Normal move.
-				log(game.active + " sea move:\n" + from + " \u2192 " + to + ".");
-			}
+			// Normal move.
+			log(game.active + " sea move:\n" + from + " \u2192 " + to + ".");
 		}
 
 		game.who = null;

@@ -95,7 +95,7 @@ const TOWNS = {
 	"Egypt":{"x":202,"y":2318},
 	"Gaza":{"x":300,"y":2185},
 	"Hama":{"x":1035,"y":477},
-	"Harim":{"x":699,"y":124},
+	"Harim":{"x":700,"y":120},
 	"Hebron":{"x":680,"y":2109},
 	"Homs":{"x":1053,"y":683},
 	"Jaffa":{"x":399,"y":1923},
@@ -113,9 +113,9 @@ const TOWNS = {
 	"Monterrand":{"x":920,"y":603},
 	"Nablus":{"x":643,"y":1787},
 	"Qaddas":{"x":1145,"y":916},
-	"Ramallah":{"x":514,"y":1952},
-	"Sa\xf4ne":{"x":653,"y":428},
-	"Shughur":{"x":656,"y":296},
+	"Ramallah":{"x":514,"y":1950},
+	"Sa\xf4ne":{"x":650,"y":430},
+	"Shughur":{"x":655,"y":300},
 	"Sidon":{"x":493,"y":1276},
 	"St. Simeon":{"x":364,"y":211},
 	"Tartus":{"x":605,"y":718},
@@ -275,11 +275,11 @@ const PORTS = [];
 	town('Y', 0.5, 0.5, 3,	"Syria",		"Artah",	1, "town");
 	town('X', 1.0, 0.5, 3,	"Syria",		"Zerdana",	1, "town");
 	town('X', 1.0, 0.5, 3,	"Syria",		"Hama",		1, "town");
-	town('X', 1.0, 0.5, 3,	"Syria",		"Homs",		2, "town");
-	town('X', 0.5, 0.5, 3,	"Syria",		"Lacum",	0, "town");
-	town('X', 0.5, 0.5, 3,	"Syria",		"Qaddas",	0, "town");
-	town('X', 0.5, 0.5, 3,	"Syria",		"Baalbek",	1, "town");
-	town('X', 0.5, 0.5, 3,	"Syria",		"Anjar",	0, "town");
+	town('X', 0.9, 0.5, 3,	"Syria",		"Homs",		2, "town");
+	town('X', 0.3, 0.5, 3,	"Syria",		"Lacum",	0, "town");
+	town('X', 0.3, 0.5, 3,	"Syria",		"Qaddas",	0, "town");
+	town('X', 0.5, 1.0, 3,	"Syria",		"Baalbek",	1, "town");
+	town('X', 0.5, 1.0, 3,	"Syria",		"Anjar",	0, "town");
 	town('X', 0.5, 0.5, 4,	"Syria",		"Damascus",	4, "town");
 	town('X', 1.0, 0.5, 3,	"Syria",		"Banyas",	1, "town");
 	town('X', 1.0, 0.5, 3,	"Syria",		"Ashtera",	1, "town");
@@ -287,7 +287,7 @@ const PORTS = [];
 
 	town('X', 0.0, 0.5, 3,	"Antioch",		"St. Simeon",	0, "port");
 	town('Y', 0.5, 0.5, 3,	"Antioch",		"Antioch",	3, "town");
-	town('Y', 1.0, 0.5, 3,	"Antioch",		"Harim",	0, "town");
+	town('Y', 0.5, 0.5, 3,	"Antioch",		"Harim",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Antioch",		"Kassab",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Antioch",		"Shughur",	0, "town");
 	town('X', 0.0, 0.5, 3,	"Antioch",		"Latakia",	1, "port");
@@ -319,11 +319,11 @@ const PORTS = [];
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Ramallah",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Jerusalem",	3, "town");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Jericho",	0, "town");
-	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Ascalon",	2, "port");
+	town('X', 0.1, 0.5, 6,	"Jerusalem",	"Ascalon",	2, "port");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Lachish",	0, "town");
-	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Hebron",	1, "town");
+	town('X', 0.5, 1.0, 3,	"Jerusalem",	"Hebron",	1, "town");
 	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Kerak",	1, "town");
-	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Gaza",		1, "town");
+	town('X', 0.5, 0.5, 6,	"Jerusalem",	"Gaza",		1, "town");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Beersheba",	0, "town");
 	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Dimona",	0, "town");
 	town('X', 1.0, 0.5, 3,	"Jerusalem",	"Zoar",		0, "town");

@@ -1065,21 +1065,27 @@ states.saracen_deployment = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Deployment: Waiting for " + game.active + ".";
-		view.prompt = "Deployment: You may swap places with Saladin and any other block of his family."
+		view.prompt = "Deployment: You may swap places with Saladin and any other block of his family.";
 		gen_action(view, 'next');
-		for (let b of SALADIN_FAMILY)
-			if (b != SALADIN && game.location[b] != game.location[SALADIN])
-				gen_action(view, 'block', b);
+		gen_action_undo(view);
+		if (game.location[SALADIN] == DAMASCUS) {
+			for (let b of SALADIN_FAMILY)
+				if (b != SALADIN && game.location[b] != game.location[SALADIN])
+					gen_action(view, 'block', b);
+		}
 	},
 	block: function (who) {
+		push_undo();
 		let saladin = game.location[SALADIN];
 		game.location[SALADIN] = game.location[who];
 		game.location[who] = saladin;
+		game.who = null;
 	},
 	next: function () {
 		game.who = null;
 		start_year();
-	}
+	},
+	undo: pop_undo
 }
 
 // GAME TURN
@@ -1824,7 +1830,7 @@ states.sea_move_to = {
 	town: function (to) {
 		--game.moves;
 
-		let from = game.location[game.who];
+		let from = game.where;
 		game.location[game.who] = to;
 		game.moved[game.who] = 1;
 

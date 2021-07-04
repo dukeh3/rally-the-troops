@@ -304,6 +304,8 @@ function is_home_seat(where, who) {
 		who = BLOCKS[who].name;
 		break;
 	}
+	if (who == "Raymond (Tiberias)" || who == "Raymond (Tripoli)")
+		who = "Raymond";
 	if (SHIELDS[where].includes(who))
 		return true;
 	return false;
@@ -863,7 +865,8 @@ function can_block_muster_with_3_moves(n0, muster) {
 					if (n2 == muster)
 						return true;
 					if (TOWNS[n2].exits.includes(muster))
-						return can_block_use_road_to_muster(n2, muster);
+						if (can_block_use_road_to_muster(n2, muster))
+							return true;
 				}
 			}
 		}
@@ -879,7 +882,8 @@ function can_block_muster_with_2_moves(n0, muster, avoid) {
 			if (n1 == muster)
 				return true;
 			if (TOWNS[n1].exits.includes(muster))
-				return can_block_use_road_to_muster(n1, muster);
+				if (can_block_use_road_to_muster(n1, muster))
+					return true;
 		}
 	}
 	return false;
@@ -1308,8 +1312,6 @@ function start_player_turn() {
 function end_player_turn() {
 	game.moves = 0;
 	game.main_road = null;
-
-	count_victory_points();
 
 	if (game.active == game.p2) {
 		goto_combat_phase();
@@ -3143,9 +3145,12 @@ states.draw_phase = {
 		case 'nomads':
 			view.prompt = "Draw Phase: Place " + BLOCKS[game.who].name + " at full strength in "
 				+ list_seats(game.who).join(", ") + " or at strength 1 in any friendly town.";
-			for (let town in TOWNS)
+			for (let town in TOWNS) {
+				if (town == ENGLAND || town == FRANCE || town == GERMANIA)
+					continue;
 				if (is_friendly_field(town)) // TODO: FAQ claims besieger controls town for draw purposes
 					gen_action(view, 'town', town);
+			}
 			break;
 		}
 	},
@@ -3183,6 +3188,7 @@ function end_draw_phase() {
 }
 
 function end_game_turn() {
+	count_victory_points();
 	if (is_winter()) {
 		goto_winter_1();
 	} else {
@@ -3559,7 +3565,6 @@ exports.setup = function (scenario, players) {
 
 exports.action = function (state, current, action, arg) {
 	game = state;
-	// TODO: check action and argument against action list
 	if (is_active_player(current)) {
 		let S = states[game.state];
 		if (action in S) {

@@ -89,7 +89,7 @@ function print_turn_log(text) {
 	let last = game.turn_log[0];
 	let n = 0;
 	for (let entry of game.turn_log) {
-		if (entry.toString() != last.toString()) {
+		if (entry.toString() !== last.toString()) {
 			text += print_move(last);
 			n = 0;
 		}
@@ -104,12 +104,8 @@ function print_turn_log(text) {
 	delete game.turn_log;
 }
 
-function is_active_player(current) {
-	return (current == game.active) || (game.active == BOTH && current != OBSERVER);
-}
-
 function is_inactive_player(current) {
-	return current == OBSERVER || (game.active != current && game.active != BOTH);
+	return current === OBSERVER || (game.active !== current && game.active !== BOTH);
 }
 
 function remove_from_array(array, item) {
@@ -132,11 +128,11 @@ function push_undo() {
 
 function pop_undo() {
 	let undo = game.undo;
-	let log = game.log;
+	let save_log = game.log;
 	Object.assign(game, JSON.parse(undo.pop()));
 	game.undo = undo;
-	log.length = game.log;
-	game.log = log;
+	save_log.length = game.log;
+	game.log = save_log;
 }
 
 function gen_action_undo(view) {
@@ -151,7 +147,7 @@ function gen_action_undo(view) {
 function gen_action(view, action, argument) {
 	if (!view.actions)
 		view.actions = {}
-	if (argument != undefined) {
+	if (argument !== undefined) {
 		if (!(action in view.actions)) {
 			view.actions[action] = [ argument ];
 		} else {
@@ -192,11 +188,11 @@ function count_ap(hand) {
 }
 
 function is_pretender_heir(who) {
-	return (block_owner(who) == block_owner(game.pretender) && block_type(who) == 'heir');
+	return (block_owner(who) === block_owner(game.pretender) && block_type(who) === 'heir');
 }
 
 function is_royal_heir(who) {
-	return (block_owner(who) == block_owner(game.king) && block_type(who) == 'heir');
+	return (block_owner(who) === block_owner(game.king) && block_type(who) === 'heir');
 }
 
 function is_dead(who) {
@@ -210,22 +206,22 @@ function is_shield_area_for(where, who, combat) {
 	let needle = BLOCKS[who].shield;
 
 	// Nevilles going to exile in Calais
-	if (where == "Calais") {
-		if (who == "Warwick/L" || who == "Kent/L" || who == "Salisbury/L")
+	if (where === "Calais") {
+		if (who === "Warwick/L" || who === "Kent/L" || who === "Salisbury/L")
 			return false;
 		if (count_blocks_exclude_mercenaries("Calais") < 4) {
-			if (who == "Kent/Y")
+			if (who === "Kent/Y")
 				return is_area_friendly_to("East Yorks", LANCASTER);
-			if (who == "Salisbury/Y")
+			if (who === "Salisbury/Y")
 				return is_area_friendly_to("North Yorks", LANCASTER);
 		}
 	}
 
 	// Exeter and Clarence as enemy nobles
-	if (who == "Exeter/Y")
-		return where == "Cornwall";
-	if (who == "Clarence/L")
-		return (where == "South Yorks" || where == "Rutland" || where == "Hereford");
+	if (who === "Exeter/Y")
+		return where === "Cornwall";
+	if (who === "Clarence/L")
+		return (where === "South Yorks" || where === "Rutland" || where === "Hereford");
 
 	// Everyone can always use their own shield
 	if (haystack && haystack.includes(needle))
@@ -242,13 +238,13 @@ function is_shield_area_for(where, who, combat) {
 	}
 
 	// York heirs can use any York shield
-	if (is_heir(who) && block_owner(who) == YORK) {
+	if (is_heir(who) && block_owner(who) === YORK) {
 		if (haystack.includes("York"))
-			return !combat || find_senior_heir_in_area(YORK, where) == who;
+			return !combat || find_senior_heir_in_area(YORK, where) === who;
 	}
 
 	// Lancaster heirs can use each other's specific shields if their owner is dead
-	if (is_heir(who) && block_owner(who) == LANCASTER) {
+	if (is_heir(who) && block_owner(who) === LANCASTER) {
 		let available = false;
 		if (haystack.includes("Lancaster"))
 			available = true;
@@ -259,7 +255,7 @@ function is_shield_area_for(where, who, combat) {
 		if (is_dead("Richmond") && haystack.includes("Richmond"))
 			available = true;
 		if (available)
-			return !combat || find_senior_heir_in_area(LANCASTER, where) == who;
+			return !combat || find_senior_heir_in_area(LANCASTER, where) === who;
 	}
 
 	return false;
@@ -267,16 +263,16 @@ function is_shield_area_for(where, who, combat) {
 
 function is_at_home(who) {
 	let where = game.location[who];
-	if (!where || where == MINOR || where == POOL)
+	if (!where || where === MINOR || where === POOL)
 		return true;
 	if (is_pretender_heir(who))
 		return is_exile_area(where);
 	if (is_royal_heir(who))
 		return is_shield_area_for(where, who, false) || is_crown_area(where);
-	if (block_type(who) == 'nobles')
+	if (block_type(who) === 'nobles')
 		return is_shield_area_for(where, who, false);
-	if (block_type(who) == 'church')
-		return has_cathedral(where) == block_home(who);
+	if (block_type(who) === 'church')
+		return has_cathedral(where) === block_home(who);
 	return true;
 }
 
@@ -289,15 +285,15 @@ function is_home_for(where, who) {
 		return is_shield_area_for(where, who, false);
 	if (is_royal_heir(who))
 		return is_crown_area(where) || is_shield_area_for(where, who, false);
-	if (block_type(who) == 'nobles')
+	if (block_type(who) === 'nobles')
 		return is_shield_area_for(where, who, false);
-	if (block_type(who) == 'church')
-		return block_home(who) == has_cathedral(where);
+	if (block_type(who) === 'church')
+		return block_home(who) === has_cathedral(where);
 	return false;
 }
 
 function is_available_home_for(where, who) {
-	if (who == "Clarence/L")
+	if (who === "Clarence/L")
 		return is_home_for(where, who) && is_vacant_area(where);
 	return is_home_for(where, who) && is_friendly_or_vacant_area(where);
 }
@@ -319,12 +315,12 @@ function available_home(who) {
 function go_home_if_possible(who) {
 	if (!is_in_exile(who)) {
 		let n = count_available_homes(who);
-		if (n == 0) {
+		if (n === 0) {
 			game.turn_log.push([block_name(who), "Pool"]);
 			disband(who);
-		} else if (n == 1) {
+		} else if (n === 1) {
 			let home = available_home(who);
-			if (game.location[who] != home) {
+			if (game.location[who] !== home) {
 				game.location[who] = home;
 				game.turn_log.push([block_name(who), game.location[who]]); // TODO: "Home"?
 			}
@@ -337,14 +333,14 @@ function go_home_if_possible(who) {
 
 function is_on_map_not_in_exile_or_man(who) {
 	let where = game.location[who];
-	return where && where != MINOR &&
-		where != POOL &&
-		where != "Isle of Man" &&
+	return where && where !== MINOR &&
+		where !== POOL &&
+		where !== "Isle of Man" &&
 		!is_exile_area(where);
 }
 
 function is_land_area(where) {
-	return where && where != MINOR && where != POOL && !is_sea_area(where);
+	return where && where !== MINOR && where !== POOL && !is_sea_area(where);
 }
 
 function is_area_friendly_to(where, owner) {
@@ -362,8 +358,8 @@ function is_london_friendly_to(owner) {
 function count_lancaster_nobles_and_heirs() {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == LANCASTER &&
-			(block_type(b) == 'nobles' || block_type(b) == 'church' || block_type(b) == 'heir'))
+		if (block_owner(b) === LANCASTER &&
+			(block_type(b) === 'nobles' || block_type(b) === 'church' || block_type(b) === 'heir'))
 			if (is_on_map_not_in_exile_or_man(b))
 				++count;
 	if (is_london_friendly_to(LANCASTER))
@@ -374,8 +370,8 @@ function count_lancaster_nobles_and_heirs() {
 function count_york_nobles_and_heirs() {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == YORK &&
-			(block_type(b) == 'nobles' || block_type(b) == 'church' || block_type(b) == 'heir'))
+		if (block_owner(b) === YORK &&
+			(block_type(b) === 'nobles' || block_type(b) === 'church' || block_type(b) === 'heir'))
 			if (is_on_map_not_in_exile_or_man(b))
 				++count;
 	if (is_london_friendly_to(YORK))
@@ -396,8 +392,7 @@ function block_home(who) {
 }
 
 function block_owner(who) {
-	if (who == REBEL) {
-		let pretender = game.pretender;
+	if (who === REBEL) {
 		if (game.pretender)
 			return block_owner(game.pretender);
 		else if (game.king)
@@ -409,7 +404,7 @@ function block_owner(who) {
 }
 
 function block_initiative(who) {
-	if (block_type(who) == 'bombard')
+	if (block_type(who) === 'bombard')
 		return game.battle_round <= 1 ? 'A' : 'D';
 	return BLOCKS[who].combat[0];
 }
@@ -427,52 +422,52 @@ function block_fire_power(who, where) {
 			++combat;
 		if (is_noble(who) && is_shield_area_for(where, who, true))
 			++combat;
-		if (is_church(who) && block_home(who) == has_cathedral(where))
+		if (is_church(who) && block_home(who) === has_cathedral(where))
 			++combat;
-		if (is_levy(who) && block_home(who) == has_city(where))
+		if (is_levy(who) && block_home(who) === has_city(where))
 			++combat;
-		if (who == "Welsh Mercenary" && is_wales(where))
+		if (who === "Welsh Mercenary" && is_wales(where))
 			++combat;
 	}
 	return combat;
 }
 
 function is_mercenary(who) {
-	return BLOCKS[who].type == 'mercenaries';
+	return BLOCKS[who].type === 'mercenaries';
 }
 
 function is_heir(who) {
-	return BLOCKS[who].type == 'heir';
+	return BLOCKS[who].type === 'heir';
 }
 
 function is_noble(who) {
-	return BLOCKS[who].type == 'nobles';
+	return BLOCKS[who].type === 'nobles';
 }
 
 function is_church(who) {
-	return BLOCKS[who].type == 'church';
+	return BLOCKS[who].type === 'church';
 }
 
 function is_levy(who) {
-	return BLOCKS[who].type == 'levies';
+	return BLOCKS[who].type === 'levies';
 }
 
 function is_rose_noble(who) {
-	return BLOCKS[who].type == 'nobles' && !BLOCKS[who].loyalty;
+	return BLOCKS[who].type === 'nobles' && !BLOCKS[who].loyalty;
 }
 
 function is_neville(who) {
 	let name = block_name(who);
-	return name == "Warwick" || name == "Kent" || name == "Salisbury";
+	return name === "Warwick" || name === "Kent" || name === "Salisbury";
 }
 
 function block_loyalty(source, target) {
 	let source_name = source ? block_name(source) : "Event";
-	if (source_name == "Warwick") {
+	if (source_name === "Warwick") {
 		let target_name = block_name(target);
-		if (target_name == "Kent" || target_name == "Salisbury")
+		if (target_name === "Kent" || target_name === "Salisbury")
 			return 1;
-		if (target_name == "Northumberland" || target_name == "Westmoreland")
+		if (target_name === "Northumberland" || target_name === "Westmoreland")
 			return 0;
 	}
 	return BLOCKS[target].loyalty | 0;
@@ -480,13 +475,13 @@ function block_loyalty(source, target) {
 
 function can_defect(source, target) {
 	// Clarence and Exeter can't defect if they are the king or pretender
-	if (target == game.king || target == game.pretender)
+	if (target === game.king || target === game.pretender)
 		return false;
 	return block_loyalty(source, target) > 0 && !game.defected[target];
 }
 
 function can_attempt_treason_event() {
-	if (game.treason == game.attacker[game.where]) {
+	if (game.treason === game.attacker[game.where]) {
 		for (let b in BLOCKS)
 			if (is_defender(b) && can_defect(null, b))
 				return true;
@@ -499,9 +494,9 @@ function can_attempt_treason_event() {
 }
 
 function treachery_tag(who) {
-	if (who == game.king) return 'King';
-	if (who == game.pretender) return 'Pretender';
-	if (who == "Warwick/L" || who == "Warwick/Y") return 'Warwick';
+	if (who === game.king) return 'King';
+	if (who === game.pretender) return 'Pretender';
+	if (who === "Warwick/L" || who === "Warwick/Y") return 'Warwick';
 	return game.active;
 }
 
@@ -509,7 +504,7 @@ function can_attempt_treachery(who) {
 	let once = treachery_tag(who);
 	if (game.battle_list.includes(who) && !game.treachery[once]) {
 		for (let b in BLOCKS) {
-			if (game.active == game.attacker[game.where]) {
+			if (game.active === game.attacker[game.where]) {
 				if (is_defender(b) && can_defect(who, b))
 					return true;
 			} else {
@@ -526,11 +521,11 @@ function block_max_steps(who) {
 }
 
 function can_activate(who) {
-	return block_owner(who) == game.active && !game.moved[who] && !game.dead[who];
+	return block_owner(who) === game.active && !game.moved[who] && !game.dead[who];
 }
 
 function is_area_on_map(location) {
-	return location && location != MINOR && location != POOL;
+	return location && location !== MINOR && location !== POOL;
 }
 
 function is_block_on_map(b) {
@@ -546,11 +541,11 @@ function border_id(a, b) {
 }
 
 function border_was_last_used_by_enemy(from, to) {
-	return game.last_used[border_id(from, to)] == ENEMY[game.active];
+	return game.last_used[border_id(from, to)] === ENEMY[game.active];
 }
 
 function border_was_last_used_by_active(from, to) {
-	return game.last_used[border_id(from, to)] == game.active;
+	return game.last_used[border_id(from, to)] === game.active;
 }
 
 function border_type(a, b) {
@@ -569,7 +564,7 @@ function count_friendly(where) {
 	let p = game.active;
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == p && !game.dead[b])
+		if (game.location[b] === where && block_owner(b) === p && !game.dead[b])
 			++count;
 	return count;
 }
@@ -578,7 +573,7 @@ function count_enemy(where) {
 	let p = ENEMY[game.active];
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == p && !game.dead[b])
+		if (game.location[b] === where && block_owner(b) === p && !game.dead[b])
 			++count;
 	return count;
 }
@@ -587,15 +582,15 @@ function count_enemy_excluding_reserves(where) {
 	let p = ENEMY[game.active];
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == p)
+		if (game.location[b] === where && block_owner(b) === p)
 			if (!game.reserves.includes(b))
 				++count;
 	return count;
 }
 
-function is_friendly_area(where) { return is_land_area(where) && count_friendly(where) > 0 && count_enemy(where) == 0; }
-function is_enemy_area(where) { return is_land_area(where) && count_friendly(where) == 0 && count_enemy(where) > 0; }
-function is_vacant_area(where) { return is_land_area(where) && count_friendly(where) == 0 && count_enemy(where) == 0; }
+function is_friendly_area(where) { return is_land_area(where) && count_friendly(where) > 0 && count_enemy(where) === 0; }
+function is_enemy_area(where) { return is_land_area(where) && count_friendly(where) === 0 && count_enemy(where) > 0; }
+function is_vacant_area(where) { return is_land_area(where) && count_friendly(where) === 0 && count_enemy(where) === 0; }
 function is_contested_area(where) { return is_land_area(where) && count_friendly(where) > 0 && count_enemy(where) > 0; }
 function is_friendly_or_vacant_area(where) { return is_friendly_area(where) || is_vacant_area(where); }
 
@@ -616,19 +611,19 @@ function is_major_port(where) {
 }
 
 function is_sea_area(where) {
-	return where == 'Irish Sea' || where == 'North Sea' || where == 'English Channel';
+	return where === 'Irish Sea' || where === 'North Sea' || where === 'English Channel';
 }
 
 function is_wales(where) {
-	return where == "Caernarvon" || where == "Pembroke" || where == "Powys" || where == "Glamorgan";
+	return where === "Caernarvon" || where === "Pembroke" || where === "Powys" || where === "Glamorgan";
 }
 
 function is_lancaster_exile_area(where) {
-	return where == "France" || where == "Scotland";
+	return where === "France" || where === "Scotland";
 }
 
 function is_york_exile_area(where) {
-	return where == "Calais" || where == "Ireland";
+	return where === "Calais" || where === "Ireland";
 }
 
 function is_exile_area(where) {
@@ -636,34 +631,34 @@ function is_exile_area(where) {
 }
 
 function is_friendly_exile_area(where) {
-	return (game.active == LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
+	return (game.active === LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
 }
 
 function is_enemy_exile_area(where) {
-	return (game.active == YORK) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
+	return (game.active === YORK) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
 }
 
 function is_pretender_exile_area(where) {
-	return (game.pretender == LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
+	return (game.pretender === LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
 }
 
 function can_recruit_to(who, to) {
-	if (who == "Welsh Mercenary")
+	if (who === "Welsh Mercenary")
 		return is_wales(to) && is_friendly_or_vacant_area(to);
 	switch (block_type(who)) {
 	case 'heir':
 		// Not in rulebook, but they can be disbanded to the pool during exile limit check...
 		// Use same rules as entering a minor noble.
-		if (block_owner(who) == block_owner(game.king))
+		if (block_owner(who) === block_owner(game.king))
 			return is_crown_area(to) && is_friendly_or_vacant_area(to);
 		else
 			return is_pretender_exile_area(to);
 	case 'nobles':
 		return is_shield_area_for(to, who, false) && is_friendly_or_vacant_area(to);
 	case 'church':
-		return block_home(who) == has_cathedral(to) && is_friendly_or_vacant_area(to);
+		return block_home(who) === has_cathedral(to) && is_friendly_or_vacant_area(to);
 	case 'levies':
-		return block_home(who) == has_city(to) && is_friendly_or_vacant_area(to);
+		return block_home(who) === has_city(to) && is_friendly_or_vacant_area(to);
 	case 'bombard':
 		return has_city(to) && is_friendly_area(to);
 	case 'rebel':
@@ -674,14 +669,14 @@ function can_recruit_to(who, to) {
 
 function can_recruit(who) {
 	// Move one group events:
-	if (game.active == game.force_march) return false;
-	if (game.active == game.surprise) return false;
-	if (game.active == game.treason) return false;
+	if (game.active === game.force_march) return false;
+	if (game.active === game.surprise) return false;
+	if (game.active === game.treason) return false;
 
 	// Must use AP for sea moves:
-	if (game.active == game.piracy) return false;
+	if (game.active === game.piracy) return false;
 
-	if (can_activate(who) && game.location[who] == POOL)
+	if (can_activate(who) && game.location[who] === POOL)
 		for (let to in AREAS)
 			if (can_recruit_to(who, to))
 				return true;
@@ -702,14 +697,14 @@ function count_pinning(where) {
 function count_pinned(where) {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == game.active)
+		if (game.location[b] === where && block_owner(b) === game.active)
 			if (!game.reserves.includes(b))
 				++count;
 	return count;
 }
 
 function is_pinned(who, from) {
-	if (game.active == game.p2) {
+	if (game.active === game.p2) {
 		if (count_pinned(from) <= count_pinning(from))
 			return true;
 	}
@@ -719,13 +714,13 @@ function is_pinned(who, from) {
 function can_block_sea_move_to(who, from, to) {
 	if (is_enemy_exile_area(to))
 		return false;
-	if (game.active == game.force_march)
+	if (game.active === game.force_march)
 		return false;
-	if (who == REBEL || who == "Scots Mercenary" || who == "Welsh Mercenary")
+	if (who === REBEL || who === "Scots Mercenary" || who === "Welsh Mercenary")
 		return false;
-	if (block_type(who) == 'bombard' || block_type(who) == 'levies')
+	if (block_type(who) === 'bombard' || block_type(who) === 'levies')
 		return false;
-	if (border_type(from, to) == 'sea')
+	if (border_type(from, to) === 'sea')
 		return true;
 	return false;
 }
@@ -745,7 +740,7 @@ function can_block_sea_move(who) {
 }
 
 function can_block_use_border(who, from, to) {
-	if (game.active == game.surprise) {
+	if (game.active === game.surprise) {
 		switch (border_type(from, to)) {
 		case 'major': return border_limit(from, to) < 5;
 		case 'river': return border_limit(from, to) < 4;
@@ -773,20 +768,20 @@ function count_borders_crossed(to) {
 function can_block_land_move_to(who, from, to) {
 	if (is_enemy_exile_area(to))
 		return false;
-	if (game.active == game.piracy)
+	if (game.active === game.piracy)
 		return false;
 	if (can_block_use_border(who, from, to)) {
 		// limit number of borders used to attack/reinforce
 		let contested = is_contested_area(to);
 		if (contested && !border_was_last_used_by_active(from, to)) {
 			// p1 or p2 attacking
-			if (game.attacker[to] == game.active) {
+			if (game.attacker[to] === game.active) {
 				if (count_borders_crossed(to) >= 3)
 					return false;
 			}
-			if (game.active == game.p2) {
+			if (game.active === game.p2) {
 				// p2 reinforcing battle started by p1
-				if (game.attacker[to] == game.p1) {
+				if (game.attacker[to] === game.p1) {
 					if (count_borders_crossed(to) >= 2)
 						return false;
 				}
@@ -817,16 +812,16 @@ function can_block_land_move(who) {
 function can_block_continue(who, from, to) {
 	if (is_contested_area(to))
 		return false;
-	if (border_type(from, to) == 'minor')
+	if (border_type(from, to) === 'minor')
 		return false;
-	if (game.active == game.force_march) {
+	if (game.active === game.force_march) {
 		if (game.distance >= 3)
 			return false;
 	} else {
 		if (game.distance >= 2)
 			return false;
 	}
-	if (to == game.last_from)
+	if (to === game.last_from)
 		return false;
 	return true;
 }
@@ -853,7 +848,7 @@ function can_block_regroup_to(who, to) {
 }
 
 function can_block_regroup(who) {
-	if (block_owner(who) == game.active) {
+	if (block_owner(who) === game.active) {
 		let from = game.location[who];
 		for (let to of AREAS[from].exits)
 			if (can_block_regroup_to(who, to))
@@ -864,9 +859,9 @@ function can_block_regroup(who) {
 
 function can_block_muster_via(who, from, next, muster) {
 	if (can_block_land_move_to(who, from, next) && is_friendly_or_vacant_area(next)) {
-		if (next == muster)
+		if (next === muster)
 			return true;
-		if (border_type(from, next) != 'minor') {
+		if (border_type(from, next) !== 'minor') {
 			if (AREAS[next].exits.includes(muster))
 				if (can_block_land_move_to(who, next, muster))
 					return true;
@@ -877,7 +872,7 @@ function can_block_muster_via(who, from, next, muster) {
 
 function can_block_muster(who, muster) {
 	let from = game.location[who];
-	if (from == muster)
+	if (from === muster)
 		return false;
 	if (can_activate(who) && is_block_on_map(who)) {
 		if (is_pinned(who, from))
@@ -901,13 +896,13 @@ function is_battle_reserve(who) {
 }
 
 function is_attacker(who) {
-	if (game.location[who] == game.where && block_owner(who) == game.attacker[game.where] && !game.dead[who])
+	if (game.location[who] === game.where && block_owner(who) === game.attacker[game.where] && !game.dead[who])
 		return !game.reserves.includes(who);
 	return false;
 }
 
 function is_defender(who) {
-	if (game.location[who] == game.where && block_owner(who) != game.attacker[game.where] && !game.dead[who])
+	if (game.location[who] === game.where && block_owner(who) !== game.attacker[game.where] && !game.dead[who])
 		return !game.reserves.includes(who);
 	return false;
 }
@@ -942,12 +937,12 @@ function check_instant_victory() {
 function eliminate_block(who) {
 	log(block_name(who) + " is eliminated.");
 	game.flash += " " + block_name(who) + " is eliminated.";
-	if (who == "Exeter/Y") {
+	if (who === "Exeter/Y") {
 		game.location[who] = null;
 		++game.killed_heirs[LANCASTER];
 		return check_instant_victory();
 	}
-	if (who == "Clarence/L") {
+	if (who === "Clarence/L") {
 		game.location[who] = null;
 		++game.killed_heirs[YORK];
 		return check_instant_victory();
@@ -955,7 +950,7 @@ function eliminate_block(who) {
 	if (is_heir(who)) {
 		game.location[who] = null;
 		++game.killed_heirs[block_owner(who)];
-		if (who == game.pretender)
+		if (who === game.pretender)
 			game.pretender = find_senior_heir(block_owner(game.pretender));
 		// A new King is only crowned in the supply phase.
 		return check_instant_victory();
@@ -983,7 +978,7 @@ function eliminate_block(who) {
 }
 
 function reduce_block(who) {
-	if (game.steps[who] == 1) {
+	if (game.steps[who] === 1) {
 		eliminate_block(who);
 	} else {
 		--game.steps[who];
@@ -1009,7 +1004,7 @@ function count_defenders() {
 function count_blocks_exclude_mercenaries(where) {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (!(game.reduced && game.reduced[b]) && game.location[b] == where && !is_mercenary(b))
+		if (!(game.reduced && game.reduced[b]) && game.location[b] === where && !is_mercenary(b))
 			++count;
 	return count;
 }
@@ -1017,20 +1012,20 @@ function count_blocks_exclude_mercenaries(where) {
 function count_blocks(where) {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (!(game.reduced && game.reduced[b]) && game.location[b] == where)
+		if (!(game.reduced && game.reduced[b]) && game.location[b] === where)
 			++count;
 	return count;
 }
 
 function add_blocks_exclude_mercenaries(list, where) {
 	for (let b in BLOCKS)
-		if (!(game.reduced && game.reduced[b]) && game.location[b] == where && !is_mercenary(b))
+		if (!(game.reduced && game.reduced[b]) && game.location[b] === where && !is_mercenary(b))
 			list.push(b);
 }
 
 function add_blocks(list, where) {
 	for (let b in BLOCKS)
-		if (!(game.reduced && game.reduced[b]) && game.location[b] == where)
+		if (!(game.reduced && game.reduced[b]) && game.location[b] === where)
 			list.push(b);
 }
 
@@ -1038,10 +1033,10 @@ function check_supply_penalty() {
 	game.supply = [];
 	for (let where in AREAS) {
 		if (is_friendly_area(where)) {
-			if (where == "Calais" || where == "France") {
+			if (where === "Calais" || where === "France") {
 				if (count_blocks_exclude_mercenaries(where) > 4)
 					add_blocks_exclude_mercenaries(game.supply, where);
-			} else if (where == "Ireland" || where == "Scotland") {
+			} else if (where === "Ireland" || where === "Scotland") {
 				if (count_blocks_exclude_mercenaries(where) > 2)
 					add_blocks_exclude_mercenaries(game.supply, where);
 			} else if (has_city(where)) {
@@ -1060,10 +1055,10 @@ function check_exile_limits() {
 	game.exiles = [];
 	for (let where in AREAS) {
 		if (is_friendly_area(where)) {
-			if (where == "Calais" || where == "France") {
+			if (where === "Calais" || where === "France") {
 				if (count_blocks_exclude_mercenaries(where) > 4)
 					add_blocks_exclude_mercenaries(game.exiles, where);
-			} else if (where == "Ireland" || where == "Scotland") {
+			} else if (where === "Ireland" || where === "Scotland") {
 				if (count_blocks_exclude_mercenaries(where) > 2)
 					add_blocks_exclude_mercenaries(game.exiles, where);
 			}
@@ -1087,7 +1082,7 @@ function find_block(owner, name) {
 }
 
 function deploy(who, where) {
-	if (where == "Enemy")
+	if (where === "Enemy")
 		return;
 	if (!(where in AREAS))
 		throw new Error("Area not found: " + where);
@@ -1302,8 +1297,8 @@ function setup_richard_iii() {
 // Kingmaker scenario special rule
 function free_henry_vi() {
 	if (game.dead["Henry VI"]) {
-		if ((game.active == LANCASTER && is_friendly_area("Middlesex")) ||
-			(game.active == YORK && is_enemy_area("Middlesex"))) {
+		if ((game.active === LANCASTER && is_friendly_area("Middlesex")) ||
+			(game.active === YORK && is_enemy_area("Middlesex"))) {
 			log("Henry VI is rescued!");
 			delete game.dead["Henry VI"];
 		}
@@ -1376,9 +1371,9 @@ function resume_play_card() {
 
 states.play_card = {
 	prompt: function (view, current) {
-		if (current == OBSERVER)
+		if (current === OBSERVER)
 			return view.prompt = "Waiting for players to play a card.";
-		if (current == LANCASTER) {
+		if (current === LANCASTER) {
 			if (game.l_card) {
 				view.prompt = "Waiting for York to play a card.";
 				gen_action(view, 'undo');
@@ -1388,7 +1383,7 @@ states.play_card = {
 					gen_action(view, 'play', c);
 			}
 		}
-		if (current == YORK) {
+		if (current === YORK) {
 			if (game.y_card) {
 				view.prompt = "Waiting for Lancaster to play a card.";
 				gen_action(view, 'undo');
@@ -1400,22 +1395,22 @@ states.play_card = {
 		}
 	},
 	play: function (card, current) {
-		if (current == LANCASTER) {
+		if (current === LANCASTER) {
 			remove_from_array(game.l_hand, card);
 			game.l_card = card;
 		}
-		if (current == YORK) {
+		if (current === YORK) {
 			remove_from_array(game.y_hand, card);
 			game.y_card = card;
 		}
 		resume_play_card();
 	},
 	undo: function (_, current) {
-		if (current == LANCASTER) {
+		if (current === LANCASTER) {
 			game.l_hand.push(game.l_card);
 			game.l_card = 0;
 		}
-		if (current == YORK) {
+		if (current === YORK) {
 			game.y_hand.push(game.y_card);
 			game.y_card = 0;
 		}
@@ -1433,8 +1428,8 @@ function reveal_cards() {
 	let lc = CARDS[game.l_card];
 	let yc = CARDS[game.y_card];
 
-	let lp = (lc.event ? 10 : 0) + lc.actions * 2 + (pretender == LANCASTER ? 1 : 0);
-	let yp = (yc.event ? 10 : 0) + yc.actions * 2 + (pretender == YORK ? 1 : 0);
+	let lp = (lc.event ? 10 : 0) + lc.actions * 2 + (pretender === LANCASTER ? 1 : 0);
+	let yp = (yc.event ? 10 : 0) + yc.actions * 2 + (pretender === YORK ? 1 : 0);
 
 	if (lp > yp) {
 		game.p1 = LANCASTER;
@@ -1454,13 +1449,13 @@ function start_player_turn() {
 	reset_border_limits();
 	let lc = CARDS[game.l_card];
 	let yc = CARDS[game.y_card];
-	if (game.active == LANCASTER && lc.event)
+	if (game.active === LANCASTER && lc.event)
 		goto_event_card(lc.event);
-	else if (game.active == YORK && yc.event)
+	else if (game.active === YORK && yc.event)
 		goto_event_card(yc.event);
-	else if (game.active == LANCASTER)
+	else if (game.active === LANCASTER)
 		goto_action_phase(lc.actions);
-	else if (game.active == YORK)
+	else if (game.active === YORK)
 		goto_action_phase(yc.actions);
 }
 
@@ -1473,7 +1468,7 @@ function end_player_turn() {
 	// Remove "Surprise" road limit bonus for retreats and regroups.
 	delete game.surprise;
 
-	if (game.active == game.p2) {
+	if (game.active === game.p2) {
 		goto_battle_phase();
 	} else {
 		game.active = game.p2;
@@ -1524,7 +1519,7 @@ states.plague_event = {
 	area: function (where) {
 		log("Plague ravages " + has_city(where) + "!");
 		for (let b in BLOCKS) {
-			if (game.location[b] == where)
+			if (game.location[b] === where)
 				reduce_block(b);
 		}
 		end_player_turn();
@@ -1609,7 +1604,7 @@ states.muster_move_1 = {
 		log_move_start(from);
 		log_move_continue(to);
 		move_block(game.who, from, to);
-		if (to == game.where) {
+		if (to === game.where) {
 			log_move_end();
 			game.moved[game.who] = true;
 			game.who = null;
@@ -1657,7 +1652,7 @@ function move_block(who, from, to) {
 			game.attacker[to] = game.active;
 			game.main_border[to] = from;
 		} else {
-			if (game.attacker[to] != game.active || game.main_border[to] != from) {
+			if (game.attacker[to] !== game.active || game.main_border[to] !== from) {
 				game.reserves.push(who);
 				return RESERVE_MARK;
 			}
@@ -1681,25 +1676,25 @@ function goto_action_phase(moves) {
 states.action_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current)) {
-			if (game.active == game.piracy)
+			if (game.active === game.piracy)
 				return view.prompt = "Piracy: Waiting for " + game.active + ".";
-			if (game.active == game.force_march)
+			if (game.active === game.force_march)
 				return view.prompt = "Force March: Waiting for " + game.active + ".";
-			if (game.active == game.surprise)
+			if (game.active === game.surprise)
 				return view.prompt = "Surprise: Waiting for " + game.active + ".";
-			if (game.active == game.treason)
+			if (game.active === game.treason)
 				return view.prompt = "Treason: Waiting for " + game.active + ".";
 			else
 				return view.prompt = "Action Phase: Waiting for " + game.active + ".";
 		}
 
-		if (game.active == game.piracy) {
+		if (game.active === game.piracy) {
 			view.prompt = "Piracy: Choose an army to sea move. Attacking is allowed. " + game.moves + "AP left.";
-		} else if (game.active == game.force_march) {
+		} else if (game.active === game.force_march) {
 			view.prompt = "Force March: Move one group. Blocks can move up to 3 areas and may attack.";
-		} else if (game.active == game.surprise) {
+		} else if (game.active === game.surprise) {
 			view.prompt = "Surprise: Move one group. Border limit is +1 to cross all borders.";
-		} else if (game.active == game.treason) {
+		} else if (game.active === game.treason) {
 			view.prompt = "Treason: Move one group.";
 		} else {
 			view.prompt = "Action Phase: Choose an army to move or recruit. " + game.moves + "AP left.";
@@ -1714,7 +1709,7 @@ states.action_phase = {
 					gen_action(view, 'block', b);
 			}
 			if (can_block_land_move(b)) {
-				if (game.moves == 0) {
+				if (game.moves === 0) {
 					if (game.activated.includes(from))
 						gen_action(view, 'block', b);
 				} else {
@@ -1722,7 +1717,7 @@ states.action_phase = {
 				}
 			}
 			if (can_block_sea_move(b)) {
-				if (game.moves == 0) {
+				if (game.moves === 0) {
 					if (game.move_port[game.location[b]])
 						gen_action(view, 'block', b);
 				} else {
@@ -1735,7 +1730,7 @@ states.action_phase = {
 		push_undo();
 		game.who = who;
 		game.origin = game.location[who];
-		if (game.origin == POOL) {
+		if (game.origin === POOL) {
 			game.state = 'recruit_where';
 		} else {
 			game.distance = 0;
@@ -1792,20 +1787,20 @@ states.move_to = {
 		if (game.distance > 0)
 			gen_action(view, 'area', from);
 		for (let to of AREAS[from].exits) {
-			if (to != game.last_from && can_block_land_move_to(game.who, from, to))
+			if (to !== game.last_from && can_block_land_move_to(game.who, from, to))
 				gen_action(view, 'area', to);
-			else if (game.distance == 0 && can_block_sea_move_to(game.who, from, to)) {
+			else if (game.distance === 0 && can_block_sea_move_to(game.who, from, to)) {
 				let has_destination_port = false;
-				if (game.moves == 0) {
+				if (game.moves === 0) {
 					for (let port of AREAS[to].exits)
-						if (game.move_port[game.origin] == port)
+						if (game.move_port[game.origin] === port)
 							has_destination_port = true;
 				} else {
-					if (game.active == game.piracy)
+					if (game.active === game.piracy)
 						has_destination_port = true;
 					else
 						for (let port of AREAS[to].exits)
-							if (port != game.origin && is_friendly_or_vacant_area(port))
+							if (port !== game.origin && is_friendly_or_vacant_area(port))
 								has_destination_port = true;
 				}
 				if (has_destination_port)
@@ -1814,18 +1809,18 @@ states.move_to = {
 		}
 	},
 	block: function () {
-		if (game.distance == 0)
+		if (game.distance === 0)
 			pop_undo();
 		else
 			end_move();
 	},
 	area: function (to) {
 		let from = game.location[game.who];
-		if (to == from) {
+		if (to === from) {
 			end_move();
 			return;
 		}
-		if (game.distance == 0)
+		if (game.distance === 0)
 			log_move_start(from);
 		game.last_from = from;
 		if (is_sea_area(to)) {
@@ -1846,23 +1841,23 @@ states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to move.";
-		if (game.active == game.piracy) {
+		if (game.active === game.piracy) {
 			view.prompt = "Piracy: Sea Move " + block_name(game.who) + " to a coastal area.";
 		} else {
 			view.prompt = "Sea Move " + block_name(game.who) + " to a friendly or vacant coastal area.";
 		}
 		gen_action_undo(view);
 		for (let to of AREAS[game.location[game.who]].exits) {
-			if (to == game.last_from)
+			if (to === game.last_from)
 				continue;
 			if (is_friendly_or_vacant_area(to)) {
-				if (game.moves == 0) {
-					if (game.move_port[game.origin] == to)
+				if (game.moves === 0) {
+					if (game.move_port[game.origin] === to)
 						gen_action(view, 'area', to);
 				} else {
 					gen_action(view, 'area', to);
 				}
-			} else if (game.active == game.piracy && game.moves > 0) {
+			} else if (game.active === game.piracy && game.moves > 0) {
 				// Can attack with piracy, but no port-to-port bonus.
 				gen_action(view, 'area', to);
 			}
@@ -1872,7 +1867,7 @@ states.sea_move_to = {
 		game.location[game.who] = to;
 		game.moved[game.who] = true;
 
-		if (game.active == game.piracy && is_contested_area(to)) {
+		if (game.active === game.piracy && is_contested_area(to)) {
 			// Can attack with piracy, but no port-to-port bonus.
 			log_move_continue(to, ATTACK_MARK);
 			game.is_pirate[game.who] = true;
@@ -1883,7 +1878,7 @@ states.sea_move_to = {
 		} else {
 			// Can sea move two blocks between same major ports for 1 AP.
 			log_move_continue(to);
-			if (game.move_port[game.origin] == to) {
+			if (game.move_port[game.origin] === to) {
 				delete game.move_port[game.origin];
 			} else {
 				logp("sea moves.");
@@ -1993,7 +1988,7 @@ states.treason_event = {
 		view.prompt = "Treason: Choose a target or pass.";
 		gen_action(view, 'pass');
 		for (let b in BLOCKS) {
-			if (game.active == game.attacker[game.where]) {
+			if (game.active === game.attacker[game.where]) {
 				if (is_defender(b) && can_defect(null, b)) {
 					gen_action(view, 'battle_treachery', b);
 					gen_action(view, 'block', b);
@@ -2026,7 +2021,7 @@ states.treason_event = {
 
 function bring_on_reserves(owner, moved) {
 	for (let b in BLOCKS) {
-		if (block_owner(b) == owner && game.location[b] == game.where) {
+		if (block_owner(b) === owner && game.location[b] === game.where) {
 			remove_from_array(game.reserves, b);
 			game.moved[b] = moved;
 		}
@@ -2061,15 +2056,15 @@ function pump_battle_round() {
 		return;
 	}
 
-	if (count_attackers() == 0 || count_defenders() == 0) {
+	if (count_attackers() === 0 || count_defenders() === 0) {
 		// Deploy reserves immediately if all blocks on one side are eliminated.
-		if (count_attackers() == 0) {
+		if (count_attackers() === 0) {
 			log("Attacking main force eliminated.");
 			bring_on_reserves(game.attacker[game.where], true);
-		} else if (count_defenders() == 0) {
+		} else if (count_defenders() === 0) {
 			log("Defending main force was eliminated.");
 			bring_on_reserves(ENEMY[game.attacker[game.where]], true);
-			if (game.battle_round == 1) {
+			if (game.battle_round === 1) {
 				log("The attacker is now the defender.");
 				game.attacker[game.where] = ENEMY[game.attacker[game.where]];
 			}
@@ -2080,7 +2075,7 @@ function pump_battle_round() {
 		let output = null;
 		for (let b in BLOCKS) {
 			if (is_candidate(b) && !game.moved[b] && !game.dead[b]) {
-				if (block_initiative(b) == ci) {
+				if (block_initiative(b) === ci) {
 					if (!output)
 						output = [];
 					output.push(b);
@@ -2122,9 +2117,9 @@ function pass_with_block(b) {
 }
 
 function can_retreat_with_block(who) {
-	if (game.location[who] == game.where) {
+	if (game.location[who] === game.where) {
 		if (game.battle_round > 1) {
-			if (game.active == game.piracy && game.is_pirate[who]) {
+			if (game.active === game.piracy && game.is_pirate[who]) {
 				return true;
 			} else {
 				for (let to of AREAS[game.where].exits)
@@ -2137,9 +2132,9 @@ function can_retreat_with_block(who) {
 }
 
 function must_retreat_with_block(who) {
-	if (game.location[who] == game.where)
-		if (game.battle_round == 4)
-			return (block_owner(who) == game.attacker[game.where]);
+	if (game.location[who] === game.where)
+		if (game.battle_round === 4)
+			return (block_owner(who) === game.attacker[game.where]);
 	return false;
 }
 
@@ -2172,10 +2167,10 @@ function roll_attack(active, b, verb) {
 		}
 	}
 
-	game.flash = name + " " + verb + " " + rolls.join(" ") +  " ";
-	if (game.hits == 0)
+	game.flash = name + " " + verb + " " + rolls.join(" ") + " ";
+	if (game.hits === 0)
 		game.flash += "and misses.";
-	else if (game.hits == 1)
+	else if (game.hits === 1)
 		game.flash += "and scores 1 hit.";
 	else
 		game.flash += "and scores " + game.hits + " hits.";
@@ -2205,7 +2200,7 @@ function attempt_treachery(source, target) {
 	let result = true;
 	for (let i = 0; i < n; ++i) {
 		let die = roll_d6();
-		if ((die & 1) == 1) {
+		if ((die & 1) === 1) {
 			rolls.push(DIE_MISS[die]);
 			result = false;
 		} else {
@@ -2232,7 +2227,7 @@ function charge_with_block(heir, target) {
 	game.moved[heir] = true;
 	roll_attack(game.active, heir, "charges " + block_name(target));
 	n = Math.min(game.hits, game.steps[target]);
-	if (n == game.steps[target]) {
+	if (n === game.steps[target]) {
 		eliminate_block(target);
 	} else {
 		while (n-- > 0)
@@ -2255,16 +2250,10 @@ function can_block_fire(who) {
 	return false;
 }
 
-function can_block_retreat(who) {
-	if (game.location[who] == game.where)
-		return game.battle_round > 1;
-	return false;
-}
-
 function find_minor_heir(owner) {
 	let candidate = null;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == owner && block_type(b) == 'heir' && game.location[b] == MINOR)
+		if (block_owner(b) === owner && block_type(b) === 'heir' && game.location[b] === MINOR)
 			if (!candidate || BLOCKS[b].heir < BLOCKS[candidate].heir)
 				candidate = b;
 	}
@@ -2274,7 +2263,7 @@ function find_minor_heir(owner) {
 function find_senior_heir(owner) {
 	let candidate = null;
 	for (let b in BLOCKS)
-		if (block_owner(b) == owner && block_type(b) == 'heir' && is_block_on_map(b))
+		if (block_owner(b) === owner && block_type(b) === 'heir' && is_block_on_map(b))
 			if (!candidate || BLOCKS[b].heir < BLOCKS[candidate].heir)
 				candidate = b;
 	return candidate;
@@ -2283,7 +2272,7 @@ function find_senior_heir(owner) {
 function find_next_king(owner) {
 	let candidate = null;
 	for (let b in BLOCKS)
-		if (block_owner(b) == owner && block_type(b) == 'heir' && game.location[b])
+		if (block_owner(b) === owner && block_type(b) === 'heir' && game.location[b])
 			if (!candidate || BLOCKS[b].heir < BLOCKS[candidate].heir)
 				candidate = b;
 	return candidate;
@@ -2292,7 +2281,7 @@ function find_next_king(owner) {
 function find_senior_heir_in_area(owner, where) {
 	let candidate = null;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == owner && block_type(b) == 'heir' && game.location[b] == where) {
+		if (block_owner(b) === owner && block_type(b) === 'heir' && game.location[b] === where) {
 			if (is_battle_reserve(b))
 				continue;
 			if (!candidate || BLOCKS[b].heir < BLOCKS[candidate].heir)
@@ -2303,7 +2292,7 @@ function find_senior_heir_in_area(owner, where) {
 }
 
 function is_senior_royal_heir_in(who, where) {
-	return find_senior_heir_in_area(block_owner(game.king), where) == who;
+	return find_senior_heir_in_area(block_owner(game.king), where) === who;
 }
 
 function can_heir_charge() {
@@ -2328,11 +2317,11 @@ states.battle_round = {
 		let can_retreat = false;
 		let must_retreat = false;
 		let can_pass = false;
-		if (game.active == game.attacker[game.where]) {
+		if (game.active === game.attacker[game.where]) {
 			if (game.battle_round < 4) can_fire = true;
 			if (game.battle_round > 1) can_retreat = true;
 			if (game.battle_round < 4) can_pass = true;
-			if (game.battle_round == 4) must_retreat = true;
+			if (game.battle_round === 4) must_retreat = true;
 		} else {
 			can_fire = true;
 			if (game.battle_round > 1) can_retreat = true;
@@ -2396,7 +2385,7 @@ states.battle_charge = {
 		view.prompt = "Heir Charge: Choose a target.";
 		gen_action(view, 'undo');
 		for (let b in BLOCKS) {
-			if (game.active == game.attacker[game.where]) {
+			if (game.active === game.attacker[game.where]) {
 				if (is_defender(b)) {
 					gen_action(view, 'battle_charge', b);
 					gen_action(view, 'block', b);
@@ -2428,7 +2417,7 @@ states.battle_treachery = {
 		view.prompt = "Treachery: Choose a target.";
 		gen_action(view, 'undo');
 		for (let b in BLOCKS) {
-			if (game.active == game.attacker[game.where]) {
+			if (game.active === game.attacker[game.where]) {
 				if (is_defender(b) && can_defect(game.who, b)) {
 					gen_action(view, 'battle_treachery', b);
 					gen_action(view, 'block', b);
@@ -2456,7 +2445,7 @@ states.battle_treachery = {
 
 function goto_battle_hits() {
 	game.battle_list = list_victims(game.active);
-	if (game.battle_list.length == 0)
+	if (game.battle_list.length === 0)
 		resume_battle();
 	else
 		game.state = 'battle_hits';
@@ -2464,7 +2453,7 @@ function goto_battle_hits() {
 
 function apply_hit(who) {
 	let n = Math.min(game.hits, game.steps[who]);
-	if (n == 1)
+	if (n === 1)
 		game.flash = block_name(who) + " takes " + n + " hit.";
 	else
 		game.flash = block_name(who) + " takes " + n + " hits.";
@@ -2474,26 +2463,26 @@ function apply_hit(who) {
 	}
 	game.battle_list = list_victims(game.active);
 	if (game.battle_list.length > 0) {
-		if (game.hits == 1)
+		if (game.hits === 1)
 			game.flash += " 1 hit left.";
 		else if (game.hits > 1)
 			game.flash += " " + game.hits + " hits left.";
 	}
-	if (game.hits == 0)
+	if (game.hits === 0)
 		resume_battle();
 	else
 		goto_battle_hits();
 }
 
 function list_victims(p) {
-	let is_candidate = (p == game.attacker[game.where]) ? is_attacker : is_defender;
+	let is_candidate = (p === game.attacker[game.where]) ? is_attacker : is_defender;
 	let max = 0;
 	for (let b in BLOCKS)
 		if (is_candidate(b) && game.steps[b] > max)
 			max = game.steps[b];
 	let list = [];
 	for (let b in BLOCKS)
-		if (is_candidate(b) && game.steps[b] == max)
+		if (is_candidate(b) && game.steps[b] === max)
 			list.push(b);
 	return list;
 }
@@ -2503,7 +2492,7 @@ states.battle_hits = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+		view.prompt = "Assign " + game.hits + (game.hits !== 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'battle_hit', b);
 			gen_action(view, 'block', b);
@@ -2523,7 +2512,7 @@ states.retreat_in_battle = {
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
-		if (game.active == game.piracy && game.is_pirate[game.who]) {
+		if (game.active === game.piracy && game.is_pirate[game.who]) {
 			view.prompt = "Retreat: Move the army to a friendly or vacant areas in the same sea zone.";
 			for (let to of AREAS[game.where].exits)
 				if (is_sea_area(to))
@@ -2610,8 +2599,8 @@ states.regroup = {
 		gen_action_undo(view);
 		gen_action(view, 'end_regroup');
 		for (let b in BLOCKS) {
-			if (game.location[b] == game.where) {
-				if (game.active == game.piracy) {
+			if (game.location[b] === game.where) {
+				if (game.active === game.piracy) {
 					if (game.is_pirate[b])
 						gen_action(view, 'block', b);
 				} else {
@@ -2637,7 +2626,7 @@ states.regroup = {
 
 states.regroup_to = {
 	prompt: function (view, current) {
-		if (game.active == game.piracy && game.is_pirate[game.who]) {
+		if (game.active === game.piracy && game.is_pirate[game.who]) {
 			if (is_inactive_player(current))
 				return view.prompt = "Waiting for " + game.active + " to regroup.";
 			view.prompt = "Regroup: Move the army to a friendly or vacant area in the same sea zone.";
@@ -2700,7 +2689,7 @@ function goto_supply_phase() {
 	if (!game.location[game.king]) {
 		game.king = find_next_king(block_owner(game.king));
 		log("The King is dead; long live the king!");
-		if (game.location[game.king] == MINOR)
+		if (game.location[game.king] === MINOR)
 			log("The new King is a minor.");
 		else
 			log("The new King is in " + game.location[game.king] + ".");
@@ -2825,7 +2814,7 @@ states.supply_limits_pretender = {
 			return view.prompt = "Waiting for " + game.active + " to check supply limits.";
 		view.prompt = "Supply Phase: Reduce blocks in over-stacked areas.";
 		gen_action_undo(view);
-		if (game.supply.length == 0)
+		if (game.supply.length === 0)
 			gen_action(view, 'end_supply_phase');
 		for (let b of game.supply)
 			gen_action(view, 'block', b);
@@ -2911,7 +2900,7 @@ states.supply_limits_king = {
 			return view.prompt = "Waiting for " + game.active + " to check supply limits.";
 		view.prompt = "Supply Phase: Reduce blocks in over-stacked areas.";
 		gen_action_undo(view);
-		if (game.supply.length == 0)
+		if (game.supply.length === 0)
 			gen_action(view, 'end_supply_phase');
 		for (let b of game.supply)
 			gen_action(view, 'block', b);
@@ -2961,26 +2950,26 @@ function goto_political_turn() {
 				disband(b);
 				break;
 			case "Irish Mercenary":
-				if (game.location[b] != "Ireland") {
+				if (game.location[b] !== "Ireland") {
 					game.turn_log.push([game.location[b], "Ireland"]);
 					game.location[b] = "Ireland";
 				}
 				break;
 			case "Burgundian Mercenary":
 			case "Calais Mercenary":
-				if (game.location[b] != "Calais") {
+				if (game.location[b] !== "Calais") {
 					game.turn_log.push([game.location[b], "Calais"]);
 					game.location[b] = "Calais";
 				}
 				break;
 			case "Scots Mercenary":
-				if (game.location[b] != "Scotland") {
+				if (game.location[b] !== "Scotland") {
 					game.turn_log.push([game.location[b], "Scotland"]);
 					game.location[b] = "Scotland";
 				}
 				break;
 			case "French Mercenary":
-				if (game.location[b] != "France") {
+				if (game.location[b] !== "France") {
 					game.turn_log.push([game.location[b], "France"]);
 					game.location[b] = "France";
 				}
@@ -2998,11 +2987,11 @@ function goto_political_turn() {
 	log("");
 	log("Lancaster controls " + l_count + " nobles.");
 	log("York controls " + y_count + " nobles.");
-	if (l_count > y_count && block_owner(game.king) == YORK) {
+	if (l_count > y_count && block_owner(game.king) === YORK) {
 		game.king = find_senior_heir(LANCASTER);
 		game.pretender = find_senior_heir(YORK);
 		log(game.king + " usurps the throne!");
-	} else if (y_count > l_count && block_owner(game.king) == LANCASTER) {
+	} else if (y_count > l_count && block_owner(game.king) === LANCASTER) {
 		game.king = find_senior_heir(YORK);
 		game.pretender = find_senior_heir(LANCASTER);
 		log(game.king + " usurps the throne!");
@@ -3011,7 +3000,7 @@ function goto_political_turn() {
 	}
 
 	// Game ends after last Usurpation check
-	if (game.campaign == game.end_campaign)
+	if (game.campaign === game.end_campaign)
 		return goto_game_over();
 
 	log("");
@@ -3026,7 +3015,7 @@ function goto_pretender_goes_home() {
 	game.turn_log = [];
 	let choices = false;
 	for (let b in BLOCKS)
-		if (block_owner(b) == game.active && is_block_on_map(b))
+		if (block_owner(b) === game.active && is_block_on_map(b))
 			if (go_home_if_possible(b))
 				choices = true;
 	if (!choices) {
@@ -3044,7 +3033,7 @@ states.pretender_goes_home = {
 		gen_action_undo(view);
 		let done = true;
 		for (let b in BLOCKS) {
-			if (block_owner(b) == game.active && is_block_on_map(b) && !game.moved[b]) {
+			if (block_owner(b) === game.active && is_block_on_map(b) && !game.moved[b]) {
 				if (!is_in_exile(b)) {
 					if (is_heir(b)) {
 						done = false;
@@ -3061,7 +3050,7 @@ states.pretender_goes_home = {
 		if (done) {
 			view.prompt = "Pretender Goes Home: You may move nobles to another home.";
 			for (let b in BLOCKS) {
-				if (block_owner(b) == game.active && is_block_on_map(b) && !game.moved[b]) {
+				if (block_owner(b) === game.active && is_block_on_map(b) && !game.moved[b]) {
 					if (!is_in_exile(b)) {
 						if (is_at_home(b)) {
 							let n = count_available_homes(b);
@@ -3099,7 +3088,7 @@ states.pretender_goes_home_to = {
 			view.prompt = "Pretender Goes Home: Move " + block_name(game.who) + " to home.";
 		gen_action(view, 'block', game.who);
 		for (let where in AREAS) {
-			if (where != game.location[game.who]) {
+			if (where !== game.location[game.who]) {
 				if (is_heir(game.who)) {
 					if (is_friendly_exile_area(where))
 						gen_action(view, 'area', where);
@@ -3140,7 +3129,7 @@ states.exile_limits_pretender = {
 			return view.prompt = "Waiting for " + game.active + " to check exile limits.";
 		view.prompt = "Campaign Reset: Disband one block in each over-stacked exile area.";
 		gen_action_undo(view);
-		if (game.exiles.length == 0)
+		if (game.exiles.length === 0)
 			gen_action(view, 'end_exile_limits');
 		for (let b of game.exiles)
 			gen_action(view, 'block', b);
@@ -3149,7 +3138,7 @@ states.exile_limits_pretender = {
 		push_undo();
 		let where = game.location[who];
 		logp("disbands in " + where + ".");
-		game.exiles = game.exiles.filter(b => game.location[b] != where);
+		game.exiles = game.exiles.filter(b => game.location[b] !== where);
 		disband(who);
 	},
 	end_exile_limits: function () {
@@ -3166,7 +3155,7 @@ function goto_king_goes_home() {
 	game.turn_log = [];
 	let choices = false;
 	for (let b in BLOCKS)
-		if (block_owner(b) == game.active && is_block_on_map(b))
+		if (block_owner(b) === game.active && is_block_on_map(b))
 			if (go_home_if_possible(b))
 				choices = true;
 	if (!choices) {
@@ -3184,7 +3173,7 @@ states.king_goes_home = {
 		gen_action_undo(view);
 		let done = true;
 		for (let b in BLOCKS) {
-			if (block_owner(b) == game.active && is_block_on_map(b) && !game.moved[b]) {
+			if (block_owner(b) === game.active && is_block_on_map(b) && !game.moved[b]) {
 				if (!is_in_exile(b)) {
 					if (!is_at_home(b)) {
 						done = false;
@@ -3198,7 +3187,7 @@ states.king_goes_home = {
 		if (done) {
 			view.prompt = "King Goes Home: You may move nobles and heirs to another home.";
 			for (let b in BLOCKS) {
-				if (block_owner(b) == game.active && is_block_on_map(b) && !game.moved[b]) {
+				if (block_owner(b) === game.active && is_block_on_map(b) && !game.moved[b]) {
 					if (!is_in_exile(b)) {
 						if (is_at_home(b)) {
 							let n = count_available_homes(b);
@@ -3233,7 +3222,7 @@ states.king_goes_home_to = {
 		view.prompt = "King Goes Home: Move " + block_name(game.who) + " to home.";
 		gen_action(view, 'block', game.who);
 		for (let where in AREAS)
-			if (where != game.location[game.who])
+			if (where !== game.location[game.who])
 				if (is_available_home_for(where, game.who))
 					gen_action(view, 'area', where);
 	},
@@ -3265,7 +3254,7 @@ states.exile_limits_king = {
 			return view.prompt = "Waiting for " + game.active + " to check exile limits.";
 		view.prompt = "Campaign Reset: Disband one block in each over-stacked exile area.";
 		gen_action_undo(view);
-		if (game.exiles.length == 0)
+		if (game.exiles.length === 0)
 			gen_action(view, 'end_exile_limits');
 		for (let b of game.exiles)
 			gen_action(view, 'block', b);
@@ -3274,7 +3263,7 @@ states.exile_limits_king = {
 		push_undo();
 		let where = game.location[who];
 		logp("disbands in " + where + ".");
-		game.exiles = game.exiles.filter(b => game.location[b] != where);
+		game.exiles = game.exiles.filter(b => game.location[b] !== where);
 		disband(who);
 	},
 	end_exile_limits: function () {
@@ -3307,7 +3296,7 @@ function goto_game_over() {
 }
 
 states.game_over = {
-	prompt: function (view, current) {
+	prompt: function (view) {
 		view.prompt = game.victory;
 	}
 }
@@ -3324,21 +3313,21 @@ function make_battle_view() {
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)
-			if (game.location[b] == game.where & block_owner(b) == owner && !game.dead[b] && fn(b))
+			if (game.location[b] === game.where & block_owner(b) === owner && !game.dead[b] && fn(b))
 				cell.push([b, game.steps[b], game.moved[b]?1:0])
 	}
 
 	fill_cell(battle.LR, LANCASTER, b => is_battle_reserve(b));
-	fill_cell(battle.LA, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.LB, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.LC, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
-	fill_cell(battle.LD, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) == 'D');
+	fill_cell(battle.LA, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
+	fill_cell(battle.LB, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
+	fill_cell(battle.LC, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
+	fill_cell(battle.LD, LANCASTER, b => !is_battle_reserve(b) && block_initiative(b) === 'D');
 
 	fill_cell(battle.YR, YORK, b => is_battle_reserve(b));
-	fill_cell(battle.YA, YORK, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.YB, YORK, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.YC, YORK, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
-	fill_cell(battle.YD, YORK, b => !is_battle_reserve(b) && block_initiative(b) == 'D');
+	fill_cell(battle.YA, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
+	fill_cell(battle.YB, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
+	fill_cell(battle.YC, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
+	fill_cell(battle.YD, YORK, b => !is_battle_reserve(b) && block_initiative(b) === 'D');
 
 	return battle;
 }
@@ -3347,7 +3336,7 @@ exports.ready = function (scenario, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (scenario, players) {
+exports.setup = function (scenario) {
 	game = {
 		attacker: {},
 		border_limit: {},
@@ -3366,11 +3355,11 @@ exports.setup = function (scenario, players) {
 		where: null,
 		killed_heirs: { Lancaster: 0, York: 0 },
 	}
-	if (scenario == "Wars of the Roses")
+	if (scenario === "Wars of the Roses")
 		setup_game();
-	else if (scenario == "Kingmaker")
+	else if (scenario === "Kingmaker")
 		setup_kingmaker();
-	else if (scenario == "Richard III")
+	else if (scenario === "Richard III")
 		setup_richard_iii();
 	else
 		throw new Error("Unknown scenario:", scenario);
@@ -3380,20 +3369,17 @@ exports.setup = function (scenario, players) {
 
 exports.action = function (state, current, action, arg) {
 	game = state;
-	// TODO: check current, action and argument against action list
-	if (true) {
-		let S = states[game.state];
-		if (action in S)
-			S[action](arg, current);
-		else
-			throw new Error("Invalid action: " + action);
-	}
+	let S = states[game.state];
+	if (action in S)
+		S[action](arg, current);
+	else
+		throw new Error("Invalid action: " + action);
 	return state;
 }
 
 exports.resign = function (state, current) {
 	game = state;
-	if (game.state != 'game_over') {
+	if (game.state !== 'game_over') {
 		log("");
 		log(current + " resigned.");
 		game.active = "None";
@@ -3412,10 +3398,10 @@ exports.view = function(state, current) {
 		active: game.active,
 		king: game.king,
 		pretender: game.pretender,
-		l_card: (game.show_cards || current == LANCASTER) ? game.l_card : 0,
-		y_card: (game.show_cards || current == YORK) ? game.y_card : 0,
-		hand: (current == LANCASTER) ? game.l_hand : (current == YORK) ? game.y_hand : [],
-		who: (game.active == current) ? game.who : null,
+		l_card: (game.show_cards || current === LANCASTER) ? game.l_card : 0,
+		y_card: (game.show_cards || current === YORK) ? game.y_card : 0,
+		hand: (current === LANCASTER) ? game.l_hand : (current === YORK) ? game.y_hand : [],
+		who: (game.active === current) ? game.who : null,
 		where: game.where,
 		known: {},
 		secret: { York: {}, Lancaster: {}, Rebel: {} },
@@ -3435,12 +3421,12 @@ exports.view = function(state, current) {
 			continue;
 
 		let is_known = false;
-		if (current == block_owner(b) || (game.dead[b] && is_block_on_map(b)) || game.state == 'game_over')
+		if (current === block_owner(b) || (game.dead[b] && is_block_on_map(b)) || game.state === 'game_over')
 			is_known = true;
 
 		if (is_known) {
 			view.known[b] = [a, game.steps[b], (game.moved[b] || game.dead[b]) ? 1 : 0];
-		} else if (a != POOL && a != MINOR) {
+		} else if (a !== POOL && a !== MINOR) {
 			let list = view.secret[BLOCKS[b].owner];
 			if (!(a in list))
 				list[a] = [0, 0];

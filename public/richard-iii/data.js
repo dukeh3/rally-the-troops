@@ -1,3 +1,5 @@
+"use strict";
+
 let AREAS = {
 	"Ireland":{"x":120,"y":475},
 	"Isle of Man":{"x":360,"y":525},
@@ -260,11 +262,11 @@ const CARDS = {
 	function block(image, owner, type, name, steps, combat, loyalty, extra, extra2) {
 		let id = name;
 		let enemy = null;
-		if (name == "Bombard")
+		if (name === "Bombard")
 			id = name + "/" + owner[0];
 		if (loyalty) {
 			id = name + "/" + owner[0];
-			if (owner == "York")
+			if (owner === "York")
 				enemy = name + "/L";
 			else
 				enemy = name + "/Y";
@@ -285,13 +287,13 @@ const CARDS = {
 		if (enemy)
 			BLOCKS[id].enemy = enemy;
 		if (extra) {
-			if (type == 'heir') {
+			if (type === 'heir') {
 				BLOCKS[id].heir = extra;
 				BLOCKS[id].shield = extra2;
 			}
-			if (type == 'church' || type == 'levies')
+			if (type === 'church' || type === 'levies')
 				BLOCKS[id].home = extra;
-			if (type == 'nobles')
+			if (type === 'nobles')
 				BLOCKS[id].shield = extra;
 		}
 	}
@@ -397,5 +399,5 @@ const CARDS = {
 
 })();
 
-if (typeof module != 'undefined')
+if (typeof module !== 'undefined')
 	module.exports = { CARDS, BLOCKS, AREAS, BORDERS }

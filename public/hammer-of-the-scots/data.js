@@ -226,7 +226,7 @@ let BORDERS = {};
 
 	function block(owner, type, name, move, combat, steps, mortal, image) {
 		let id = name;
-		if (type == 'nobles')
+		if (type === 'nobles')
 			id = name + "/" + owner[0];
 		let item = {
 			owner: owner,
@@ -241,74 +241,70 @@ let BORDERS = {};
 		BLOCKS[id] = item;
 	}
 
-	const A4 = "A4"; const A3 = "A3"; const A2 = "A2"; const A1 = "A1";
-	const B4 = "B4"; const B3 = "B3"; const B2 = "B2"; const B1 = "B1";
-	const C4 = "C4"; const C3 = "C3"; const C2 = "C2"; const C1 = "C1";
+	block("Scotland",	"wallace",	"Wallace",		3,	"A3", 	4,	true,	11);
+	block("Scotland",	"king",		"King",			3,	"A3", 	4,	true,	12);
+	block("Scotland",	"infantry",	"Douglas",		2,	"C3", 	4,	false,	13);
+	block("Scotland",	"infantry",	"Campbell",		2,	"C2", 	4,	false,	14);
+	block("Scotland",	"infantry",	"Graham",		2,	"C2", 	4,	false,	15);
+	block("Scotland",	"infantry",	"MacDonald",		2,	"C3", 	3,	false,	16);
+	block("Scotland",	"infantry",	"Lindsay",		2,	"C2", 	3,	false,	17);
 
-	block("Scotland",	"wallace",	"Wallace",		3,	A3, 	4,	true,	11);
-	block("Scotland",	"king",		"King",			3,	A3, 	4,	true,	12);
-	block("Scotland",	"infantry",	"Douglas",		2,	C3, 	4,	false,	13);
-	block("Scotland",	"infantry",	"Campbell",		2,	C2, 	4,	false,	14);
-	block("Scotland",	"infantry",	"Graham",		2,	C2, 	4,	false,	15);
-	block("Scotland",	"infantry",	"MacDonald",		2,	C3, 	3,	false,	16);
-	block("Scotland",	"infantry",	"Lindsay",		2,	C2, 	3,	false,	17);
+	block("Scotland",	"infantry",	"Fraser",		2,	"C3", 	3,	false,	21);
+	block("Scotland",	"infantry",	"Barclay",		2,	"C2", 	4,	false,	22);
+	block("Scotland",	"infantry",	"Grant",		2,	"C2", 	3,	false,	23);
+	block("Scotland",	"cavalry",	"Keith",		3,	"B1", 	3,	false,	24);
+	block("Scotland",	"archers",	"Etterick",		3,	"B2", 	2,	false,	25);
+	block("Scotland",	"norse",	"Norse",		0,	"A2", 	3,	true,	26);
+	block("Scotland",	"knights",	"French Knights",	2,	"B3", 	4,	true,	27);
 
-	block("Scotland",	"infantry",	"Fraser",		2,	C3, 	3,	false,	21);
-	block("Scotland",	"infantry",	"Barclay",		2,	C2, 	4,	false,	22);
-	block("Scotland",	"infantry",	"Grant",		2,	C2, 	3,	false,	23);
-	block("Scotland",	"cavalry",	"Keith",		3,	B1, 	3,	false,	24);
-	block("Scotland",	"archers",	"Etterick",		3,	B2, 	2,	false,	25);
-	block("Scotland",	"norse",	"Norse",		0,	A2, 	3,	true,	26);
-	block("Scotland",	"knights",	"French Knights",	2,	B3, 	4,	true,	27);
+	block("Scotland",	"nobles",	"Comyn",		2,	"B2", 	4,	false,	31);
+	block("Scotland",	"moray",	"Moray",		2,	"B2", 	3,	true,	32);
+	block("Scotland",	"nobles",	"Angus",		2,	"B2", 	3,	false,	33);
+	block("Scotland",	"nobles",	"Argyll",		2,	"B2", 	3,	false,	34);
+	block("Scotland",	"nobles",	"Bruce",		2,	"B2", 	4,	false,	35);
+	block("Scotland",	"nobles",	"Mar",			2,	"B2", 	3,	false,	36);
+	block("Scotland",	"nobles",	"Lennox",		2,	"B2", 	3,	false,	37);
 
-	block("Scotland",	"nobles",	"Comyn",		2,	B2, 	4,	false,	31);
-	block("Scotland",	"moray",	"Moray",		2,	B2, 	3,	true,	32);
-	block("Scotland",	"nobles",	"Angus",		2,	B2, 	3,	false,	33);
-	block("Scotland",	"nobles",	"Argyll",		2,	B2, 	3,	false,	34);
-	block("Scotland",	"nobles",	"Bruce",		2,	B2, 	4,	false,	35);
-	block("Scotland",	"nobles",	"Mar",			2,	B2, 	3,	false,	36);
-	block("Scotland",	"nobles",	"Lennox",		2,	B2, 	3,	false,	37);
+	block("Scotland",	"nobles",	"Buchan",		2,	"B2", 	3,	false,	41);
+	block("Scotland",	"nobles",	"Galloway",		2,	"B2", 	3,	false,	42);
+	block("Scotland",	"nobles",	"Ross",			2,	"B2", 	3,	false,	43);
+	block("Scotland",	"nobles",	"Atholl",		2,	"B2", 	3,	false,	44);
+	block("Scotland",	"nobles",	"Dunbar",		2,	"B2", 	3,	false,	45);
+	block("Scotland",	"nobles",	"Mentieth",		2,	"B2", 	3,	false,	46);
+	block("Scotland",	"nobles",	"Steward",		2,	"B2", 	3,	false,	47);
 
-	block("Scotland",	"nobles",	"Buchan",		2,	B2, 	3,	false,	41);
-	block("Scotland",	"nobles",	"Galloway",		2,	B2, 	3,	false,	42);
-	block("Scotland",	"nobles",	"Ross",			2,	B2, 	3,	false,	43);
-	block("Scotland",	"nobles",	"Atholl",		2,	B2, 	3,	false,	44);
-	block("Scotland",	"nobles",	"Dunbar",		2,	B2, 	3,	false,	45);
-	block("Scotland",	"nobles",	"Mentieth",		2,	B2, 	3,	false,	46);
-	block("Scotland",	"nobles",	"Steward",		2,	B2, 	3,	false,	47);
+	block("England",	"king",		"Edward",		3,	"B4", 	4,	true,	61);
+	block("England",	"archers",	"Lancaster Archers",	2,	"B3", 	3,	false,	62);
+	block("England",	"archers",	"Wales Archers",	2,	"B3", 	3,	false,	63);
+	block("England",	"knights",	"Lancaster Knights",	2,	"B3", 	4,	false,	64);
+	block("England",	"knights",	"York Knights",		2,	"B3", 	4,	false,	65);
+	block("England",	"knights",	"Durham Knights",	2,	"B3", 	3,	false,	66);
+	block("England",	"hobelars",	"Hobelars",		3,	"A2", 	3,	true,	67);
 
-	block("England",	"king",		"Edward",		3,	B4, 	4,	true,	61);
-	block("England",	"archers",	"Lancaster Archers",	2,	B3, 	3,	false,	62);
-	block("England",	"archers",	"Wales Archers",	2,	B3, 	3,	false,	63);
-	block("England",	"knights",	"Lancaster Knights",	2,	B3, 	4,	false,	64);
-	block("England",	"knights",	"York Knights",		2,	B3, 	4,	false,	65);
-	block("England",	"knights",	"Durham Knights",	2,	B3, 	3,	false,	66);
-	block("England",	"hobelars",	"Hobelars",		3,	A2, 	3,	true,	67);
+	block("England",	"infantry",	"York Infantry",	2,	"C2", 	4,	false,	71);
+	block("England",	"infantry",	"Lancaster Infantry",	2,	"C2", 	4,	false,	72);
+	block("England",	"infantry",	"Northumber Infantry",	2,	"C2", 	4,	false,	73);
+	block("England",	"infantry",	"Durham Infantry",	2,	"C2", 	3,	false,	74);
+	block("England",	"infantry",	"Cumbria Infantry",	2,	"C2", 	3,	false,	75);
+	block("England",	"infantry",	"Westmor Infantry",	2,	"C2", 	3,	false,	82);
+	block("England",	"infantry",	"Wales Infantry",	2,	"C3", 	3,	false,	76);
+	block("England",	"infantry",	"Ulster Infantry",	2,	"C3", 	3,	false,	77);
 
-	block("England",	"infantry",	"York Infantry",	2,	C2, 	4,	false,	71);
-	block("England",	"infantry",	"Lancaster Infantry",	2,	C2, 	4,	false,	72);
-	block("England",	"infantry",	"Northumber Infantry",	2,	C2, 	4,	false,	73);
-	block("England",	"infantry",	"Durham Infantry",	2,	C2, 	3,	false,	74);
-	block("England",	"infantry",	"Cumbria Infantry",	2,	C2, 	3,	false,	75);
-	block("England",	"infantry",	"Westmor Infantry",	2,	C2, 	3,	false,	82);
-	block("England",	"infantry",	"Wales Infantry",	2,	C3, 	3,	false,	76);
-	block("England",	"infantry",	"Ulster Infantry",	2,	C3, 	3,	false,	77);
+	block("England",	"nobles",	"Comyn",		2,	"B2", 	4,	false,	81);
+	block("England",	"nobles",	"Angus",		2,	"B2", 	3,	false,	83);
+	block("England",	"nobles",	"Argyll",		2,	"B2", 	3,	false,	84);
+	block("England",	"nobles",	"Bruce",		2,	"B2", 	4,	false,	85);
+	block("England",	"nobles",	"Mar",			2,	"B2", 	3,	false,	86);
+	block("England",	"nobles",	"Lennox",		2,	"B2", 	3,	false,	87);
 
-	block("England",	"nobles",	"Comyn",		2,	B2, 	4,	false,	81);
-	block("England",	"nobles",	"Angus",		2,	B2, 	3,	false,	83);
-	block("England",	"nobles",	"Argyll",		2,	B2, 	3,	false,	84);
-	block("England",	"nobles",	"Bruce",		2,	B2, 	4,	false,	85);
-	block("England",	"nobles",	"Mar",			2,	B2, 	3,	false,	86);
-	block("England",	"nobles",	"Lennox",		2,	B2, 	3,	false,	87);
-
-	block("England",	"nobles",	"Buchan",		2,	B2, 	3,	false,	91);
-	block("England",	"nobles",	"Galloway",		2,	B2, 	3,	false,	92);
-	block("England",	"nobles",	"Ross",			2,	B2, 	3,	false,	93);
-	block("England",	"nobles",	"Atholl",		2,	B2, 	3,	false,	94);
-	block("England",	"nobles",	"Dunbar",		2,	B2, 	3,	false,	95);
-	block("England",	"nobles",	"Mentieth",		2,	B2, 	3,	false,	96);
-	block("England",	"nobles",	"Steward",		2,	B2, 	3,	false,	97);
+	block("England",	"nobles",	"Buchan",		2,	"B2", 	3,	false,	91);
+	block("England",	"nobles",	"Galloway",		2,	"B2", 	3,	false,	92);
+	block("England",	"nobles",	"Ross",			2,	"B2", 	3,	false,	93);
+	block("England",	"nobles",	"Atholl",		2,	"B2", 	3,	false,	94);
+	block("England",	"nobles",	"Dunbar",		2,	"B2", 	3,	false,	95);
+	block("England",	"nobles",	"Mentieth",		2,	"B2", 	3,	false,	96);
+	block("England",	"nobles",	"Steward",		2,	"B2", 	3,	false,	97);
 })();
 
-if (typeof module != 'undefined')
+if (typeof module !== 'undefined')
 	module.exports = { CARDS, BLOCKS, AREAS, BORDERS }

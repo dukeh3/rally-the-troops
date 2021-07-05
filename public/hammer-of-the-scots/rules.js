@@ -71,7 +71,7 @@ function print_turn_log_no_active(text) {
 	let last = game.turn_log[0];
 	let n = 0;
 	for (let entry of game.turn_log) {
-		if (entry.toString() != last.toString()) {
+		if (entry.toString() !== last.toString()) {
 			text += print_move(last);
 			n = 0;
 		}
@@ -90,12 +90,8 @@ function print_turn_log(verb) {
 	print_turn_log_no_active(game.active + " " + verb + ":");
 }
 
-function is_active_player(current) {
-	return (current == game.active) || (game.active == BOTH && current != OBSERVER);
-}
-
 function is_inactive_player(current) {
-	return current == OBSERVER || (game.active != current && game.active != BOTH);
+	return current === OBSERVER || (game.active !== current && game.active !== BOTH);
 }
 
 function remove_from_array(array, item) {
@@ -118,11 +114,11 @@ function push_undo() {
 
 function pop_undo() {
 	let undo = game.undo;
-	let log = game.log;
+	let save_log = game.log;
 	Object.assign(game, JSON.parse(undo.pop()));
 	game.undo = undo;
-	log.length = game.log;
-	game.log = log;
+	save_log.length = game.log;
+	game.log = save_log;
 }
 
 function gen_action_undo(view) {
@@ -137,7 +133,7 @@ function gen_action_undo(view) {
 function gen_action(view, action, argument) {
 	if (!view.actions)
 		view.actions = {}
-	if (argument != undefined) {
+	if (argument !== undefined) {
 		if (!(action in view.actions))
 			view.actions[action] = [ argument ];
 		else
@@ -169,9 +165,9 @@ function deal_cards(deck, n) {
 }
 
 function block_name(who) {
-	if (who == EDWARD)
-		return game.edward == 1 ? "Edward I" : "Edward II";
-	if (who == KING)
+	if (who === EDWARD)
+		return game.edward === 1 ? "Edward I" : "Edward II";
+	if (who === KING)
 		return "Scottish King";
 	return BLOCKS[who].name;
 }
@@ -208,9 +204,9 @@ function block_fire_power(who, where) {
 	let area = AREAS[where];
 	let combat = block_printed_fire_power(who);
 	if (is_defender(who)) {
-		if (block_type(who) == 'nobles' && area.home == block_name(who))
+		if (block_type(who) === 'nobles' && area.home === block_name(who))
 			++combat;
-		else if (who == MORAY && where == "Moray")
+		else if (who === MORAY && where === "Moray")
 			++combat;
 	}
 	return combat;
@@ -230,14 +226,14 @@ function is_friendly_coastal_area(where) {
 
 function is_in_friendly_coastal_area(who) {
 	let where = game.location[who];
-	if (where && where != E_BAG && where != S_BAG)
+	if (where && where !== E_BAG && where !== S_BAG)
 		return is_friendly_coastal_area(where);
 	return false;
 }
 
 function is_on_map(who) {
 	let where = game.location[who];
-	if (where && where != E_BAG && where != S_BAG)
+	if (where && where !== E_BAG && where !== S_BAG)
 		return true;
 	return false;
 }
@@ -245,13 +241,13 @@ function is_on_map(who) {
 function count_blocks_in_area(where) {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where)
+		if (game.location[b] === where)
 			++count;
 	return count;
 }
 
 function castle_limit(where) {
-	if (game.active == SCOTLAND && is_cathedral_area(where))
+	if (game.active === SCOTLAND && is_cathedral_area(where))
 		return AREAS[where].limit + 1;
 	return AREAS[where].limit;
 }
@@ -267,7 +263,7 @@ function is_under_castle_limit(where) {
 function count_english_nobles() {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == ENGLAND && block_type(b) == 'nobles')
+		if (block_owner(b) === ENGLAND && block_type(b) === 'nobles')
 			if (is_on_map(b))
 				++count;
 	return count;
@@ -276,7 +272,7 @@ function count_english_nobles() {
 function count_scottish_nobles() {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == SCOTLAND && block_type(b) == 'nobles')
+		if (block_owner(b) === SCOTLAND && block_type(b) === 'nobles')
 			if (is_on_map(b))
 				++count;
 	if (is_on_map(MORAY))
@@ -295,7 +291,7 @@ function border_id(a, b) {
 }
 
 function border_was_last_used_by_enemy(from, to) {
-	return game.last_used[border_id(from, to)] == ENEMY[game.active];
+	return game.last_used[border_id(from, to)] === ENEMY[game.active];
 }
 
 function border_type(a, b) {
@@ -314,7 +310,7 @@ function count_friendly(where) {
 	let p = game.active;
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == p)
+		if (game.location[b] === where && block_owner(b) === p)
 			++count;
 	return count;
 }
@@ -323,14 +319,14 @@ function count_enemy(where) {
 	let p = ENEMY[game.active];
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == p)
+		if (game.location[b] === where && block_owner(b) === p)
 			++count;
 	return count;
 }
 
-function is_friendly_area(where) { return count_friendly(where) > 0 && count_enemy(where) == 0; }
-function is_enemy_area(where) { return count_friendly(where) == 0 && count_enemy(where) > 0; }
-function is_neutral_area(where) { return count_friendly(where) == 0 && count_enemy(where) == 0; }
+function is_friendly_area(where) { return count_friendly(where) > 0 && count_enemy(where) === 0; }
+function is_enemy_area(where) { return count_friendly(where) === 0 && count_enemy(where) > 0; }
+function is_neutral_area(where) { return count_friendly(where) === 0 && count_enemy(where) === 0; }
 function is_contested_area(where) { return count_friendly(where) > 0 && count_enemy(where) > 0; }
 function is_friendly_or_neutral_area(where) { return is_friendly_area(where) || is_neutral_area(where); }
 
@@ -348,14 +344,14 @@ function count_pinning(where) {
 function count_pinned(where) {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (game.location[b] == where && block_owner(b) == game.active)
+		if (game.location[b] === where && block_owner(b) === game.active)
 			if (!game.reserves.includes(b))
 				++count;
 	return count;
 }
 
 function is_pinned(from) {
-	if (game.active == game.p2) {
+	if (game.active === game.p2) {
 		if (count_pinned(from) <= count_pinning(from))
 			return true;
 	}
@@ -363,24 +359,24 @@ function is_pinned(from) {
 }
 
 function can_block_use_border(who, from, to) {
-	if (border_type(from, to) == 'major')
+	if (border_type(from, to) === 'major')
 		return border_limit(from, to) < 6;
 	return border_limit(from, to) < 2;
 }
 
 function can_block_move_to(who, from, to) {
 	// No group moves across Anglo-Scottish border
-	if (from == ENGLAND || to == ENGLAND)
-		if (game.moves == 0)
+	if (from === ENGLAND || to === ENGLAND)
+		if (game.moves === 0)
 			return false;
-	if (game.active == SCOTLAND && game.truce == SCOTLAND && to == ENGLAND)
+	if (game.active === SCOTLAND && game.truce === SCOTLAND && to === ENGLAND)
 		return false;
 	if (can_block_use_border(who, from, to)) {
 		if (count_pinning(from) > 0) {
 			if (border_was_last_used_by_enemy(from, to))
 				return false;
 		}
-		if (game.truce == game.active && is_enemy_area(to))
+		if (game.truce === game.active && is_enemy_area(to))
 			return false;
 		return true;
 	}
@@ -388,9 +384,9 @@ function can_block_move_to(who, from, to) {
 }
 
 function can_block_move(who) {
-	if (who == NORSE)
+	if (who === NORSE)
 		return false;
-	if (block_owner(who) == game.active && !game.moved[who]) {
+	if (block_owner(who) === game.active && !game.moved[who]) {
 		let from = game.location[who];
 		if (from) {
 			if (is_pinned(from))
@@ -404,16 +400,16 @@ function can_block_move(who) {
 }
 
 function can_block_continue(who, from, here) {
-	if (here == ENGLAND)
+	if (here === ENGLAND)
 		return false;
 	if (is_contested_area(here))
 		return false;
-	if (border_type(from, here) == 'minor')
+	if (border_type(from, here) === 'minor')
 		return false;
 	if (game.distance >= block_move(who))
 		return false;
 	for (let to of AREAS[here].exits)
-		if (to != game.last_from && can_block_move_to(who, here, to))
+		if (to !== game.last_from && can_block_move_to(who, here, to))
 			return true;
 	return false;
 }
@@ -421,9 +417,9 @@ function can_block_continue(who, from, here) {
 function can_block_retreat_to(who, to) {
 	if (is_friendly_area(to) || is_neutral_area(to)) {
 		let from = game.location[who];
-		if (block_owner(who) == ENGLAND && from == ENGLAND)
+		if (block_owner(who) === ENGLAND && from === ENGLAND)
 			return false;
-		if (block_owner(who) == SCOTLAND && to == ENGLAND)
+		if (block_owner(who) === SCOTLAND && to === ENGLAND)
 			return false;
 		if (can_block_use_border(who, from, to)) {
 			if (border_was_last_used_by_enemy(from, to))
@@ -435,8 +431,8 @@ function can_block_retreat_to(who, to) {
 }
 
 function can_block_retreat(who) {
-	if (block_owner(who) == game.active) {
-		if (who == NORSE)
+	if (block_owner(who) === game.active) {
+		if (who === NORSE)
 			return true;
 		let from = game.location[who];
 		for (let to of AREAS[from].exits)
@@ -449,9 +445,9 @@ function can_block_retreat(who) {
 function can_block_regroup_to(who, to) {
 	if (is_friendly_area(to) || is_neutral_area(to)) {
 		let from = game.location[who];
-		if (block_owner(who) == ENGLAND && from == ENGLAND)
+		if (block_owner(who) === ENGLAND && from === ENGLAND)
 			return false;
-		if (block_owner(who) == SCOTLAND && to == ENGLAND)
+		if (block_owner(who) === SCOTLAND && to === ENGLAND)
 			return false;
 		if (can_block_use_border(who, from, to))
 			return true;
@@ -460,7 +456,7 @@ function can_block_regroup_to(who, to) {
 }
 
 function can_block_regroup(who) {
-	if (block_owner(who) == game.active) {
+	if (block_owner(who) === game.active) {
 		let from = game.location[who];
 		for (let to of AREAS[from].exits)
 			if (can_block_regroup_to(who, to))
@@ -474,13 +470,13 @@ function is_battle_reserve(b) {
 }
 
 function is_attacker(b) {
-	if (game.location[b] == game.where && block_owner(b) == game.attacker[game.where])
+	if (game.location[b] === game.where && block_owner(b) === game.attacker[game.where])
 		return !game.reserves.includes(b);
 	return false;
 }
 
 function is_defender(b) {
-	if (game.location[b] == game.where && block_owner(b) != game.attacker[game.where])
+	if (game.location[b] === game.where && block_owner(b) !== game.attacker[game.where])
 		return !game.reserves.includes(b);
 	return false;
 }
@@ -496,28 +492,28 @@ function swap_blocks(old) {
 }
 
 function disband(who) {
-	game.location[who] = block_owner(who) == ENGLAND ? E_BAG : S_BAG;
+	game.location[who] = block_owner(who) === ENGLAND ? E_BAG : S_BAG;
 	game.steps[who] = block_max_steps(who);
 }
 
 function eliminate_block(who, reason) {
-	if (block_type(who) == 'nobles') {
-		if (reason == 'retreat') {
+	if (block_type(who) === 'nobles') {
+		if (reason === 'retreat') {
 			game.turn_log.push([game.location[who], "Captured"]);
-		} else if (reason == 'combat') {
+		} else if (reason === 'combat') {
 			game.flash = block_name(who) + " is captured.";
 			log(block_name(who) + " is captured.");
 		} else {
 			log(block_name(who) + " is captured.");
 		}
 	} else {
-		if (reason == 'retreat') {
+		if (reason === 'retreat') {
 			game.turn_log.push([game.location[who], "Eliminated"]);
-		} else if (reason == 'combat') {
+		} else if (reason === 'combat') {
 			game.flash = block_name(who) + " is eliminated.";
 			log(block_name(who) + " is eliminated.");
 		} else {
-			if (block_owner(who) == ENGLAND)
+			if (block_owner(who) === ENGLAND)
 				log("English block is eliminated.");
 			else
 				log("Scottish block is eliminated.");
@@ -525,14 +521,14 @@ function eliminate_block(who, reason) {
 	}
 
 	// TODO: clean up and check all combinations
-	if (who == EDWARD) {
-		if (reason == 'combat' || reason == 'retreat') {
-			if (game.edward == 1) {
+	if (who === EDWARD) {
+		if (reason === 'combat' || reason === 'retreat') {
+			if (game.edward === 1) {
 				game.edward = 2;
 				disband(who);
 			} else {
 				game.location[who] = null;
-				if (reason == 'combat') {
+				if (reason === 'combat') {
 					game.victory = "Scotland wins because king Edward II has died in battle!";
 					game.result = SCOTLAND;
 				}
@@ -540,18 +536,18 @@ function eliminate_block(who, reason) {
 		} else {
 			disband(who);
 		}
-	} else if (who == KING) {
+	} else if (who === KING) {
 		game.location[who] = null;
-		if (reason == 'combat' || reason == 'retreat') {
+		if (reason === 'combat' || reason === 'retreat') {
 			game.victory = "England wins because the Scottish king has died in battle!";
 			game.result = ENGLAND
 		}
-	} else if (block_is_mortal(who) && (reason == 'combat' || reason == 'retreat')) {
+	} else if (block_is_mortal(who) && (reason === 'combat' || reason === 'retreat')) {
 		game.location[who] = null;
-	} else if (block_type(who) == 'nobles') {
+	} else if (block_type(who) === 'nobles') {
 		who = swap_blocks(who);
 		game.steps[who] = 1; // flip at strength 1 if eliminated
-		if (reason == 'combat' || reason == 'retreat')
+		if (reason === 'combat' || reason === 'retreat')
 			game.reserves.push(who);
 	} else {
 		disband(who);
@@ -559,7 +555,7 @@ function eliminate_block(who, reason) {
 }
 
 function reduce_block(who, reason) {
-	if (game.steps[who] == 1) {
+	if (game.steps[who] === 1) {
 		eliminate_block(who, reason);
 	} else {
 		--game.steps[who];
@@ -603,9 +599,9 @@ function celtic_unity_roll(who) {
 function reset_blocks() {
 	for (let b in BLOCKS) {
 		game.steps[b] = block_max_steps(b);
-		if (block_type(b) == 'nobles')
+		if (block_type(b) === 'nobles')
 			game.location[b] = null;
-		else if (block_owner(b) == ENGLAND)
+		else if (block_owner(b) === ENGLAND)
 			game.location[b] = E_BAG;
 		else
 			game.location[b] = S_BAG;
@@ -632,7 +628,7 @@ function draw_from_bag(bag, exclude_list) {
 	for (let b in BLOCKS) {
 		if (exclude_list && exclude_list.includes(b))
 			continue;
-		if (game.location[b] == bag)
+		if (game.location[b] === bag)
 			list.push(b);
 	}
 	return list[Math.floor(Math.random() * list.length)];
@@ -641,7 +637,7 @@ function draw_from_bag(bag, exclude_list) {
 function deploy_english(count) {
 	let list = [];
 	for (let b in BLOCKS)
-		if (game.location[b] == E_BAG)
+		if (game.location[b] === E_BAG)
 			list.push(b);
 	for (let i = 0; i < count; ++i) {
 		let x = Math.floor(Math.random() * list.length);
@@ -772,11 +768,11 @@ function start_game_turn() {
 }
 
 function end_game_turn() {
-	if (count_english_nobles() == 0) {
+	if (count_english_nobles() === 0) {
 		game.victory = "Scotland wins by controlling all the nobles!";
 		game.result = SCOTLAND;
 	}
-	if (count_scottish_nobles() == 0) {
+	if (count_scottish_nobles() === 0) {
 		game.victory = "England wins by controlling all the nobles!";
 		game.result = ENGLAND;
 	}
@@ -812,9 +808,9 @@ function resume_play_card() {
 
 states.play_card = {
 	prompt: function (view, current) {
-		if (current == OBSERVER)
+		if (current === OBSERVER)
 			return view.prompt = "Waiting for players to play a card.";
-		if (current == ENGLAND) {
+		if (current === ENGLAND) {
 			if (game.e_card) {
 				view.prompt = "Waiting for Scotland to play a card.";
 				gen_action(view, 'undo');
@@ -824,7 +820,7 @@ states.play_card = {
 					gen_action(view, 'play', c);
 			}
 		}
-		if (current == SCOTLAND) {
+		if (current === SCOTLAND) {
 			if (game.s_card) {
 				view.prompt = "Waiting for England to play a card.";
 				gen_action(view, 'undo');
@@ -836,22 +832,22 @@ states.play_card = {
 		}
 	},
 	play: function (card, current) {
-		if (current == ENGLAND) {
+		if (current === ENGLAND) {
 			remove_from_array(game.e_hand, card);
 			game.e_card = card;
 		}
-		if (current == SCOTLAND) {
+		if (current === SCOTLAND) {
 			remove_from_array(game.s_hand, card);
 			game.s_card = card;
 		}
 		resume_play_card();
 	},
 	undo: function (_, current) {
-		if (current == ENGLAND) {
+		if (current === ENGLAND) {
 			game.e_hand.push(game.e_card);
 			game.e_card = 0;
 		}
-		if (current == SCOTLAND) {
+		if (current === SCOTLAND) {
 			game.s_hand.push(game.s_card);
 			game.s_card = 0;
 		}
@@ -897,13 +893,13 @@ function start_player_turn() {
 	reset_border_limits();
 	let ec = CARDS[game.e_card];
 	let sc = CARDS[game.s_card];
-	if (game.active == ENGLAND && ec.event)
+	if (game.active === ENGLAND && ec.event)
 		goto_event(ec.event);
-	else if (game.active == SCOTLAND && sc.event)
+	else if (game.active === SCOTLAND && sc.event)
 		goto_event(sc.event);
-	else if (game.active == ENGLAND)
+	else if (game.active === ENGLAND)
 		goto_move_phase(ec.moves);
-	else if (game.active == SCOTLAND)
+	else if (game.active === SCOTLAND)
 		goto_move_phase(sc.moves);
 }
 
@@ -913,7 +909,7 @@ function end_player_turn() {
 	game.main_origin = null;
 	game.main_border = null;
 
-	if (game.active == game.p2) {
+	if (game.active === game.p2) {
 		goto_battle_phase();
 	} else {
 		game.active = game.p2;
@@ -924,11 +920,11 @@ function end_player_turn() {
 // CORONATION
 
 function can_crown_bruce() {
-	return game.location[WALLACE] == null && game.location[S_BRUCE] == "Fife";
+	return game.location[WALLACE] === null && game.location[S_BRUCE] === "Fife";
 }
 
 function can_crown_comyn() {
-	return game.location[WALLACE] == null && game.location[S_COMYN] == "Fife";
+	return game.location[WALLACE] === null && game.location[S_COMYN] === "Fife";
 }
 
 function can_crown_balliol() {
@@ -936,7 +932,7 @@ function can_crown_balliol() {
 }
 
 function goto_event(event) {
-	if (game.active == SCOTLAND && !game.scottish_king &&
+	if (game.active === SCOTLAND && !game.scottish_king &&
 		(can_crown_bruce() || can_crown_comyn() || can_crown_balliol())) {
 		game.state = 'coronation_event';
 		game.event = event;
@@ -1055,7 +1051,7 @@ function goto_herald() {
 }
 
 function is_enemy_noble(who) {
-	return is_on_map(who) && block_type(who) == 'nobles' && block_owner(who) == ENEMY[game.active];
+	return is_on_map(who) && block_type(who) === 'nobles' && block_owner(who) === ENEMY[game.active];
 }
 
 states.herald = {
@@ -1107,9 +1103,9 @@ states.victuals = {
 		gen_action(view, 'end_builds');
 		if (game.victuals > 0) {
 			for (let b in BLOCKS) {
-				if (is_on_map(b) && block_owner(b) == game.active)
+				if (is_on_map(b) && block_owner(b) === game.active)
 					if (game.steps[b] < block_max_steps(b))
-						if (!game.where || game.location[b] == game.where)
+						if (!game.where || game.location[b] === game.where)
 							gen_action(view, 'block', b);
 			}
 		}
@@ -1163,7 +1159,7 @@ states.pillage = {
 
 function pillage_victims() {
 	function is_candidate(b) {
-		return block_owner(b) == game.active && game.location[b] == game.where;
+		return block_owner(b) === game.active && game.location[b] === game.where;
 	}
 	let max = 0;
 	for (let b in BLOCKS)
@@ -1171,7 +1167,7 @@ function pillage_victims() {
 			max = game.steps[b];
 	let list = [];
 	for (let b in BLOCKS)
-		if (is_candidate(b) && game.steps[b] == max)
+		if (is_candidate(b) && game.steps[b] === max)
 			list.push(b);
 	return list;
 }
@@ -1187,7 +1183,7 @@ states.pillage_hits = {
 	block: function (who) {
 		--game.pillage;
 		reduce_block(who, 'pillage');
-		if (game.pillage == 0 || pillage_victims().length == 0) {
+		if (game.pillage === 0 || pillage_victims().length === 0) {
 			game.active = ENEMY[game.active];
 			game.state = 'pillage_builds';
 			game.pillage = 2 - game.pillage;
@@ -1207,13 +1203,13 @@ states.pillage_builds = {
 		if (game.pillage > 0) {
 			if (game.where) {
 				for (let b in BLOCKS)
-					if (block_owner(b) == game.active && game.location[b] == game.where)
+					if (block_owner(b) === game.active && game.location[b] === game.where)
 						if (game.steps[b] < block_max_steps(b))
 							gen_action(view, 'block', b);
 			} else {
 				for (let to of AREAS[game.from].exits)
 					for (let b in BLOCKS)
-						if (block_owner(b) == game.active && game.location[b] == to)
+						if (block_owner(b) === game.active && game.location[b] === to)
 							if (game.steps[b] < block_max_steps(b))
 								gen_action(view, 'block', b);
 			}
@@ -1226,7 +1222,7 @@ states.pillage_builds = {
 		++game.steps[who];
 		--game.pillage;
 		// TODO: auto-end pillage builds?
-		// if (game.pillage == 0) end_pillage(game.from);
+		// if (game.pillage === 0) end_pillage(game.from);
 	},
 	end_pillage: function () {
 		clear_undo();
@@ -1270,10 +1266,10 @@ states.sea_move = {
 		gen_action(view, 'end_move_phase');
 		if (game.moves > 0) {
 			for (let b in BLOCKS) {
-				if (b == NORSE)
+				if (b === NORSE)
 					continue;
-				if (is_in_friendly_coastal_area(b) && block_owner(b) == game.active)
-					if (!game.from || game.location[b] == game.from)
+				if (is_in_friendly_coastal_area(b) && block_owner(b) === game.active)
+					if (!game.from || game.location[b] === game.from)
 						gen_action(view, 'block', b);
 			}
 		}
@@ -1306,7 +1302,7 @@ states.sea_move_to = {
 		} else {
 			let from = game.location[game.who];
 			for (let to in AREAS)
-				if (to != from && is_friendly_coastal_area(to))
+				if (to !== from && is_friendly_coastal_area(to))
 					gen_action(view, 'area', to);
 		}
 	},
@@ -1345,12 +1341,12 @@ states.move_who = {
 		gen_action_undo(view);
 		gen_action(view, 'end_move_phase');
 		for (let b in BLOCKS) {
-			if (b == NORSE && game.active == SCOTLAND && is_on_map(NORSE)) {
+			if (b === NORSE && game.active === SCOTLAND && is_on_map(NORSE)) {
 				if (!game.moved[b] && game.moves > 0 && !is_pinned(game.location[NORSE]))
 					gen_action(view, 'block', NORSE);
 			}
 			if (can_block_move(b)) {
-				if (game.moves == 0) {
+				if (game.moves === 0) {
 					let from = game.location[b];
 					if (game.activated.includes(from))
 						gen_action(view, 'block', b);
@@ -1389,7 +1385,7 @@ function move_block(who, from, to) {
 			game.main_origin[to] = game.origin;
 			return ATTACK_MARK;
 		} else {
-			if (game.attacker[to] != game.active || game.main_border[to] != from || game.main_origin[to] != game.origin) {
+			if (game.attacker[to] !== game.active || game.main_border[to] !== from || game.main_origin[to] !== game.origin) {
 				game.reserves.push(who);
 				return RESERVE_MARK;
 			} else {
@@ -1408,33 +1404,33 @@ states.move_where = {
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let from = game.location[game.who];
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			for (let to in AREAS)
-				if (to != from && to != ENGLAND && is_coastal_area(to))
-					if (game.truce != game.active || !is_enemy_area(to))
+				if (to !== from && to !== ENGLAND && is_coastal_area(to))
+					if (game.truce !== game.active || !is_enemy_area(to))
 						gen_action(view, 'area', to);
 		} else {
 			if (game.distance > 0)
 				gen_action(view, 'area', from);
 			for (let to of AREAS[from].exits) {
-				if (to != game.last_from && can_block_move_to(game.who, from, to))
+				if (to !== game.last_from && can_block_move_to(game.who, from, to))
 					gen_action(view, 'area', to);
 			}
 		}
 	},
-	block: function (who) {
-		if (game.distance == 0)
+	block: function () {
+		if (game.distance === 0)
 			pop_undo();
 		else
 			end_move();
 	},
 	area: function (to) {
 		let from = game.location[game.who];
-		if (to == from) {
+		if (to === from) {
 			end_move();
 			return;
 		}
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			log("The Norse move by sea.");
 			game.location[game.who] = to;
 			game.moved[game.who] = true;
@@ -1453,7 +1449,7 @@ states.move_where = {
 			game.who = null;
 			game.state = 'move_who';
 		} else {
-			if (game.distance == 0)
+			if (game.distance === 0)
 				game.move_buf = [ from ];
 			let mark = move_block(game.who, from, to);
 			if (mark)
@@ -1471,7 +1467,7 @@ states.move_where = {
 function end_move() {
 	if (game.distance > 0) {
 		let to = game.location[game.who];
-		if (game.origin == ENGLAND || to == ENGLAND) {
+		if (game.origin === ENGLAND || to === ENGLAND) {
 			log(game.active + " crosses the Anglo-Scottish border.");
 			game.moves --;
 		} else if (!game.activated.includes(game.origin)) {
@@ -1520,7 +1516,7 @@ function start_battle(where, reason) {
 	game.battle_reason = reason;
 	game.flash = "";
 	log("");
-	if (reason != 'battle')
+	if (reason !== 'battle')
 		log("Defection battle in " + where + ".");
 	else
 		log("Battle in " + where + ".");
@@ -1559,7 +1555,7 @@ function end_battle() {
 
 function bring_on_reserves() {
 	for (let b in BLOCKS)
-		if (game.location[b] == game.where)
+		if (game.location[b] === game.where)
 			remove_from_array(game.reserves, b);
 }
 
@@ -1574,25 +1570,25 @@ function start_battle_round() {
 		reset_border_limits();
 		game.moved = {};
 
-		if (game.battle_round == 1) {
+		if (game.battle_round === 1) {
 			for (let b of CELTIC_BLOCKS)
-				if (game.location[b] == game.where && !is_battle_reserve(b))
+				if (game.location[b] === game.where && !is_battle_reserve(b))
 					celtic_unity_roll(b);
 		}
-		if (game.battle_round == 2) {
-			if (count_defenders() == 0) {
+		if (game.battle_round === 2) {
+			if (count_defenders() === 0) {
 				log("Defending main force was eliminated.");
 				log("The attacker is now the defender.");
 				game.attacker[game.where] = ENEMY[game.attacker[game.where]];
-			} else if (count_attackers() == 0) {
+			} else if (count_attackers() === 0) {
 				log("Attacking main force was eliminated.");
 			}
 			for (let b of CELTIC_BLOCKS)
-				if (game.location[b] == game.where && is_battle_reserve(b))
+				if (game.location[b] === game.where && is_battle_reserve(b))
 					celtic_unity_roll(b);
 			bring_on_reserves();
 		}
-		if (game.battle_round == 3) {
+		if (game.battle_round === 3) {
 			bring_on_reserves();
 		}
 
@@ -1607,7 +1603,7 @@ function pump_battle_round() {
 		let output = null;
 		for (let b in BLOCKS) {
 			if (is_candidate(b) && !game.moved[b]) {
-				if (block_initiative(b) == ci) {
+				if (block_initiative(b) === ci) {
 					if (!output)
 						output = [];
 					output.push(b);
@@ -1628,7 +1624,7 @@ function pump_battle_round() {
 
 	if (is_friendly_area(game.where) || is_enemy_area(game.where)) {
 		end_battle();
-	} else if (count_attackers() == 0 || count_defenders() == 0) {
+	} else if (count_attackers() === 0 || count_defenders() === 0) {
 		start_battle_round();
 	} else {
 		let attacker = game.attacker[game.where];
@@ -1679,9 +1675,9 @@ function fire_with_block(b) {
 	}
 
 	game.flash = name + " fires " + rolls.join(" ") + " ";
-	if (game.hits == 0)
+	if (game.hits === 0)
 		game.flash += "and misses.";
-	else if (game.hits == 1)
+	else if (game.hits === 1)
 		game.flash += "and scores 1 hit.";
 	else
 		game.flash += "and scores " + game.hits + " hits.";
@@ -1726,7 +1722,7 @@ states.battle_round = {
 
 function goto_battle_hits() {
 	game.battle_list = list_victims(game.active);
-	if (game.battle_list.length == 0)
+	if (game.battle_list.length === 0)
 		resume_battle();
 	else
 		game.state = 'battle_hits';
@@ -1738,26 +1734,26 @@ function apply_hit(who) {
 	game.hits--;
 	if (game.victory)
 		goto_game_over();
-	else if (game.hits == 0)
+	else if (game.hits === 0)
 		resume_battle();
 	else {
 		game.battle_list = list_victims(game.active);
-		if (game.battle_list.length == 0)
+		if (game.battle_list.length === 0)
 			resume_battle();
 		else
-			game.flash += " " + game.hits + (game.hits == 1 ? " hit left." : " hits left.");
+			game.flash += " " + game.hits + (game.hits === 1 ? " hit left." : " hits left.");
 	}
 }
 
 function list_victims(p) {
-	let is_candidate = (p == game.attacker[game.where]) ? is_attacker : is_defender;
+	let is_candidate = (p === game.attacker[game.where]) ? is_attacker : is_defender;
 	let max = 0;
 	for (let b in BLOCKS)
 		if (is_candidate(b) && game.steps[b] > max)
 			max = game.steps[b];
 	let list = [];
 	for (let b in BLOCKS)
-		if (is_candidate(b) && game.steps[b] == max)
+		if (is_candidate(b) && game.steps[b] === max)
 			list.push(b);
 	return list;
 }
@@ -1767,7 +1763,7 @@ states.battle_hits = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Waiting for " + game.active + " to assign hits.";
-		view.prompt = "Assign " + game.hits + (game.hits != 1 ? " hits" : " hit") + " to your armies.";
+		view.prompt = "Assign " + game.hits + (game.hits !== 1 ? " hits" : " hit") + " to your armies.";
 		for (let b of game.battle_list) {
 			gen_action(view, 'block', b);
 			gen_action(view, 'battle_hit', b);
@@ -1800,7 +1796,7 @@ states.retreat = {
 		gen_action_undo(view);
 		let can_retreat = false;
 		for (let b in BLOCKS) {
-			if (game.location[b] == game.where && can_block_retreat(b)) {
+			if (game.location[b] === game.where && can_block_retreat(b)) {
 				gen_action(view, 'block', b);
 				can_retreat = true;
 			}
@@ -1811,7 +1807,7 @@ states.retreat = {
 	end_retreat: function () {
 		clear_undo();
 		for (let b in BLOCKS)
-			if (game.location[b] == game.where && block_owner(b) == game.active)
+			if (game.location[b] === game.where && block_owner(b) === game.active)
 				eliminate_block(b, 'retreat');
 		print_turn_log("retreats");
 		goto_regroup();
@@ -1831,10 +1827,10 @@ states.retreat_to = {
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
 		let can_retreat = false;
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			view.prompt = "Retreat: Move the army to a friendly coastal area.";
 			for (let to in AREAS) {
-				if (to != game.where && to != ENGLAND && is_friendly_coastal_area(to)) {
+				if (to !== game.where && to !== ENGLAND && is_friendly_coastal_area(to)) {
 					gen_action(view, 'area', to);
 					can_retreat = true;
 				}
@@ -1853,7 +1849,7 @@ states.retreat_to = {
 	},
 	area: function (to) {
 		let from = game.where;
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			game.turn_log.push([from, to + " (Norse)"]);
 			game.location[game.who] = to;
 		} else {
@@ -1878,10 +1874,10 @@ states.retreat_in_battle = {
 			return view.prompt = "Waiting for " + game.active + " to retreat.";
 		gen_action(view, 'undo');
 		gen_action(view, 'block', game.who);
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			view.prompt = "Retreat: Move the army to a friendly coastal area.";
 			for (let to in AREAS)
-				if (to != game.where && to != ENGLAND && is_friendly_coastal_area(to))
+				if (to !== game.where && to !== ENGLAND && is_friendly_coastal_area(to))
 					gen_action(view, 'area', to);
 		} else {
 			view.prompt = "Retreat: Move the army to a friendly or neutral area.";
@@ -1892,7 +1888,7 @@ states.retreat_in_battle = {
 	},
 	area: function (to) {
 		game.turn_log.push([game.active, to]);
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			game.flash = "Norse retreat to " + to + ".";
 			log_battle(game.flash);
 			game.location[game.who] = to;
@@ -1931,7 +1927,7 @@ states.regroup = {
 		gen_action_undo(view);
 		gen_action(view, 'end_regroup');
 		for (let b in BLOCKS)
-			if (game.location[b] == game.where && can_block_regroup(b))
+			if (game.location[b] === game.where && can_block_regroup(b))
 				gen_action(view, 'block', b);
 	},
 	block: function (who) {
@@ -1945,13 +1941,13 @@ states.regroup = {
 		clear_undo();
 		game.active = game.battle_active;
 		delete game.battle_active;
-		if (game.battle_reason == 'herald') {
+		if (game.battle_reason === 'herald') {
 			delete game.battle_reason;
 			end_player_turn();
-		} else if (game.battle_reason == 'pillage') {
+		} else if (game.battle_reason === 'pillage') {
 			delete game.battle_reason;
 			end_player_turn();
-		} else if (game.battle_reason == 'coronation') {
+		} else if (game.battle_reason === 'coronation') {
 			delete game.battle_reason;
 			resume_coronation();
 		} else {
@@ -1969,9 +1965,9 @@ states.regroup_to = {
 		view.prompt = "Regroup: Move the army to a friendly or neutral area.";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			for (let to in AREAS)
-				if (to != game.where && to != ENGLAND && is_friendly_coastal_area(to))
+				if (to !== game.where && to !== ENGLAND && is_friendly_coastal_area(to))
 					gen_action(view, 'area', to);
 		} else {
 			for (let to of AREAS[game.where].exits)
@@ -1981,7 +1977,7 @@ states.regroup_to = {
 	},
 	area: function (to) {
 		let from = game.where;
-		if (game.who == NORSE) {
+		if (game.who === NORSE) {
 			game.turn_log.push([from, to + " (Norse)"]);
 			game.location[game.who] = to;
 		} else {
@@ -2000,7 +1996,7 @@ states.regroup_to = {
 function count_non_noble_english_blocks_on_map() {
 	let count = 0;
 	for (let b in BLOCKS)
-		if (block_owner(b) == ENGLAND && block_type(b) != 'nobles')
+		if (block_owner(b) === ENGLAND && block_type(b) !== 'nobles')
 			if (is_on_map(b))
 				++count;
 	return count;
@@ -2026,7 +2022,7 @@ states.border_raids = {
 			return view.prompt = "Waiting for England to choose a border raid victim.";
 		view.prompt = "Border Raids: Eliminate a non-Noble block.";
 		for (let b in BLOCKS)
-			if (block_owner(b) == ENGLAND && block_type(b) != 'nobles')
+			if (block_owner(b) === ENGLAND && block_type(b) !== 'nobles')
 				if (is_on_map(b))
 					gen_action(view, 'block', b);
 	},
@@ -2046,16 +2042,16 @@ function goto_winter_turn() {
 }
 
 function is_bruce(who) {
-	return who == E_BRUCE || who == S_BRUCE;
+	return who === E_BRUCE || who === S_BRUCE;
 }
 
 function is_comyn(who) {
-	return who == E_COMYN || who == S_COMYN;
+	return who === E_COMYN || who === S_COMYN;
 }
 
 function find_noble_home(who) {
 	for (let where in AREAS)
-		if (AREAS[where].home == block_name(who))
+		if (AREAS[where].home === block_name(who))
 			return where;
 	return null;
 }
@@ -2063,7 +2059,7 @@ function find_noble_home(who) {
 function go_home_to(who, home, defected = false) {
 	let name = block_name(who);
 	let from = game.location[who];
-	if (from != home) {
+	if (from !== home) {
 		game.location[who] = home;
 		if (is_contested_area(home)) {
 			who = swap_blocks(who);
@@ -2084,7 +2080,7 @@ function english_nobles_go_home() {
 	game.turn_log = [];
 	game.active = ENGLAND;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == ENGLAND && block_type(b) == 'nobles' && game.location[b])
+		if (block_owner(b) === ENGLAND && block_type(b) === 'nobles' && game.location[b])
 			if (!is_bruce(b) && !is_comyn(b))
 				go_home(b);
 	}
@@ -2099,7 +2095,7 @@ function scottish_nobles_go_home() {
 	game.turn_log = [];
 	game.active = SCOTLAND;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == SCOTLAND && block_type(b) == 'nobles' && game.location[b])
+		if (block_owner(b) === SCOTLAND && block_type(b) === 'nobles' && game.location[b])
 			if (!is_bruce(b) && !is_comyn(b))
 				go_home(b);
 	}
@@ -2166,7 +2162,7 @@ function end_bruce() {
 	game.who = null;
 	game.active = game.going_home;
 	delete game.bruce_defected;
-	if (game.going_home == ENGLAND)
+	if (game.going_home === ENGLAND)
 		goto_e_comyn();
 	else
 		goto_s_comyn();
@@ -2231,7 +2227,7 @@ function end_comyn() {
 	game.who = null;
 	game.active = game.going_home;
 	delete game.comyn_defected;
-	if (game.active == ENGLAND) {
+	if (game.active === ENGLAND) {
 		print_turn_log_no_count("English nobles go home:");
 		scottish_nobles_go_home();
 	} else {
@@ -2244,7 +2240,7 @@ function goto_moray() {
 	delete game.bruce_home;
 	delete game.comyn_home;
 
-	if (is_on_map(MORAY) && game.location[MORAY] != "Moray" && is_friendly_or_neutral_area("Moray")) {
+	if (is_on_map(MORAY) && game.location[MORAY] !== "Moray" && is_friendly_or_neutral_area("Moray")) {
 		game.state = 'moray';
 		game.active = SCOTLAND;
 		game.who = MORAY;
@@ -2269,7 +2265,7 @@ states.moray = {
 	},
 	area: function (to) {
 		let from = game.location[MORAY];
-		if (to != from)
+		if (to !== from)
 			game.turn_log.push(["Moray", to]);
 		game.location[MORAY] = to;
 		game.who = null;
@@ -2279,7 +2275,7 @@ states.moray = {
 
 function king_can_go_home(current) {
 	for (let where in AREAS)
-		if (where != current && is_cathedral_area(where))
+		if (where !== current && is_cathedral_area(where))
 			if (is_friendly_or_neutral_area(where))
 				return true;
 	return false;
@@ -2289,17 +2285,17 @@ function goto_scottish_king() {
 	print_turn_log_no_count("Scottish nobles go home:");
 
 	// We can end winter early if Moray and Wallace are dead or on the map, and Moray is not overstacked
-	if (game.year == game.end_year) {
+	if (game.year === game.end_year) {
 		let e = count_english_nobles();
 		let s = count_scottish_nobles();
 		// We have a clear winner.
 		if (s > 7 || e > 7)
 			return goto_game_over();
 		// Moray is dead so there can be no tie.
-		if (game.location[MORAY] == null)
+		if (game.location[MORAY] === null)
 			return goto_game_over();
 		// Wallace is dead so there can be no tie breaker.
-		if (game.location[WALLACE] == null)
+		if (game.location[WALLACE] === null)
 			return goto_game_over();
 		// A tie is possible, need to continue to disband and build phase...
 	}
@@ -2332,7 +2328,7 @@ states.scottish_king = {
 		goto_edward_wintering();
 	},
 	area: function (to) {
-		if (game.location[KING] != to) {
+		if (game.location[KING] !== to) {
 			log("Scottish King moves to " + to + ".");
 			game.location[KING] = to;
 		}
@@ -2342,18 +2338,18 @@ states.scottish_king = {
 }
 
 function is_in_scotland(who) {
-	return is_on_map(who) && game.location[who] != ENGLAND;
+	return is_on_map(who) && game.location[who] !== ENGLAND;
 }
 
 function goto_edward_wintering() {
-	if (game.edward == 1 && game.year != 1306 && is_in_scotland(EDWARD) && !game.wintered_last_year) {
+	if (game.edward === 1 && game.year !== 1306 && is_in_scotland(EDWARD) && !game.wintered_last_year) {
 		game.active = ENGLAND;
 		game.who = EDWARD;
 		game.state = 'edward_wintering';
 		return;
 	}
 
-	if (game.edward == 1 && game.year == 1306) {
+	if (game.edward === 1 && game.year === 1306) {
 		log("Edward I dies.");
 		game.edward = 2;
 	}
@@ -2392,14 +2388,14 @@ states.edward_wintering = {
 		gen_action(view, 'area', game.location[EDWARD]);
 		gen_action(view, 'area', ENGLAND);
 	},
-	winter: function (to) {
+	winter: function () {
 		winter_edward();
 	},
 	disband: function () {
 		disband_edward();
 	},
 	area: function (to) {
-		if (to == ENGLAND)
+		if (to === ENGLAND)
 			disband_edward();
 		else
 			winter_edward();
@@ -2415,16 +2411,16 @@ function goto_english_disbanding() {
 
 		// All (English) blocks in England must disband.
 		// Scottish blocks disband later during the castle limit check.
-		if (where == ENGLAND && block_owner(b) == ENGLAND) {
+		if (where === ENGLAND && block_owner(b) === ENGLAND) {
 			game.turn_log.push([ENGLAND]);
 			disband(b);
 		}
 
-		if (block_owner(b) == ENGLAND && is_on_map(b)) {
+		if (block_owner(b) === ENGLAND && is_on_map(b)) {
 			// Knights, Archers, & Hobelars must disband except when wintering with Edward.
 			let type = block_type(b);
-			if (type == 'knights' || type == 'archers' || type == 'hobelars') {
-				if (where == game.location[EDWARD]) {
+			if (type === 'knights' || type === 'archers' || type === 'hobelars') {
+				if (where === game.location[EDWARD]) {
 					ask = true;
 				} else {
 					game.turn_log.push([where]);
@@ -2433,7 +2429,7 @@ function goto_english_disbanding() {
 			}
 
 			// Infantry may remain in Scotland subject to Castle Limits or wintering with Edward.
-			if (type == 'infantry') {
+			if (type === 'infantry') {
 				ask = true;
 			}
 		}
@@ -2457,11 +2453,11 @@ states.english_disbanding = {
 		// Mandatory disbanding
 		let okay_to_end = true;
 		for (let b in BLOCKS) {
-			if (block_owner(b) == ENGLAND && is_on_map(b)) {
+			if (block_owner(b) === ENGLAND && is_on_map(b)) {
 				let where = game.location[b];
 				let type = block_type(b);
-				if (type == 'infantry') {
-					if (!is_within_castle_limit(where) && where != game.location[EDWARD]) {
+				if (type === 'infantry') {
+					if (!is_within_castle_limit(where) && where !== game.location[EDWARD]) {
 						okay_to_end = false;
 						gen_action(view, 'block', b);
 					}
@@ -2479,11 +2475,11 @@ states.english_disbanding = {
 			view.prompt = "English Disbanding: You may disband units to the pool.";
 			gen_action(view, 'end_disbanding');
 			for (let b in BLOCKS) {
-				if (block_owner(b) == ENGLAND && is_on_map(b)) {
+				if (block_owner(b) === ENGLAND && is_on_map(b)) {
 					let type = block_type(b);
-					if (type == 'knights' || type == 'archers' || type == 'hobelars')
+					if (type === 'knights' || type === 'archers' || type === 'hobelars')
 						gen_action(view, 'block', b);
-					if (type == 'infantry')
+					if (type === 'infantry')
 						gen_action(view, 'block', b);
 				}
 			}
@@ -2506,15 +2502,15 @@ function heal_wallace() {
 	let old = game.steps[WALLACE];
 	game.steps[WALLACE] = Math.min(block_max_steps(WALLACE), game.steps[WALLACE] + 2);
 	let n = game.steps[WALLACE] - old;
-	if (n == 1)
+	if (n === 1)
 		log("Wallace gains 1 step.");
-	else if (n == 2)
+	else if (n === 2)
 		log("Wallace gains 2 steps.");
 }
 
 function goto_wallace() {
 	game.active = SCOTLAND;
-	if (game.location[WALLACE] == "Selkirk") {
+	if (game.location[WALLACE] === "Selkirk") {
 		heal_wallace();
 		goto_scottish_disbanding();
 	} else if (is_on_map(WALLACE) && is_friendly_or_neutral_area("Selkirk")) {
@@ -2534,7 +2530,7 @@ states.wallace = {
 		gen_action(view, 'area', "Selkirk");
 	},
 	area: function (to) {
-		if (to == "Selkirk") {
+		if (to === "Selkirk") {
 			log("Wallace goes home to " + to + ".");
 			heal_wallace();
 		}
@@ -2549,9 +2545,9 @@ function goto_scottish_disbanding() {
 	game.turn_log = [];
 	let ask = false;
 	for (let b in BLOCKS) {
-		if (block_owner(b) == SCOTLAND && is_on_map(b)) {
+		if (block_owner(b) === SCOTLAND && is_on_map(b)) {
 			let type = block_type(b);
-			if (type != 'nobles')
+			if (type !== 'nobles')
 				ask = true;
 		}
 	}
@@ -2574,12 +2570,12 @@ states.scottish_disbanding = {
 		// Mandatory disbanding
 		let okay_to_end = true;
 		for (let b in BLOCKS) {
-			if (block_owner(b) == SCOTLAND && is_on_map(b)) {
+			if (block_owner(b) === SCOTLAND && is_on_map(b)) {
 				let where = game.location[b];
-				if (b == WALLACE && where == "Selkirk")
+				if (b === WALLACE && where === "Selkirk")
 					continue;
 				let type = block_type(b);
-				if (type != 'nobles') {
+				if (type !== 'nobles') {
 					if (!is_within_castle_limit(where)) {
 						okay_to_end = false;
 						gen_action(view, 'block', b);
@@ -2595,9 +2591,9 @@ states.scottish_disbanding = {
 			view.prompt = "Scottish Disbanding: You may disband units to the pool.";
 			gen_action(view, 'end_disbanding');
 			for (let b in BLOCKS) {
-				if (block_owner(b) == SCOTLAND && is_on_map(b)) {
+				if (block_owner(b) === SCOTLAND && is_on_map(b)) {
 					let type = block_type(b);
-					if (type != 'nobles')
+					if (type !== 'nobles')
 						gen_action(view, 'block', b);
 				}
 			}
@@ -2648,7 +2644,7 @@ states.scottish_builds = {
 			let rp = game.rp[where];
 			if (rp > 0) {
 				for (let b in BLOCKS) {
-					if (game.location[b] == where && game.steps[b] < block_max_steps(b)) {
+					if (game.location[b] === where && game.steps[b] < block_max_steps(b)) {
 						gen_action(view, 'block', b);
 						can_build = true;
 					}
@@ -2666,7 +2662,7 @@ states.scottish_builds = {
 	},
 	area: function (where) {
 		let who;
-		if (where == "Lanark" || where == "Badenoch")
+		if (where === "Lanark" || where === "Badenoch")
 			who = draw_from_bag(S_BAG, [ NORSE, FRENCH_KNIGHTS ]);
 		else
 			who = draw_from_bag(S_BAG);
@@ -2715,9 +2711,9 @@ states.english_builds = {
 			let rp = game.rp[where];
 			if (rp > 0) {
 				for (let b in BLOCKS) {
-					if (game.location[b] == where && game.steps[b] < block_max_steps(b)) {
+					if (game.location[b] === where && game.steps[b] < block_max_steps(b)) {
 						let type = block_type(b);
-						if (type == 'nobles' || type == 'infantry') {
+						if (type === 'nobles' || type === 'infantry') {
 							gen_action(view, 'block', b);
 							can_build = true;
 						}
@@ -2789,7 +2785,7 @@ function goto_game_over() {
 }
 
 states.game_over = {
-	prompt: function (view, current) {
+	prompt: function (view) {
 		view.prompt = game.victory;
 	}
 }
@@ -2806,18 +2802,18 @@ function make_battle_view() {
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)
-			if (game.location[b] == game.where & block_owner(b) == owner && fn(b))
+			if (game.location[b] === game.where & block_owner(b) === owner && fn(b))
 				cell.push([b, game.steps[b], game.moved[b]?1:0])
 	}
 
 	fill_cell(battle.ER, ENGLAND, b => is_battle_reserve(b));
-	fill_cell(battle.EA, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.EB, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.EC, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
+	fill_cell(battle.EA, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
+	fill_cell(battle.EB, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
+	fill_cell(battle.EC, ENGLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
 	fill_cell(battle.SR, SCOTLAND, b => is_battle_reserve(b));
-	fill_cell(battle.SA, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'A');
-	fill_cell(battle.SB, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'B');
-	fill_cell(battle.SC, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) == 'C');
+	fill_cell(battle.SA, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'A');
+	fill_cell(battle.SB, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'B');
+	fill_cell(battle.SC, SCOTLAND, b => !is_battle_reserve(b) && block_initiative(b) === 'C');
 
 	return battle;
 }
@@ -2826,7 +2822,7 @@ exports.ready = function (scenario, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (scenario, players) {
+exports.setup = function (scenario) {
 	game = {
 		attacker: {},
 		border_limit: {},
@@ -2844,11 +2840,11 @@ exports.setup = function (scenario, players) {
 		who: null,
 		where: null,
 	}
-	if (scenario == "The Bruce")
+	if (scenario === "The Bruce")
 		setup_the_bruce();
-	else if (scenario == "Braveheart")
+	else if (scenario === "Braveheart")
 		setup_braveheart();
-	else if (scenario == "Campaign")
+	else if (scenario === "Campaign")
 		setup_campaign();
 	else
 		throw new Error("Unknown scenario:", scenario);
@@ -2858,20 +2854,17 @@ exports.setup = function (scenario, players) {
 
 exports.action = function (state, current, action, arg) {
 	game = state;
-	// TODO: check current, action and argument against action list
-	if (true) {
-		let S = states[game.state];
-		if (action in S)
-			S[action](arg, current);
-		else
-			throw new Error("Invalid action: " + action);
-	}
+	let S = states[game.state];
+	if (action in S)
+		S[action](arg, current);
+	else
+		throw new Error("Invalid action: " + action);
 	return state;
 }
 
 exports.resign = function (state, current) {
 	game = state;
-	if (game.state != 'game_over') {
+	if (game.state !== 'game_over') {
 		log("");
 		log(current + " resigned.");
 		game.active = "None";
@@ -2891,10 +2884,10 @@ exports.view = function(state, current) {
 		edward: game.edward,
 		e_vp: count_english_nobles(),
 		s_vp: count_scottish_nobles(),
-		e_card: (game.show_cards || current == ENGLAND) ? game.e_card : 0,
-		s_card: (game.show_cards || current == SCOTLAND) ? game.s_card : 0,
-		hand: (current == ENGLAND) ? game.e_hand : (current == SCOTLAND) ? game.s_hand : [],
-		who: (game.active == current) ? game.who : null,
+		e_card: (game.show_cards || current === ENGLAND) ? game.e_card : 0,
+		s_card: (game.show_cards || current === SCOTLAND) ? game.s_card : 0,
+		hand: (current === ENGLAND) ? game.e_hand : (current === SCOTLAND) ? game.s_hand : [],
+		who: (game.active === current) ? game.who : null,
 		where: game.where,
 		known: {},
 		secret: { Scotland: {}, England: {} },
@@ -2911,7 +2904,7 @@ exports.view = function(state, current) {
 
 	for (let b in BLOCKS) {
 		let a = game.location[b];
-		if (current == block_owner(b) || game.state == 'game_over') {
+		if (current === block_owner(b) || game.state === 'game_over') {
 			if (a)
 				view.known[b] = [a, game.steps[b], game.moved[b] ? 1 : 0];
 		} else {

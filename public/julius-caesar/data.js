@@ -2,8 +2,6 @@
 
 const CAESAR = "Caesar";
 const POMPEIUS = "Pompeius";
-const CLEOPATRA = "Cleopatra";
-const BOTH = "Both";
 
 const CARDS = {
 	1: { name: "Apollo", event: "Apollo", image: "apollo" },
@@ -120,13 +118,13 @@ const SPACES = {
 };
 
 (function () {
-	function space(axis, major, minor, wrap, name, type, value) {
+	function space(axis, major_align, minor_align, wrap, name, type, value) {
 		SPACES[name].type = type;
 		SPACES[name].value = value | 0;
 		SPACES[name].exits = [];
 		SPACES[name].layout_axis = axis;
-		SPACES[name].layout_major = (1 - major) / 2;
-		SPACES[name].layout_minor = (1 - minor) / 2;
+		SPACES[name].layout_major = (1 - major_align) / 2;
+		SPACES[name].layout_minor = (1 - minor_align) / 2;
 		SPACES[name].wrap = wrap;
 	}
 
@@ -397,13 +395,13 @@ const SPACES = {
 	function block(owner, CR, steps, type, name, levy) {
 		let id = name;
 		let [initiative, firepower] = CR;
-		if (type != 'leader' && type != 'cleopatra' && type != 'legio')
+		if (type !== 'leader' && type !== 'cleopatra' && type !== 'legio')
 			id = owner[0] + " " + id;
 		let descr = name;
-		if (type != 'leader' && type != 'cleopatra' && type != 'legio')
+		if (type !== 'leader' && type !== 'cleopatra' && type !== 'legio')
 			descr = owner[0] + ". " + descr;
 		if (levy) {
-			if (levy == "Carthago Nova")
+			if (levy === "Carthago Nova")
 				descr += " (C. Nova)";
 			else
 				descr += " (" + levy + ")";
@@ -503,5 +501,5 @@ const SPACES = {
 	pompeius("D2", 2, "navis", "Navis 5");
 })();
 
-if (typeof module != 'undefined')
+if (typeof module !== 'undefined')
 	module.exports = { CARDS, BLOCKS, SPACES, EDGES }

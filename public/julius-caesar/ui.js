@@ -1,5 +1,6 @@
 "use strict";
 
+const CLEOPATRA = "Cleopatra";
 const DEAD = "Dead";
 const LEVY = "Levy";
 const ENEMY = { "Caesar": "Pompeius", "Pompeius": "Caesar" };

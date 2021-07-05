@@ -1,5 +1,7 @@
 "use strict";
 
+/* global game, PIECES, SPACES */
+
 const SEASON_X = [ 893, 978, 1064, 1149 ];
 const YEAR_X = { 1801: 175, 1802: 294, 1803: 413, 1804: 532, 1805: 652, 1806: 771 };
 const YEAR_Y = 728;
@@ -21,16 +23,7 @@ function create_piece_list(n, name) {
 
 const US_FRIGATES = create_piece_list(8, 'us_frigate_');
 const TR_FRIGATES = create_piece_list(2, 'tr_frigate_');
-const SE_FRIGATES = create_piece_list(2, 'se_frigate_');
-const US_GUNBOATS = create_piece_list(3, 'us_gunboat_');
-const TR_CORSAIRS = create_piece_list(9, 'tr_corsair_');
-const AL_CORSAIRS = create_piece_list(9, 'al_corsair_');
-const US_MARINES = create_piece_list(4, 'us_marine_');
-const AR_INFANTRY = create_piece_list(10, 'ar_infantry_');
-const TR_INFANTRY = create_piece_list(20, 'tr_infantry_');
-
 const FRIGATES = US_FRIGATES.concat(TR_FRIGATES);
-const CORSAIRS = TR_CORSAIRS.concat(AL_CORSAIRS);
 
 const ALEXANDRIA = get_space_id("Alexandria");
 const ALGIERS = get_space_id("Algiers");
@@ -84,7 +77,7 @@ function on_click_space(evt) { send_action('space', evt.target.space); }
 function on_click_piece(evt) { send_action('piece', evt.target.piece); }
 
 function on_focus_active_card(evt) {
-	if (typeof game.card == 'number') {
+	if (typeof game.card === 'number') {
 		if (game.card < 27)
 			document.getElementById("tooltip").className = "card show us_card_" + game.card;
 		else
@@ -206,11 +199,11 @@ function on_update() {
 	document.getElementById("tr_info").textContent = tr_info();
 	document.getElementById("us_info").textContent = us_info();
 
-	if (game.card == undefined)
+	if (game.card === undefined)
 		document.getElementById("active_card").className = "card show blank";
-	else if (game.card == "United States")
+	else if (game.card === "United States")
 		document.getElementById("active_card").className = "card show us_card_back";
-	else if (game.card == "Tripolitania")
+	else if (game.card === "Tripolitania")
 		document.getElementById("active_card").className = "card show tr_card_back";
 	else if (game.card < 27)
 		document.getElementById("active_card").className = "card show us_card_" + game.card;
@@ -260,11 +253,11 @@ function layout_space(location, s, x0, y0, size) {
 
 	let pps = { se_f:[], us_f:[], us_g:[], us_m:[], ar_i:[], tr_f:[], tr_c:[], al_c:[], tr_i:[] };
 	for (let p = 0; p < PIECES.length; ++p) {
-		if (location[p] == s) {
+		if (location[p] === s) {
 			let prefix = PIECES[p].substring(0,4);
-			if (location[p] == TRIPOLITAN_SUPPLY && prefix == 'tr_f') prefix = 'us_f';
-			if (prefix == 'se_f') prefix = 'us_f';
-			if (prefix == 'al_c') prefix = 'tr_c';
+			if (location[p] === TRIPOLITAN_SUPPLY && prefix === 'tr_f') prefix = 'us_f';
+			if (prefix === 'se_f') prefix = 'us_f';
+			if (prefix === 'al_c') prefix = 'tr_c';
 			pps[prefix].push(p);
 		}
 	}
@@ -273,7 +266,7 @@ function layout_space(location, s, x0, y0, size) {
 	for (let prefix in pps) {
 		let row = pps[prefix];
 		if (row.length > 0) {
-			let wrap = (prefix == 'ar_i' || prefix == 'tr_i') ? size+1 : size;
+			let wrap = (prefix === 'ar_i' || prefix === 'tr_i') ? size+1 : size;
 			if (row.length > wrap*2) {
 				rows.push(lout(row.slice(0,wrap), prefix))
 				rows.push(lout(row.slice(wrap,wrap*2), prefix))
@@ -365,7 +358,7 @@ function update_spaces() {
 		ui.spaces[space].classList.remove('highlight');
 		ui.spaces[space].classList.remove('where');
 	}
-	if (game.where != null) {
+	if (game.where !== null) {
 		ui.spaces[game.where].classList.add('where');
 	}
 	if (game.actions && game.actions.space) {

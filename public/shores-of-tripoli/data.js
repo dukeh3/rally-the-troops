@@ -1,3 +1,5 @@
+"use strict";
+
 const SPACES = [
 	"United States Supply",
 	"Tripolitan Supply",
@@ -44,7 +46,5 @@ const PIECES = [
 	"tr_infantry_16", "tr_infantry_17", "tr_infantry_18", "tr_infantry_19", "tr_infantry_20",
 ];
 
-const SEASONS = [ "Spring", "Summer", "Fall", "Winter" ];
-
-if (typeof module != 'undefined')
-	module.exports = { SPACES, PIECES, SEASONS }
+if (typeof module !== 'undefined')
+	module.exports = { SPACES, PIECES }

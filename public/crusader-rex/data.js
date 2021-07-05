@@ -35,11 +35,11 @@ const ROADS = {};
 
 const SHIELDS = {
 	Antioch: [ "Bohemond", "Templars", "Turcopoles" ],
-	Latakia: [ "Bohemond"  ],
-	"Sa\xf4ne": [ "Josselin"  ],
-	Margat: [ "Hospitallers"  ],
-	Krak: [ "Hospitallers"  ],
-	Tartus: [ "Templars"  ],
+	Latakia: [ "Bohemond" ],
+	"Sa\xf4ne": [ "Josselin" ],
+	Margat: [ "Hospitallers" ],
+	Krak: [ "Hospitallers" ],
+	Tartus: [ "Templars" ],
 	Tripoli: [ "Bohemond", "Raymond" ],
 	Beirut: [ "Turcopoles", "King Guy" ],
 	Sidon: [ "Reynald (Sidon)" ],
@@ -49,7 +49,6 @@ const SHIELDS = {
 	Tiberias: [ "Turcopoles", "Raymond" ],
 	Baisan: [ "Hospitallers" ],
 	Caesarea: [ "Walter" ],
-	Baisan: [ "Hospitallers" ],
 	Nablus: [ "Balian" ],
 	Amman: [ "Templars" ],
 	Jaffa: [ "King Guy" ],
@@ -137,17 +136,15 @@ const TOWNS = {
 const PORTS = [];
 
 (function () {
-	let r = 1, c = 1;
-
 	let nomads = { Arabs: 1, Turks: 1, Kurds: 1 }
 
 	function army(rc, owner, name, home, move, steps, combat, order, plural) {
 		let id = name;
-		if (order == 'Military Orders' || order == 'Pilgrims' || order == 'Turcopoles')
+		if (order === 'Military Orders' || order === 'Pilgrims' || order === 'Turcopoles')
 			id = home + " " + name;
-		if (order == 'Nomads')
+		if (order === 'Nomads')
 			id += " " + nomads[name]++;
-		if (name == 'Reynald' || name == 'Raymond')
+		if (name === 'Reynald' || name === 'Raymond')
 			id += " (" + home + ")";
 		if (id in BLOCKS)
 			throw Error("Name clash: " + id + " order:"+order + " " + JSON.stringify(nomads));
@@ -248,19 +245,19 @@ const PORTS = [];
 	saracen(97, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads", 1);
 	saracen(87, "Arabs",		"Egypt",	3,	4,	"B1",	"Nomads", 1);
 
-	function town(axis, major, minor, wrap, region, name, rating, type) {
+	function town(axis, major_align, minor_align, wrap, region, name, rating, type) {
 		TOWNS[name].region = region;
 		TOWNS[name].rating = rating;
-		if (type == 'port' || type == 'fortified-port')
+		if (type === 'port' || type === 'fortified-port')
 			TOWNS[name].port = true;
-		if (type == 'fortified-port')
+		if (type === 'fortified-port')
 			TOWNS[name].fortified_port = true;
 		if (TOWNS[name].port)
 			PORTS.push(name);
 		TOWNS[name].exits = [];
 		TOWNS[name].layout_axis = axis;
-		TOWNS[name].layout_major = 1-major;
-		TOWNS[name].layout_minor = 1-minor;
+		TOWNS[name].layout_major = 1 - major_align;
+		TOWNS[name].layout_minor = 1 - minor_align;
 		TOWNS[name].wrap = wrap;
 	}
 
@@ -443,5 +440,5 @@ const PORTS = [];
 	// TODO: seats and alternate seats
 })();
 
-if (typeof module != 'undefined')
+if (typeof module !== 'undefined')
 	module.exports = { CARDS, BLOCKS, TOWNS, PORTS, ROADS, SHIELDS }

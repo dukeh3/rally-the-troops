@@ -245,7 +245,7 @@ body.shift .block.known:hover {
 	border-bottom: 1px solid black;
 }
 .battle .battle_menu {
-	margin: 10px 5px;
+	margin: 5px 5px;
 }
 
 #FF, #FC, #FR, #EF, #EC, #ER { margin: 0px auto; padding: 5px; }
@@ -253,23 +253,25 @@ body.shift .block.known:hover {
 #ER .battle_menu_list { min-height: 0; }
 #FR .battle_menu_list { min-height: 0; }
 
-X#ER { background-image: linear-gradient(-2deg, tan 30%, skyblue 35%); }
-X#FR { background-image: linear-gradient(182deg, tan 30%, olivedrab 35%); }
 #FC, #EC {
-	background-color: gray;
-	border-top: 5px dashed tan;
+	background-size: cover;
+	background-repeat: no-repeat;
+	padding: 0;
+	height: 107px;
+	padding-top: 53px;
 	border-bottom: 5px solid dimgray;
+	filter: drop-shadow(0px 0px 3px rgba(0,0,0,0.5));
 }
 
-#FC, #EC, #FF, #EF { min-height: 120px; }
+#FC.c0, #EC.c0 { display: none; }
+#FC.c1, #EC.c1 { background-image: url('castle_1.svg'); width: 140px; }
+#FC.c2, #EC.c2 { background-image: url('castle_2.svg'); width: 220px; }
+#FC.c3, #EC.c3 { background-image: url('castle_3.svg'); width: 300px; }
+#FC.c4, #EC.c4 { background-image: url('castle_4.svg'); width: 380px; }
+
+#FC, #EC, #FF, #EF { min-height: 107px; }
 #ER { min-height: 15px; }
 #FR { min-height: 15px; }
-
-#FC.c0, #EC.c0 { display: none; }
-#FC.c1, #EC.c1 { width: 90px; }
-#FC.c2, #EC.c2 { width: 180px; }
-#FC.c3, #EC.c3 { width: 270px; }
-#FC.c4, #EC.c4 { width: 360px; }
 
 /* CARD AND BLOCK IMAGES */
 

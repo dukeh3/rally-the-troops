@@ -654,12 +654,12 @@ function update_battle() {
 				ui.battle_menu[block].classList.add('storm');
 			if (game.actions && game.actions.sally && game.actions.sally.includes(block))
 				ui.battle_menu[block].classList.add('sally');
-			if (game.actions && game.actions.hit && game.actions.hit.includes(block))
-				ui.battle_menu[block].classList.add('hit');
 			if (game.actions && game.actions.charge && game.actions.charge.includes(block))
 				ui.battle_menu[block].classList.add('charge');
 			if (game.actions && game.actions.treachery && game.actions.treachery.includes(block))
 				ui.battle_menu[block].classList.add('treachery');
+			if (game.actions && game.actions.hit && game.actions.hit.includes(block))
+				ui.battle_menu[block].classList.add('hit');
 
 			let class_name = battle_block_class_name(BLOCKS[block]);
 			if (game.actions && game.actions.block && game.actions.block.includes(block))

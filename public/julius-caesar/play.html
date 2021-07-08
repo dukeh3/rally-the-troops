@@ -161,13 +161,13 @@ body.shift .block.known:hover {
 
 .block.highlight { cursor: pointer; }
 
-.simple-labels .block{ width: 48px; height: 48px; border-radius: 6px; }
+.simple-labels .block { width: 48px; height: 48px; border-radius: 6px; }
 
 .simple-labels .block.Caesar { background-color: #b22; border: 2px solid #822; }
 .simple-labels .block.Pompeius { background-color: #eb2; border: 2px solid #862; }
 .simple-labels .block.Cleopatra { background-color: #09b; border: 2px solid #067; }
-.simple-labels .block.highlight { border: 2px solid white !important ; }
-.simple-labels .block.selected { border: 2px solid yellow !important ; }
+.simple-labels .block.highlight { border: 2px solid white; }
+.simple-labels .block.selected { border: 2px solid yellow; }
 .simple-labels .block.moved { filter: grayscale(70%); }
 
 .columbia-labels .block{ width: 56px; height: 56px; border-radius: 6px; }
@@ -178,9 +178,11 @@ body.shift .block.known:hover {
 .columbia-labels .block.known.Caesar { background-color: #822; }
 .columbia-labels .block.known.Pompeius { background-color: #862; }
 .columbia-labels .block.known.Cleopatra { background-color: #067; }
-.columbia-labels .block.highlight { border: 3px solid white !important ; }
-.columbia-labels .block.selected { border: 3px solid yellow !important ; }
+.columbia-labels .block.highlight { border: 3px solid white; }
+.columbia-labels .block.selected { border: 3px solid yellow; }
 .columbia-labels .block.moved { filter: grayscale(70%); }
+
+.battle_menu.hit .block.highlight { border-color: black; }
 
 .columbia-labels .block.r0 { transform: rotate(0deg); }
 .columbia-labels .block.r1 { transform: rotate(-90deg); }

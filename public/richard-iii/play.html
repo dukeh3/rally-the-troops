@@ -140,20 +140,22 @@ div.block { background-size: cover; background-repeat: no-repeat; }
 
 div.block { box-shadow: 0px 0px 3px 0px black; }
 
-div.block.Lancaster { border: 3px solid brown; background-color: brown; }
-div.block.York { border: 3px solid gainsboro; background-color: gainsboro; }
-div.block.Rebel { border: 3px solid dimgray; background-color: dimgray; }
+div.block.Lancaster { border: 3px solid brown; background-color: indianred; }
+div.block.York { border: 3px solid gainsboro; background-color: whitesmoke; }
+div.block.Rebel { border: 3px solid dimgray; background-color: gray; }
 
-div.block.Lancaster.highlight { border-color: red; }
+div.block.Lancaster.highlight { border-color: white; }
 div.block.York.highlight { border-color: white; }
 div.block.Rebel.highlight { border-color: white; }
+
+.hit div.block.highlight { border-color: black; box-shadow: 0 0 3px 0px black; }
 
 div.block.Lancaster.selected { border-color: yellow; }
 div.block.York.selected { border-color: yellow; }
 div.block.Rebel.selected { border-color: yellow; }
 
-div.block.highlight { cursor: pointer; box-shadow: 0 0 4px 1px white; }
-div.block.selected { box-shadow: 0 0 4px 1px yellow; }
+div.block.highlight { cursor: pointer; box-shadow: 0 0 3px 1px white; }
+div.block.selected { box-shadow: 0 0 3px 1px yellow; }
 div.block.moved { filter: grayscale(50%) brightness(85%); }
 div.block.highlight.moved { filter: grayscale(60%) brightness(95%); }
 

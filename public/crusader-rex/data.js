@@ -96,7 +96,7 @@ const TOWNS = {
 	"Gaza":{"x":300,"y":2185},
 	"Hama":{"x":1035,"y":477},
 	"Harim":{"x":700,"y":120},
-	"Hebron":{"x":680,"y":2109},
+	"Hebron":{"x":680,"y":2115},
 	"Homs":{"x":1053,"y":683},
 	"Jaffa":{"x":399,"y":1923},
 	"Jericho":{"x":836,"y":1931},
@@ -317,7 +317,7 @@ const PORTS = [];
 	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Amman",	1, "town");
 	town('X', 0.0, 0.5, 3,	"Jerusalem",	"Jaffa",	1, "port");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Ramallah",	0, "town");
-	town('X', 0.5, 0.5, 3,	"Jerusalem",	"Jerusalem",	3, "town");
+	town('X', 0.5, 0.4, 3,	"Jerusalem",	"Jerusalem",	3, "town");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Jericho",	0, "town");
 	town('X', 0.1, 0.5, 6,	"Jerusalem",	"Ascalon",	2, "port");
 	town('Y', 0.5, 0.5, 3,	"Jerusalem",	"Lachish",	0, "town");

@@ -39,6 +39,7 @@ const INTRIGUE = 3;
 const WINTER_CAMPAIGN = 6;
 
 const ENGLISH_CRUSADERS = [ "Richard", "Robert", "Crossbows" ];
+const GERMAN_CRUSADERS = [ "Barbarossa", "Frederik", "Leopold" ];
 const FRENCH_CRUSADERS = [ "Philippe", "Hugues", "Fileps" ];
 const SALADIN_FAMILY = [ "Saladin", "Al Adil", "Al Aziz", "Al Afdal", "Al Zahir" ];
 
@@ -672,14 +673,16 @@ function can_germans_move(who) {
 }
 
 function can_germans_move_to(who, to) {
-	if (is_winter() && is_enemy_occupied_town(to))
-		return false;
-	if (to === ALEPPO)
-		return true;
-	if (to === ANTIOCH)
-		return true;
-	if (to === ST_SIMEON)
-		return road_limit(GERMANIA, ST_SIMEON) < 2;
+	if (are_crusaders_not_in_pool(GERMAN_CRUSADERS)) {
+		if (is_winter() && is_enemy_occupied_town(to))
+			return false;
+		if (to === ALEPPO)
+			return true;
+		if (to === ANTIOCH)
+			return true;
+		if (to === ST_SIMEON)
+			return road_limit(GERMANIA, ST_SIMEON) < 2;
+	}
 	return false;
 }
 

@@ -19,8 +19,8 @@
 .card_info { background-color: silver; }
 .grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
-.grid_top.Tripolitania.your_turn { background-color: salmon; }
-.grid_top.United_States.your_turn { background-color: skyblue; }
+.Tripolitania .grid_top.your_turn { background-color: salmon; }
+.United_States .grid_top.your_turn { background-color: skyblue; }
 .one .role_name { background-color: skyblue; }
 .two .role_name { background-color: salmon; }
 
@@ -43,8 +43,8 @@
 	border-bottom: 2px dotted gainsboro;
 }
 
-.Observer ~ .grid_center > #hand_cards { display: none; }
-.Observer ~ .grid_center > .hand_separator { display: none; }
+.Observer .grid_center > #hand_cards { display: none; }
+.Observer .grid_center > .hand_separator { display: none; }
 
 .card {
 	width: 250px;

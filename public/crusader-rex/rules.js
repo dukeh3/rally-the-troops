@@ -2425,11 +2425,14 @@ states.declare_storm = {
 function storm_with_block(who) {
 	push_undo();
 	game.storming.push(who);
-	if (block_plural(who))
-		game.flash = block_name(who) + " storm.";
+	if (game.storming.length > 1)
+		game.flash = game.active + " storm with " + game.storming.length + " blocks.";
 	else
-		game.flash = block_name(who) + " storms.";
-	log(game.active[0] + ": " + game.flash);
+		game.flash = game.active + " storm with 1 block.";
+	if (block_plural(who))
+		log(game.active[0] + ": " + block_name(who) + " storm.");
+	else
+		log(game.active[0] + ": " + block_name(who) + " storms.");
 }
 
 // DECLARE SALLY
@@ -2491,11 +2494,14 @@ function sally_with_block(who) {
 	push_undo();
 	remove_from_array(game.castle, who);
 	game.sallying.push(who);
-	if (block_plural(who))
-		game.flash = block_name(who) + " sally.";
+	if (game.sallying.length > 1)
+		game.flash = game.active + " sally with " + game.sallying.length + " blocks.";
 	else
-		game.flash = block_name(who) + " sallies.";
-	log(game.active[0] + ": " + game.flash);
+		game.flash = game.active + " sally with 1 block.";
+	if (block_plural(who))
+		log(game.active[0] + ": " + block_name(who) + " sally.");
+	else
+		log(game.active[0] + ": " + block_name(who) + " sallies.");
 }
 
 // RETREAT AFTER COMBAT

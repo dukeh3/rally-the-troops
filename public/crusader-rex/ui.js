@@ -466,8 +466,6 @@ function is_known_block(info, who) {
 	if (info.owner == player || info.owner == ASSASSINS || who == game.assassinate)
 		return true;
 	let town = game.location[who];
-	if (town == ENGLAND || town == FRANCE || town == GERMANIA)
-		return true;
 	if (town == DEAD)
 		return true;
 	return false;

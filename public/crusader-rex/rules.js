@@ -1206,10 +1206,7 @@ function reveal_cards() {
 	log("Saracens play " + CARDS[game.s_card].name + ".");
 	game.show_cards = true;
 
-	let fc = CARDS[game.f_card];
-	let sc = CARDS[game.s_card];
-
-	if (fc.event && sc.event) {
+	if (CARDS[game.f_card].event && CARDS[game.s_card].event) {
 		log("Game Turn is cancelled.");
 		game.prior_f_card = game.f_card;
 		game.prior_s_card = game.s_card;
@@ -1237,8 +1234,8 @@ function reveal_cards() {
 	game.prior_f_card = game.f_card;
 	game.prior_s_card = game.s_card;
 
-	let fp = fc.event ? 10 : fc.moves;
-	let sp = sc.event ? 10 : sc.moves;
+	let fp = CARDS[game.f_card].event ? 10 : CARDS[game.f_card].moves;
+	let sp = CARDS[game.s_card].event ? 10 : CARDS[game.s_card].moves;
 
 	if (fp === sp) {
 		let die = roll_d6();

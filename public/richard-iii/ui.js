@@ -551,7 +551,7 @@ function update_map() {
 				else
 					element.classList.add("moved");
 				if (color == REBEL)
-					layout[area][game.pretender].push(element);
+					layout[area][BLOCKS[game.pretender].owner].push(element);
 				else
 					layout[area][color].push(element);
 			}

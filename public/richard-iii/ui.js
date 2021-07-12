@@ -65,7 +65,7 @@ function on_focus_area(evt) {
 		text += " (" + AREAS[where].city + ")";
 	if (AREAS[where].crown)
 		text += " - Crown"; // " \u2655";
-	if (where == "South Yorks" || where == "Kent")
+	if (where === "South Yorks" || where === "Kent")
 		text += " - Church"; // " -" \u2657";
 	if (AREAS[where].major_port)
 		text += " - Port";
@@ -94,7 +94,7 @@ function block_name(who) {
 }
 
 function block_owner(who) {
-	if (who == REBEL)
+	if (who === REBEL)
 		return BLOCKS[game.pretender].owner;
 	return BLOCKS[who].owner;
 }
@@ -116,11 +116,11 @@ function on_focus_map_block(evt) {
 	let b = evt.target.block;
 	let s = game.known[b][1];
 	let text = block_name(b) + " ";
-	if (BLOCKS[b].type == 'heir')
+	if (BLOCKS[b].type === 'heir')
 		text += "H" + HEIR_TEXT[BLOCKS[b].heir] + "-";
 	if (BLOCKS[b].loyalty)
 		text += BLOCKS[b].loyalty + "-";
-	else if (BLOCKS[b].type == 'nobles')
+	else if (BLOCKS[b].type === 'nobles')
 		text += "\u2740-";
 	text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
 	document.getElementById("status").textContent = text;
@@ -138,7 +138,7 @@ function on_click_map_block(evt) {
 
 function is_battle_reserve(who, list) {
 	for (let [b, s, m] of list)
-		if (who == b)
+		if (who === b)
 			return true;
 	return false;
 }
@@ -195,7 +195,7 @@ function on_focus_battle_hit(evt) {
 }
 
 function on_focus_battle_charge(evt) {
-	if (block_owner(evt.target.block) == game.active)
+	if (block_owner(evt.target.block) === game.active)
 		document.getElementById("status").textContent =
 			"Charge with " + block_name(evt.target.block);
 	else
@@ -204,7 +204,7 @@ function on_focus_battle_charge(evt) {
 }
 
 function on_focus_battle_treachery(evt) {
-	if (block_owner(evt.target.block) == game.active)
+	if (block_owner(evt.target.block) === game.active)
 		document.getElementById("status").textContent =
 			"Attempt treachery with " + block_name(evt.target.block);
 	else
@@ -418,7 +418,7 @@ function layout_blocks(area, secret, known) {
 	new_line();
 
 	while (secret.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(secret.shift());
 		++i;
@@ -429,7 +429,7 @@ function layout_blocks(area, secret, known) {
 		new_line();
 
 	while (known.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(known.shift());
 		++i;
@@ -453,7 +453,7 @@ function position_block(area, row, n_rows, col, n_cols, element) {
 	let x = space.x - block_size/2;
 	let y = space.y - block_size/2;
 
-	if (space.layout_axis == 'X') {
+	if (space.layout_axis === 'X') {
 		x -= col_size * space.layout_major;
 		y -= row_size * space.layout_minor;
 		x += col * offset;
@@ -470,12 +470,12 @@ function position_block(area, row, n_rows, col, n_cols, element) {
 }
 
 function show_block(element) {
-	if (element.parentElement != ui.blocks_element)
+	if (element.parentElement !== ui.blocks_element)
 		ui.blocks_element.appendChild(element);
 }
 
 function hide_block(element) {
-	if (element.parentElement != ui.offmap_element)
+	if (element.parentElement !== ui.offmap_element)
 		ui.offmap_element.appendChild(element);
 }
 
@@ -550,7 +550,7 @@ function update_map() {
 					element.classList.remove("moved");
 				else
 					element.classList.add("moved");
-				if (color == REBEL)
+				if (color === REBEL)
 					layout[area][BLOCKS[game.pretender].owner].push(element);
 				else
 					layout[area][color].push(element);
@@ -641,7 +641,7 @@ function update_battle() {
 		for (let [block, steps, moved] of list) {
 			ui.present.add(block);
 
-			if (block == game.who)
+			if (block === game.who)
 				ui.battle_block[block].classList.add("selected");
 			else
 				ui.battle_block[block].classList.remove("selected");
@@ -695,7 +695,7 @@ function update_battle() {
 		}
 	}
 
-	if (player == LANCASTER) {
+	if (player === LANCASTER) {
 		fill_cell("FR", game.battle.LR, true);
 		fill_cell("FA", game.battle.LA, false);
 		fill_cell("FB", game.battle.LB, false);
@@ -734,8 +734,8 @@ function on_update() {
 	show_action_button("#execute_exeter_button", "execute_exeter");
 
 	let king = block_owner(game.king);
-	document.getElementById("lancaster_vp").textContent = (king == LANCASTER ? KING_TEXT : PRETENDER_TEXT);
-	document.getElementById("york_vp").textContent = (king == YORK ? KING_TEXT : PRETENDER_TEXT);
+	document.getElementById("lancaster_vp").textContent = (king === LANCASTER ? KING_TEXT : PRETENDER_TEXT);
+	document.getElementById("york_vp").textContent = (king === YORK ? KING_TEXT : PRETENDER_TEXT);
 
 	update_cards();
 	update_map();

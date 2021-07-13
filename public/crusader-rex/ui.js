@@ -463,6 +463,8 @@ function hide_block(element) {
 }
 
 function is_known_block(info, who) {
+	if (game_over)
+		return true;
 	if (info.owner == player || info.owner == ASSASSINS || who == game.assassinate)
 		return true;
 	let town = game.location[who];
@@ -502,7 +504,7 @@ function update_map() {
 				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
 				let known = " known";
-				if ((town == S_POOL || town == F_POOL) && b != game.who)
+				if ((town == S_POOL || town == F_POOL) && b != game.who && !game_over)
 					known = "";
 				element.classList = info.owner + known + " block" + image + steps + moved;
 			} else {

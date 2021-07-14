@@ -1056,6 +1056,7 @@ states.saracen_deployment = {
 		game.who = null;
 	},
 	next: function () {
+		clear_undo();
 		game.who = null;
 		start_year();
 	},

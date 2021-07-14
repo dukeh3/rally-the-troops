@@ -1148,9 +1148,20 @@ function goto_card_phase() {
 	game.active = BOTH;
 }
 
+function resume_play_card() {
+	if (game.s_card && game.f_card)
+		reveal_cards();
+	else if (game.f_card)
+		game.active = SARACENS;
+	else if (game.s_card)
+		game.active = FRANKS;
+	else
+		game.active = BOTH;
+}
+
 states.play_card = {
 	prompt: function (view, current) {
-		if (is_inactive_player(current))
+		if (current === OBSERVER)
 			return view.prompt = "Card Phase: Waiting for players to play a card.";
 		if (current === FRANKS) {
 			view.prior_s_card = game.prior_s_card;
@@ -1186,8 +1197,7 @@ states.play_card = {
 			remove_from_array(game.s_hand, card);
 			game.s_card = card;
 		}
-		if (game.s_card > 0 && game.f_card > 0)
-			reveal_cards();
+		resume_play_card();
 	},
 	undo: function (_, current) {
 		if (current === FRANKS) {
@@ -1198,6 +1208,7 @@ states.play_card = {
 			game.s_hand.push(game.s_card);
 			game.s_card = 0;
 		}
+		resume_play_card();
 	}
 }
 

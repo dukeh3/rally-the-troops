@@ -229,6 +229,16 @@ function select_random_block(where) {
 	return list[Math.floor(Math.random() * list.length)];
 }
 
+function select_random_enemy_block(where) {
+	let list = [];
+	for (let b in BLOCKS)
+		if (game.location[b] === where && block_owner(b) === enemy(game.active))
+			list.push(b);
+	if (list.length === 0)
+		return null;
+	return list[Math.floor(Math.random() * list.length)];
+}
+
 function block_plural(who) {
 	return BLOCKS[who].plural;
 }
@@ -1323,7 +1333,7 @@ states.assassins = {
 	},
 	block: function (who) {
 		game.where = game.location[who];
-		game.who = select_random_block(game.where);
+		game.who = select_random_enemy_block(game.where);
 		game.location[ASSASSINS] = game.where;
 		game.state = 'assassins_show_1';
 	},

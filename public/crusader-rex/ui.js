@@ -566,8 +566,6 @@ function update_map() {
 	}
 	if (game.who && !game.battle)
 		ui.blocks[game.who].classList.add('selected');
-	if (game.assassinate)
-		ui.blocks[game.assassinate].classList.add('selected');
 	for (let b of game.castle)
 		ui.blocks[b].classList.add('castle');
 }

@@ -1342,31 +1342,44 @@ states.assassins = {
 states.assassins_show_1 = {
 	prompt: function (view, current) {
 		view.assassinate = game.who;
+		view.who = ASSASSINS;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
 		view.prompt = "Assassins: The assassins target " + block_name(game.who) + " in " + game.where + ".";
 		gen_action(view, 'next');
+		gen_action(view, 'block', game.who);
+		gen_action(view, 'block', ASSASSINS);
 	},
-	next: function () {
-		assassinate(game.who, game.where);
-		game.state = 'assassins_show_2';
-	},
+	next: assassins_next_1,
+	block: assassins_next_1,
+}
+
+function assassins_next_1() {
+	assassinate(game.who, game.where);
+	game.state = 'assassins_show_2';
 }
 
 states.assassins_show_2 = {
 	prompt: function (view, current) {
 		view.assassinate = game.who;
+		view.who = ASSASSINS;
 		if (is_inactive_player(current))
 			return view.prompt = "Assassins: Waiting for " + game.active + ".";
 		view.prompt = "Assassins: The assassins hit " + block_name(game.who) + " in " + game.where + ".";
 		gen_action(view, 'next');
+		gen_action(view, 'block', ASSASSINS);
+		gen_action(view, 'town', MASYAF);
 	},
-	next: function () {
-		game.location[ASSASSINS] = MASYAF;
-		game.who = null;
-		game.where = null;
-		end_player_turn();
-	},
+	next: assassins_next_2,
+	block: assassins_next_2,
+	town: assassins_next_2,
+}
+
+function assassins_next_2() {
+	game.location[ASSASSINS] = MASYAF;
+	game.who = null;
+	game.where = null;
+	end_player_turn();
 }
 
 function assassinate(who, where) {

@@ -2357,6 +2357,7 @@ function goto_combat_round(new_combat_round) {
 
 	let was_contested = is_contested_battle_field();
 
+	game.active = game.attacker[game.where];
 	if (game.combat_round === 1 && count_friendly_in_field_excluding_reserves(game.where) === 0) {
 		log("Combat round skipped because main attack regrouped away.");
 		console.log("MAIN ATTACK REGROUPED AWAY, SKIP ROUND 1");

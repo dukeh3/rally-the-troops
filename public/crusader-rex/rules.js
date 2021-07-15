@@ -3297,45 +3297,68 @@ function end_game_turn() {
 	}
 }
 
-// WINTER SUPPLY
+// WINTER CAMPAIGN & SUPPLY
 
 function goto_winter_1() {
 	log("");
 	log("Start Winter of " + game.year + ".");
 	if (game.winter_campaign)
-		winter_siege_attrition();
+		goto_winter_siege_attrition();
 	else
 		goto_winter_2();
 }
 
-function winter_siege_attrition() {
+function goto_winter_siege_attrition() {
 	log(game.active + " winter campaign in " + game.winter_campaign + ".");
 	game.where = game.winter_campaign;
 
-	let target = (game.where === TYRE || game.where === TRIPOLI) ? 2 : 4;
-	for (let b in BLOCKS) {
-		if (is_block_in_castle_in(b, game.where)) {
-			let die = roll_d6();
-			if (die <= target) {
-				log("Attrition roll " + DIE_HIT[die] + ".");
-				reduce_block(b);
-			} else {
-				log("Attrition roll " + DIE_MISS[die] + ".");
-			}
+	console.log("WINTER SIEGE ATTRITION");
+	game.active = besieged_player(game.where);
+	game.state = 'winter_siege_attrition';
+	game.attrition_list = [];
+	for (let b in BLOCKS)
+		if (is_block_in_castle_in(b, game.where))
+			game.attrition_list.push(b);
+}
+
+function resume_winter_siege_attrition() {
+	if (game.attrition_list.length === 0) {
+		delete game.attrition_list;
+		if (!is_under_siege(game.where)) {
+			game.active = enemy(game.active);
+			log(game.where + " falls to siege attrition.");
+			goto_regroup();
+		} else {
+			log("Siege continues.");
+			goto_winter_2();
 		}
 	}
+}
 
-	if (!is_under_siege(game.where)) {
-		log(game.where + " falls to siege attrition.");
-		goto_regroup();
-	} else {
-		log("Siege continues.");
-		game.where = null;
-		goto_winter_2();
+states.winter_siege_attrition = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Winter Siege Attrition: Waiting for " + game.active + ".";
+		view.prompt = "Winter Siege Attrition: Roll for siege attrition in " + game.where + ".";
+		for (let b of game.attrition_list)
+			gen_action(view, 'block', b)
+	},
+	block: function (who) {
+		let target = (game.where === TYRE || game.where === TRIPOLI) ? 2 : 4;
+		let die = roll_d6();
+		if (die <= target) {
+			log("Attrition roll " + DIE_HIT[die] + ".");
+			reduce_block(who);
+		} else {
+			log("Attrition roll " + DIE_MISS[die] + ".");
+		}
+		remove_from_array(game.attrition_list, who);
+		resume_winter_siege_attrition();
 	}
 }
 
 function goto_winter_2() {
+	game.where = null;
 	eliminate_besieging_blocks(FRANKS);
 	eliminate_besieging_blocks(SARACENS);
 	lift_all_sieges();

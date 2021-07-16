@@ -502,6 +502,9 @@ function is_contested_field(where) {
 function is_friendly_or_vacant_field(where) {
 	return is_friendly_field(where) || is_vacant_town(where);
 }
+function is_enemy_or_contested_field(where) {
+	return (count_enemy_in_field(where) > 0 || is_enemy_kingdom(where));
+}
 
 /* Battle field queries exclude castles and reserves. */
 function is_contested_battle_field() {
@@ -714,7 +717,7 @@ function can_use_richards_sea_legs(who, to) {
 	// English Crusaders may attack by sea.
 	// If combined with another attack, the English must be the Main Attacker.
 	if (is_english_crusader(who)) {
-		if (is_enemy_field(to)) {
+		if (is_enemy_or_contested_field(to)) {
 			if (!game.attacker[to])
 				return true;
 			if (game.attacker[to] === FRANKS)

@@ -69,9 +69,9 @@ function on_blur(evt) {
 	document.getElementById("status").textContent = "";
 }
 
-function on_pass() { if (game.actions) { send_action('pass', null); } }
-function on_undo() { if (game.actions) { send_action('undo', null); } }
-function on_next() { if (game.actions) { send_action('next', null); } }
+function on_pass() { if (game.actions) { send_action('pass'); } }
+function on_undo() { if (game.actions) { send_action('undo'); } }
+function on_next() { if (game.actions) { send_action('next'); } }
 
 function on_click_space(evt) { send_action('space', evt.target.space); }
 function on_click_piece(evt) { send_action('piece', evt.target.piece); }

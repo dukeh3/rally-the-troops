@@ -2360,11 +2360,15 @@ function goto_combat_round(new_combat_round) {
 
 	let was_contested = is_contested_battle_field();
 
-	game.active = game.attacker[game.where];
-	if (game.combat_round === 1 && count_friendly_in_field_excluding_reserves(game.where) === 0) {
-		log("Combat round skipped because main attack regrouped away.");
-		console.log("MAIN ATTACK REGROUPED AWAY, SKIP ROUND 1");
-		game.combat_round = 2;
+	// If the main attack regroups away from a new siege while reinforcements
+	// are on the way, we need to skip the first combat round.
+	if (game.combat_round === 1 && is_under_siege(game.where)) {
+		game.active = besieging_player(game.where);
+		if (count_friendly_in_field_excluding_reserves(game.where) === 0) {
+			log("Combat round skipped because main attack regrouped away.");
+			console.log("MAIN ATTACK REGROUPED AWAY, SKIP ROUND 1");
+			game.combat_round = 2;
+		}
 	}
 
 	console.log("COMBAT ROUND", game.combat_round);

@@ -718,7 +718,7 @@ function start_flash() {
 		return;
 	flash_timer = setInterval(function () {
 		if (!game.flash_next) {
-			element.textContent = game.battle.flash;
+			element.textContent = game.battle ? game.battle.flash : "";
 			clearInterval(flash_timer);
 			flash_timer = 0;
 		} else {

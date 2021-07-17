@@ -1850,6 +1850,8 @@ states.sea_move_to = {
 		for (let to of AREAS[game.location[game.who]].exits) {
 			if (to === game.last_from)
 				continue;
+			if (is_enemy_exile_area(to))
+				continue;
 			if (is_friendly_or_vacant_area(to)) {
 				if (game.moves === 0) {
 					if (game.move_port[game.origin] === to)

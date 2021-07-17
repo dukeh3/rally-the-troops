@@ -3232,17 +3232,21 @@ states.draw_phase = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
 			return view.prompt = "Draw Phase: Waiting for " + game.active + ".";
-		gen_action(view, 'next');
+		let can_place = false;
 		switch (block_type(game.who)) {
 		case 'crusaders':
 			view.prompt = "Draw Phase: Place " + block_name(game.who) + " in the staging area.";
 			gen_action(view, 'town', block_home(game.who));
+			can_place = true;
 			break;
 		case 'pilgrims':
 			view.prompt = "Draw Phase: Place " + block_name(game.who) + " in a friendly port.";
-			for (let town in TOWNS)
-				if (is_friendly_port(town) || can_enter_besieged_port(town))
+			for (let town in TOWNS) {
+				if (is_friendly_port(town) || can_enter_besieged_port(town)) {
 					gen_action(view, 'town', town);
+					can_place = true;
+				}
+			}
 			break;
 		case 'turcopoles':
 		case 'outremers':
@@ -3254,11 +3258,15 @@ states.draw_phase = {
 				if (town === ENGLAND || town === FRANCE || town === GERMANIA)
 					continue;
 				// FAQ claims besieger controls town for draw purposes
-				if (is_friendly_field(town))
+				if (is_friendly_field(town)) {
 					gen_action(view, 'town', town);
+					can_place = true;
+				}
 			}
 			break;
 		}
+		if (!can_place)
+			gen_action(view, 'next');
 	},
 	town: function (where) {
 		let type = block_type(game.who);

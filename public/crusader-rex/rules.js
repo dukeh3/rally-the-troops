@@ -3378,6 +3378,7 @@ function goto_winter_2() {
 	eliminate_besieging_blocks(FRANKS);
 	eliminate_besieging_blocks(SARACENS);
 	lift_all_sieges();
+	count_victory_points();
 	if (check_sudden_death())
 		return;
 	if (game.year === 1192)

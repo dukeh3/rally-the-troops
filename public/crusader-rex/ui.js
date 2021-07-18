@@ -82,7 +82,7 @@ function block_owner(who) { return BLOCKS[who].owner; }
 function on_focus_map_block(evt) {
 	let info = BLOCKS[evt.target.block];
 	let where = game.location[evt.target.block];
-	if ((info.owner == player || info.owner == ASSASSINS) && where != S_POOL && where != F_POOL) {
+	if ((info.owner === player || info.owner === ASSASSINS) && where !== S_POOL && where !== F_POOL) {
 		let text = info.name + " ";
 		if (info.move)
 			text += info.move + "-";
@@ -108,9 +108,9 @@ function on_focus_battle_block(evt) {
 	let msg;
 
 	if (!evt.target.classList.contains("known")) {
-		if (block_owner(b) == FRANKS)
+		if (block_owner(b) === FRANKS)
 			msg = "Franks";
-		else if (block_owner(b) == SARACENS)
+		else if (block_owner(b) === SARACENS)
 			msg = "Saracens";
 	} else {
 		msg = block_name(b);
@@ -316,9 +316,9 @@ function build_map() {
 
 	for (let name in TOWNS) {
 		let town = TOWNS[name];
-		if (name == F_POOL || name == S_POOL || name == DEAD)
+		if (name === F_POOL || name === S_POOL || name === DEAD)
 			continue;
-		if (name == "Sea") {
+		if (name === "Sea") {
 			element = document.getElementById("svgmap").getElementById("sea");
 			element.town = "Sea";
 			element.addEventListener("mouseenter", on_focus_town);
@@ -350,13 +350,13 @@ function update_steps(b, steps, element) {
 }
 
 function layout_blocks(location, secret, known) {
-	if (label_layout == 'stack')
+	if (label_layout === 'stack')
 		document.getElementById("map").classList.add("stack_layout");
 	else
 		document.getElementById("map").classList.remove("stack_layout");
-	if (label_layout == 'spread' ||
-		(location == S_POOL || location == F_POOL || location == DEAD ||
-			location == ENGLAND || location == FRANCE || location == GERMANIA))
+	if (label_layout === 'spread' ||
+		(location === S_POOL || location === F_POOL || location === DEAD ||
+			location === ENGLAND || location === FRANCE || location === GERMANIA))
 		layout_blocks_spread(location, secret, known);
 	else
 		layout_blocks_stacked(location, secret, known);
@@ -397,7 +397,7 @@ function position_block(town, row, n_rows, col, n_cols, element) {
 	let space = TOWNS[town];
 	let block_size = 60+6;
 	let padding = 4;
-	if (town == ENGLAND || town == FRANCE || town == GERMANIA)
+	if (town === ENGLAND || town === FRANCE || town === GERMANIA)
 		padding = 21;
 	let offset = block_size + padding;
 	let row_size = (n_rows-1) * offset;
@@ -405,7 +405,7 @@ function position_block(town, row, n_rows, col, n_cols, element) {
 	let x = space.x;
 	let y = space.y;
 
-	if (space.layout_axis == 'X') {
+	if (space.layout_axis === 'X') {
 		x -= col_size * space.layout_major;
 		y -= row_size * space.layout_minor;
 		x += col * offset;
@@ -443,32 +443,32 @@ function position_block_stacked(location, i, c, k, element) {
 }
 
 function show_block(element) {
-	if (element.parentElement != ui.blocks_element)
+	if (element.parentElement !== ui.blocks_element)
 		ui.blocks_element.appendChild(element);
 }
 
 function hide_block(element) {
-	if (element.parentElement != ui.offmap_element)
+	if (element.parentElement !== ui.offmap_element)
 		ui.offmap_element.appendChild(element);
 }
 
 function show_block(element) {
-	if (element.parentElement != ui.blocks_element)
+	if (element.parentElement !== ui.blocks_element)
 		ui.blocks_element.appendChild(element);
 }
 
 function hide_block(element) {
-	if (element.parentElement != ui.offmap_element)
+	if (element.parentElement !== ui.offmap_element)
 		ui.offmap_element.appendChild(element);
 }
 
 function is_known_block(info, who) {
 	if (game_over)
 		return true;
-	if (info.owner == player || info.owner == ASSASSINS || who == game.assassinate)
+	if (info.owner === player || info.owner === ASSASSINS || who === game.assassinate)
 		return true;
 	let town = game.location[who];
-	if (town == DEAD)
+	if (town === DEAD)
 		return true;
 	return false;
 }
@@ -498,30 +498,30 @@ function update_map() {
 		let town = game.location[b];
 		if (town in TOWNS) {
 			let moved = game.moved[b] ? " moved" : "";
-			if (town == DEAD)
+			if (town === DEAD)
 				moved = " moved";
 			if (is_known_block(info, b)) {
 				let image = " block_" + info.image;
 				let steps = " r" + (info.steps - game.steps[b]);
 				let known = " known";
-				if ((town == S_POOL || town == F_POOL) && b != game.who && !game_over)
+				if ((town === S_POOL || town === F_POOL) && b !== game.who && !game_over)
 					known = "";
 				element.classList = info.owner + known + " block" + image + steps + moved;
 			} else {
 				let besieging = "";
-				if (game.sieges[town] == info.owner) {
-					if (game.winter_campaign == town)
+				if (game.sieges[town] === info.owner) {
+					if (game.winter_campaign === town)
 						besieging = " winter_campaign";
 					else
 						besieging = " besieging";
 				}
 				let jihad = "";
-				if (game.jihad == town && info.owner == game.p1)
+				if (game.jihad === town && info.owner === game.p1)
 					jihad = " jihad";
 				element.classList = info.owner + " block" + moved + besieging + jihad;
 			}
-			if (town != DEAD) {
-				if (info.owner == FRANKS)
+			if (town !== DEAD) {
+				if (info.owner === FRANKS)
 					layout[town].north.push(element);
 				else
 					layout[town].south.push(element);
@@ -536,8 +536,8 @@ function update_map() {
 		let info = BLOCKS[b];
 		let element = ui.blocks[b];
 		let town = game.location[b];
-		if (town == DEAD) {
-			if (info.owner == FRANKS)
+		if (town === DEAD) {
+			if (info.owner === FRANKS)
 				layout[F_POOL].north.unshift(element);
 			else
 				layout[S_POOL].south.unshift(element);
@@ -609,7 +609,7 @@ function update_cards() {
 function compare_blocks(a, b) {
 	let aa = BLOCKS[a].combat;
 	let bb = BLOCKS[b].combat;
-	if (aa == bb)
+	if (aa === bb)
 		return (a < b) ? -1 : (a > b) ? 1 : 0;
 	return (aa < bb) ? -1 : (aa > bb) ? 1 : 0;
 }
@@ -664,14 +664,14 @@ function update_battle() {
 				class_name += " highlight";
 			if (game.moved[block])
 				class_name += " moved";
-			if (block == game.who)
+			if (block === game.who)
 				class_name += " selected";
-			if (block == game.battle.halfhit)
+			if (block === game.battle.halfhit)
 				class_name += " halfhit";
-			if (game.battle.jihad == block_owner(block))
+			if (game.battle.jihad === block_owner(block))
 				class_name += " jihad";
 
-			if (show || block_owner(block) == player) {
+			if (show || block_owner(block) === player) {
 				class_name += " known";
 				ui.battle_block[block].className = class_name;
 				update_steps(block, game.steps[block], ui.battle_block[block], false);
@@ -689,7 +689,7 @@ function update_battle() {
 		}
 	}
 
-	if (player == FRANKS) {
+	if (player === FRANKS) {
 		fill_cell("FR", game.battle.FR, true);
 		fill_cell("FC", game.battle.FC, true);
 		fill_cell("FF", game.battle.FF, game.battle.show_castle); // saracens in frank castle

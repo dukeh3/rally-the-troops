@@ -65,16 +65,16 @@ function on_click_area(evt) {
 const STEP_TEXT = [ 0, "I", "II", "III", "IIII" ];
 
 function block_name(who) {
-	if (who == "Edward")
-		return game.edward == 1 ? "Edward I" : "Edward II";
-	if (who == "King")
+	if (who === "Edward")
+		return game.edward === 1 ? "Edward I" : "Edward II";
+	if (who === "King")
 		return "Scottish King";
 	return BLOCKS[who].name;
 }
 
 function on_focus_secret_block(evt) {
 	let owner = evt.target.owner;
-	let text = (owner == ENGLAND) ? "English" : "Scottish";
+	let text = (owner === ENGLAND) ? "English" : "Scottish";
 	document.getElementById("status").textContent = text;
 }
 
@@ -107,7 +107,7 @@ function on_click_map_block(evt) {
 
 function is_battle_reserve(who, list) {
 	for (let [b, s, m] of list)
-		if (who == b)
+		if (who === b)
 			return true;
 	return false;
 }
@@ -384,7 +384,7 @@ function layout_blocks(location, north, south) {
 	new_line();
 
 	while (north.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(north.shift());
 		++i;
@@ -395,7 +395,7 @@ function layout_blocks(location, north, south) {
 		new_line();
 
 	while (south.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(south.shift());
 		++i;
@@ -465,12 +465,12 @@ function position_block(location, row, n_rows, col, n_cols, element) {
 }
 
 function show_block(element) {
-	if (element.parentElement != ui.blocks_element)
+	if (element.parentElement !== ui.blocks_element)
 		ui.blocks_element.appendChild(element);
 }
 
 function hide_block(element) {
-	if (element.parentElement != ui.offmap_element)
+	if (element.parentElement !== ui.offmap_element)
 		ui.offmap_element.appendChild(element);
 }
 
@@ -633,7 +633,7 @@ function update_battle() {
 		for (let [block, steps, moved] of list) {
 			ui.present.add(block);
 
-			if (block == game.who)
+			if (block === game.who)
 				ui.battle_block[block].classList.add("selected");
 			else
 				ui.battle_block[block].classList.remove("selected");
@@ -681,7 +681,7 @@ function update_battle() {
 		}
 	}
 
-	if (player == ENGLAND) {
+	if (player === ENGLAND) {
 		fill_cell("FR", game.battle.ER, true);
 		fill_cell("FA", game.battle.EA, false);
 		fill_cell("FB", game.battle.EB, false);

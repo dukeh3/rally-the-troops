@@ -154,8 +154,8 @@ function build_map() {
 		let space = SPACES[s];
 		let element = document.createElement("div");
 		element.classList.add("space");
-		let size = (space.type == 'sea') ? sea_size : city_size;
-		if (space.type == "sea")
+		let size = (space.type === 'sea') ? sea_size : city_size;
+		if (space.type === "sea")
 			element.classList.add("sea");
 		else
 			element.classList.add("city");
@@ -165,7 +165,7 @@ function build_map() {
 		element.addEventListener("click", select_space);
 		element.style.left = (space.x - size/2) + "px";
 		element.style.top = (space.y - size/2) + "px";
-		if (space.type != 'pool')
+		if (space.type !== 'pool')
 			document.getElementById("spaces").appendChild(element);
 		element.space = s;
 		ui.spaces[s] = element;
@@ -253,7 +253,7 @@ function build_map() {
 
 	for (let b in BLOCKS) {
 		let block = BLOCKS[b];
-		let color = (block.name == "Cleopatra" ? "Cleopatra" : block.owner);
+		let color = (block.name === "Cleopatra" ? "Cleopatra" : block.owner);
 		build_known_block(b, block, color);
 		build_secret_block(b, block, color);
 		build_battle_block(b, block, color);
@@ -268,7 +268,7 @@ function update_steps(memo, block, steps, element, animate) {
 	let old_steps = memo[block] || steps;
 	memo[block] = steps;
 
-	if (label_style == 'simple' && steps != old_steps && animate) {
+	if (label_style === 'simple' && steps !== old_steps && animate) {
 		let options = { duration: 700, easing: 'ease', iterations: Math.abs(steps-old_steps) }
 		if (steps < old_steps)
 			element.animate(step_down_animation, options);
@@ -284,7 +284,7 @@ function update_steps(memo, block, steps, element, animate) {
 }
 
 function layout_blocks(location, secret, known) {
-	if (label_layout == 'spread' || (location == LEVY || location == DEAD))
+	if (label_layout === 'spread' || (location === LEVY || location === DEAD))
 		layout_blocks_spread(location, secret, known);
 	else
 		layout_blocks_stacked(location, secret, known);
@@ -306,7 +306,7 @@ function layout_blocks_spread(location, secret, known) {
 	new_line();
 
 	while (secret.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(secret.shift());
 		++i;
@@ -317,7 +317,7 @@ function layout_blocks_spread(location, secret, known) {
 		new_line();
 
 	while (known.length > 0) {
-		if (i == wrap)
+		if (i === wrap)
 			new_line();
 		row.push(known.shift());
 		++i;
@@ -333,15 +333,15 @@ function layout_blocks_spread(location, secret, known) {
 
 function position_block_spread(location, row, n_rows, col, n_cols, element) {
 	let space = SPACES[location];
-	let block_size = (label_style == 'columbia') ? 56+6 : 48+4;
-	let padding = (location == LEVY || location == DEAD) ? 6 : 3;
+	let block_size = (label_style === 'columbia') ? 56+6 : 48+4;
+	let padding = (location === LEVY || location === DEAD) ? 6 : 3;
 	let offset = block_size + padding;
 	let row_size = (n_rows-1) * offset;
 	let col_size = (n_cols-1) * offset;
 	let x = space.x - block_size/2;
 	let y = space.y - block_size/2;
 
-	if (space.layout_axis == 'X') {
+	if (space.layout_axis === 'X') {
 		x -= col_size * space.layout_major;
 		y -= row_size * space.layout_minor;
 		x += col * offset;
@@ -370,7 +370,7 @@ function layout_blocks_stacked(location, secret, known) {
 
 function position_block_stacked(location, i, n, element) {
 	let space = SPACES[location];
-	let block_size = (label_style == 'columbia') ? 56+6 : 48+4;
+	let block_size = (label_style === 'columbia') ? 56+6 : 48+4;
 	let x = space.x - block_size/2 - (n-1) * 9 + i * 18;
 	let y = space.y - block_size/2 - (n-1) * 9 + i * 18;
 	element.style.left = x+"px";
@@ -453,16 +453,16 @@ function update_map() {
 					element.classList.add('jupiter');
 				else
 					element.classList.remove('jupiter');
-				if (color == game.mars && location == game.surprise)
+				if (color === game.mars && location === game.surprise)
 					element.classList.add("mars");
 				else
 					element.classList.remove("mars");
-				if (color == game.neptune && location == game.surprise)
+				if (color === game.neptune && location === game.surprise)
 					element.classList.add("neptune");
 				else
 					element.classList.remove("neptune");
 				let owner = color;
-				if (owner == CLEOPATRA)
+				if (owner === CLEOPATRA)
 					owner = POMPEIUS;
 				if (jupiter)
 					owner = ENEMY[owner];
@@ -488,10 +488,10 @@ function update_map() {
 		layout[location][color].push(element);
 
 		let old_location = ui.map_location[block];
-		update_steps(ui.map_steps, block, steps, element, location == old_location);
+		update_steps(ui.map_steps, block, steps, element, location === old_location);
 		ui.map_location[block] = location;
 
-		if (moved || (location == DEAD && BLOCKS[block].type != 'leader'))
+		if (moved || (location === DEAD && BLOCKS[block].type !== 'leader'))
 			element.classList.add("moved");
 		else
 			element.classList.remove("moved");
@@ -556,7 +556,7 @@ function update_battle() {
 			ui.seen.add(block);
 			ui.present.add(block);
 
-			if (block == game.who)
+			if (block === game.who)
 				ui.battle_menu[block].classList.add("selected");
 			else
 				ui.battle_menu[block].classList.remove("selected");
@@ -604,7 +604,7 @@ function update_battle() {
 		}
 	}
 
-	if (player == CAESAR) {
+	if (player === CAESAR) {
 		fill_cell("FR", game.battle.CR, true);
 		fill_cell("FA", game.battle.CA, false);
 		fill_cell("FB", game.battle.CB, false);

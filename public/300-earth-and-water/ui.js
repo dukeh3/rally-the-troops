@@ -535,13 +535,13 @@ function update_ui() {
 			e.classList.remove("selected");
 }
 
-function on_destroy() { if (game.actions) { send_action('destroy', null); } }
-function on_battle() { if (game.actions) { send_action('battle', null); } }
-function on_build() { if (game.actions) { send_action('build', null); } }
-function on_draw() { if (game.actions) { send_action('draw', null); } }
-function on_next() { if (game.actions) { send_action('next', null); } }
-function on_pass() { if (game.actions) { send_action('pass', null); } }
-function on_undo() { if (game.actions) { send_action('undo', null); } }
+function on_destroy() { if (game.actions) { send_action('destroy'); } }
+function on_battle() { if (game.actions) { send_action('battle'); } }
+function on_build() { if (game.actions) { send_action('build'); } }
+function on_draw() { if (game.actions) { send_action('draw'); } }
+function on_next() { if (game.actions) { send_action('next'); } }
+function on_pass() { if (game.actions) { send_action('pass'); } }
+function on_undo() { if (game.actions) { send_action('undo'); } }
 
 let current_popup_card = 0;
 

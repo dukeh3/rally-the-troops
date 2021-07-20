@@ -2138,12 +2138,14 @@ function start_combat() {
 			game.castle_owner = enemy(game.attacker[game.where]);
 			game.active = game.castle_owner;
 			game.state = 'combat_deployment';
+			game.is_existing_siege = 0;
 		} else {
 			game.castle_owner = besieged_player(game.where);
 			if (!game.attacker[game.where])
 				game.attacker[game.where] = enemy(game.castle_owner);
 			console.log("CONTINUE SIEGE", game.attacker[game.where]);
 			log("Existing siege continues.");
+			game.is_existing_siege = 1;
 			next_combat_round();
 		}
 	} else {
@@ -2163,6 +2165,7 @@ function end_combat() {
 	if (game.jihad === game.where)
 		game.jihad = null;
 
+	delete game.is_existing_siege;
 	delete game.castle_owner;
 	delete game.storming;
 	delete game.sallying;
@@ -2399,7 +2402,9 @@ function goto_combat_round(new_combat_round) {
 					log(game.attacker[game.where] + " are now the attacker.");
 				}
 			}
-			return goto_declare_sally();
+			// No sally first round after combat deployment.
+			if (game.combat_round > 1 || game.is_existing_siege)
+				return goto_declare_sally();
 		}
 		return goto_field_battle();
 	}

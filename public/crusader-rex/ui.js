@@ -671,6 +671,10 @@ function update_battle() {
 			if (game.battle.jihad === block_owner(block))
 				class_name += " jihad";
 
+			if (game.battle.sallying.includes(block))
+				show = true;
+			if (game.battle.storming.includes(block))
+				show = true;
 			if (show || block_owner(block) === player) {
 				class_name += " known";
 				ui.battle_block[block].className = class_name;
@@ -690,21 +694,21 @@ function update_battle() {
 	}
 
 	if (player === FRANKS) {
-		fill_cell("FR", game.battle.FR, true);
-		fill_cell("FC", game.battle.FC, true);
-		fill_cell("FF", game.battle.FF, game.battle.show_castle); // saracens in frank castle
-		fill_cell("EF", game.battle.SF, game.battle.show_field); // saracens in field battle
-		fill_cell("EC", game.battle.SC, game.battle.show_castle); // saracens in saracen castle
 		fill_cell("ER", game.battle.SR, false);
+		fill_cell("EC", game.battle.SC, game.battle.show_castle);
+		fill_cell("EF", game.battle.SF, game.battle.show_field);
+		fill_cell("FF", game.battle.FF, game.battle.show_field);
+		fill_cell("FC", game.battle.FC, game.battle.show_castle);
+		fill_cell("FR", game.battle.FR, false);
 		document.getElementById("FC").className = "c" + game.battle.FCS;
 		document.getElementById("EC").className = "c" + game.battle.SCS;
 	} else {
 		fill_cell("ER", game.battle.FR, false);
 		fill_cell("EC", game.battle.FC, game.battle.show_castle);
 		fill_cell("EF", game.battle.FF, game.battle.show_field);
-		fill_cell("FF", game.battle.SF, game.battle.show_castle);
-		fill_cell("FC", game.battle.SC, true);
-		fill_cell("FR", game.battle.SR, true);
+		fill_cell("FF", game.battle.SF, game.battle.show_field);
+		fill_cell("FC", game.battle.SC, game.battle.show_castle);
+		fill_cell("FR", game.battle.SR, false);
 		document.getElementById("EC").className = "c" + game.battle.FCS;
 		document.getElementById("FC").className = "c" + game.battle.SCS;
 	}

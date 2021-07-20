@@ -2129,7 +2129,9 @@ function start_combat() {
 	game.halfhit = null;
 	game.storming = [];
 	game.sallying = [];
-	game.is_field_battle = 0;
+
+	game.show_castle = 0;
+	game.show_field = 0;
 
 	if (is_castle_town(game.where)) {
 		if (!is_under_siege(game.where)) {
@@ -2169,7 +2171,8 @@ function end_combat() {
 	delete game.castle_owner;
 	delete game.storming;
 	delete game.sallying;
-	delete game.is_field_battle;
+	delete game.show_castle;
+	delete game.show_field;
 	game.where = null;
 	game.flash = "";
 	game.combat_round = 0;
@@ -2237,7 +2240,6 @@ function print_retreat_summary() {
 }
 
 function goto_regroup() {
-	game.is_field_battle = 0;
 	lift_siege(game.where);
 	console.log("REGROUP", game.active);
 	if (!is_under_siege(game.where))
@@ -2309,7 +2311,6 @@ states.regroup_to = {
 // COMBAT ROUND
 
 function next_combat_round() {
-	game.is_field_battle = 0;
 	console.log("NEXT COMBAT ROUND");
 	print_retreat_summary();
 	if (game.jihad === game.where && game.combat_round === 1)
@@ -2745,7 +2746,6 @@ function pump_battle_step(is_candidate_attacker, is_candidate_defender) {
 // FIELD BATTLE
 
 function goto_field_battle() {
-	game.is_field_battle = 1;
 	resume_field_battle();
 }
 
@@ -2766,6 +2766,7 @@ function resume_field_battle() {
 		console.log("FIELD BATTLE WON BY ATTACKER", game.active);
 		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
+		game.show_field = 0;
 		return goto_regroup();
 	}
 
@@ -2774,6 +2775,7 @@ function resume_field_battle() {
 		console.log("FIELD BATTLE WON BY DEFENDER", game.active);
 		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
+		game.show_field = 0;
 		return goto_regroup();
 	}
 
@@ -2797,6 +2799,7 @@ function resume_field_battle() {
 	}
 
 	game.state = 'field_battle';
+	game.show_field = 1;
 	pump_battle_step(is_field_attacker, is_field_defender);
 }
 
@@ -2845,6 +2848,7 @@ states.field_battle = {
 function goto_siege_battle() {
 	game.attacker[game.where] = besieging_player(game.where);
 	console.log("SIEGE BATTLE", game.attacker[game.where]);
+	game.show_castle = 1;
 	resume_siege_battle();
 }
 
@@ -3638,8 +3642,8 @@ function make_battle_view() {
 		halfhit: game.halfhit,
 		flash: game.flash,
 		round: game.combat_round,
-		show_castle: is_storming,
-		show_field: is_field_battle || is_sallying,
+		show_castle: game.show_castle,
+		show_field: game.show_field,
 	};
 
 	if (is_under_siege(game.where) && !is_contested_battle_field(game.where))
@@ -3659,7 +3663,6 @@ function make_battle_view() {
 		for (let b in BLOCKS)
 			if (game.location[b] === game.where & block_owner(b) === owner && fn(b))
 				cell.push(b)
-		// cell.sort((a,b) => compare_block_initiative(a[0], b[0]));
 	}
 
 	fill_cell(battle.FR, FRANKS, b => is_reserve(b));

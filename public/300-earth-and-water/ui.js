@@ -69,7 +69,7 @@ function on_focus_discard(evt) {
 	if (game.discard)
 		document.getElementById("tooltip").className = "card show card_" + game.discard;
 	else
-		document.getElementById("tooltip").className = "card show card_back";
+		document.getElementById("tooltip").className = "card";
 }
 
 function on_blur_discard(evt) {

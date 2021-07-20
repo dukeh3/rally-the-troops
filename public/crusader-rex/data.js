@@ -87,7 +87,7 @@ const TOWNS = {
 	"Beaufort":{"x":605,"y":1354},
 	"Beersheba":{"x":444,"y":2283},
 	"Beirut":{"x":527,"y":1137},
-	"Botron":{"x":540,"y":991},
+	"Botron":{"x":540,"y":995},
 	"Caesarea":{"x":402,"y":1754},
 	"Damascus":{"x":1059,"y":1185},
 	"Damiya":{"x":847,"y":1808},

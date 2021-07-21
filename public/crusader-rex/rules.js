@@ -1418,7 +1418,7 @@ function goto_jihad() {
 function goto_select_jihad() {
 	game.jihad_list = [];
 	for (let where in TOWNS)
-		if (is_contested_field(where))
+		if (is_contested_field(where) || besieging_player(where) === game.active)
 			game.jihad_list.push(where);
 	if (game.jihad_list.length === 0) {
 		delete game.jihad_list;

@@ -136,7 +136,9 @@ function print_summary(text, skip_if_empty = false) {
 }
 
 function enemy(p) {
-	return (p === FRANKS) ? SARACENS : FRANKS;
+	if (p === FRANKS) return SARACENS;
+	if (p === SARACENS) return FRANKS;
+	return null;
 }
 
 function is_inactive_player(current) {
@@ -3644,6 +3646,7 @@ function make_battle_view() {
 		round: game.combat_round,
 		show_castle: game.show_castle,
 		show_field: game.show_field,
+		town: game.where,
 	};
 
 	if (is_under_siege(game.where) && !is_contested_battle_field(game.where))
@@ -3654,10 +3657,8 @@ function make_battle_view() {
 		battle.title += " \u2014 Combat Deployment";
 	else
 		battle.title += " \u2014 Round " + game.combat_round + " of 3";
-	if (game.where === game.jihad) {
-		battle.jihad = game.attacker[game.where];
+	if (game.where === game.jihad)
 		battle.title += " \u2014 Jihad!";
-	}
 
 	function fill_cell(cell, owner, fn) {
 		for (let b in BLOCKS)

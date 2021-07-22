@@ -668,7 +668,7 @@ function update_battle() {
 				class_name += " selected";
 			if (block === game.battle.halfhit)
 				class_name += " halfhit";
-			if (game.battle.jihad === block_owner(block))
+			if (game.jihad === game.battle.town && block_owner(block) === game.p1)
 				class_name += " jihad";
 
 			if (game.battle.sallying.includes(block))

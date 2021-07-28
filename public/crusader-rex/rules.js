@@ -1111,12 +1111,16 @@ function check_sudden_death() {
 		game.state = 'game_over';
 		game.result = FRANKS;
 		game.victory = "Franks control all seven victory cities."
+		log("");
+		log(game.victory);
 		return true;
 	}
 	if (game.s_vp === 7) {
 		game.state = 'game_over';
 		game.result = SARACENS;
 		game.victory = "Saracens control all seven victory cities."
+		log("");
+		log(game.victory);
 		return true;
 	}
 }
@@ -3573,6 +3577,8 @@ function goto_year_end() {
 			game.victory = "The game is a draw.";
 			game.result = null;
 		}
+		log("");
+		log(game.victory);
 		return;
 	}
 

@@ -615,16 +615,20 @@ function start_of_year() {
 }
 
 function goto_hand_size() {
-	if (game.us.hand.length > 8 || game.tr.hand.length > 8) {
+	game.state = 'hand_size';
+	if (game.tr.hand.length > 8)
+		game.tr.queue = [];
+	if (game.us.hand.length > 8)
+		game.us.queue = [];
+
+	if (game.tr.queue && game.us.queue)
 		game.active = "Both";
-		game.state = 'hand_size';
-		if (game.tr.hand.length > 8)
-			game.tr.queue = [];
-		if (game.us.hand.length > 8)
-			game.us.queue = [];
-	} else {
+	else if (game.tr.queue)
+		game.active = TR;
+	else if (game.us.queue)
+		game.active = US;
+	else
 		goto_american_play();
-	}
 }
 
 function format_discard(n) {

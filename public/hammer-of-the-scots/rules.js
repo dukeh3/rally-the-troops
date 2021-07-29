@@ -2010,6 +2010,7 @@ function goto_border_raids() {
 			game.state = 'border_raids';
 		} else {
 			log("England has no non-noble blocks in play.");
+			end_game_turn();
 		}
 	} else {
 		end_game_turn();

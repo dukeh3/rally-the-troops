@@ -1937,18 +1937,22 @@ states.regroup = {
 	},
 	end_regroup: function () {
 		print_turn_log("regroups");
+		game.attacker[game.where] = null;
 		game.where = null;
 		clear_undo();
 		game.active = game.battle_active;
 		delete game.battle_active;
 		if (game.battle_reason === 'herald') {
 			delete game.battle_reason;
+			game.last_used = {};
 			end_player_turn();
 		} else if (game.battle_reason === 'pillage') {
 			delete game.battle_reason;
+			game.last_used = {};
 			end_player_turn();
 		} else if (game.battle_reason === 'coronation') {
 			delete game.battle_reason;
+			game.last_used = {};
 			resume_coronation();
 		} else {
 			delete game.battle_reason;

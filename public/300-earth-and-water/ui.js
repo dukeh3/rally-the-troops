@@ -105,7 +105,7 @@ function on_click_army(evt) {
 			if (ui.selected_armies && ui.selected_armies.includes(evt.target)) {
 				remove_from_array(ui.selected_armies, evt.target);
 			} else {
-				if (ui.selected_armies.length < ui.selected_fleets.length)
+				if (ui.selected_armies.length < ui.selected_fleets.length && ui.selected_armies.length < 3)
 					ui.selected_armies.push(here[ui.selected_armies.length]);
 			}
 		}

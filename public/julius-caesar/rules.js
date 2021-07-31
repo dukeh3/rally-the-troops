@@ -1317,6 +1317,7 @@ states.move_who = {
 			game.state = 'move_where';
 	},
 	pass: function () {
+		push_undo();
 		end_movement();
 	},
 	undo: pop_undo,
@@ -1540,8 +1541,6 @@ function end_movement() {
 	game.moves = 0;
 	game.state = 'levy';
 	game.turn_log = [];
-
-	clear_undo();
 }
 
 states.levy = {
@@ -2022,6 +2021,7 @@ states.retreat = {
 	space: function (to) {
 		let from = game.location[game.who];
 		if (is_sea(to) && !is_navis(game.who)) {
+			push_undo();
 			move_to(game.who, from, to);
 			game.sea_retreated = true;
 			game.state = 'sea_retreat';
@@ -2033,10 +2033,6 @@ states.retreat = {
 			game.moved[game.who] = true;
 			resume_battle();
 		}
-	},
-	pass: function () {
-		eliminate_block(game.who);
-		resume_battle();
 	},
 	block: function () {
 		resume_battle();
@@ -2057,10 +2053,10 @@ states.sea_retreat = {
 			if (is_friendly_city(to))
 				gen_action(view, 'space', to);
 		}
-		// TODO: check if there are any valid destinations before going to this state
-		gen_action_pass(view, "Eliminate army");
+		gen_action(view, 'undo');
 	},
 	space: function (to) {
+		clear_undo();
 		let from = game.location[game.who];
 		game.flash = block_name(game.who) + " retreats.";
 		log_battle(game.flash);
@@ -2069,10 +2065,7 @@ states.sea_retreat = {
 		game.moved[game.who] = true;
 		resume_battle();
 	},
-	pass: function () {
-		eliminate_block(game.who);
-		resume_battle();
-	}
+	undo: pop_undo,
 }
 
 function goto_regroup() {

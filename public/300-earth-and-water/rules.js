@@ -1765,6 +1765,7 @@ states.greek_land_battle_immortals = {
 		game.immortals = 0;
 	},
 	next: function () {
+		game.active = GREECE;
 		end_battle(true);
 	}
 }

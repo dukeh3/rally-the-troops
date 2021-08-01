@@ -3289,7 +3289,7 @@ states.draw_phase = {
 		log(game.active + " place drawn block in " + where + ".");
 
 		game.location[game.who] = where;
-		if (type === 'outremers' || type === 'emirs' || type === 'nomads') {
+		if (type === 'turcopoles' || type === 'outremers' || type === 'emirs' || type === 'nomads') {
 			console.log("DRAW", type, where, game.who, is_home_seat(where, game.who));
 			if (is_home_seat(where, game.who))
 				game.steps[game.who] = block_max_steps(game.who);

@@ -1554,6 +1554,12 @@ function goto_move_phase(moves) {
 }
 
 function end_move_phase() {
+	if (game.moves > 0) {
+		push_undo();
+		game.state = 'confirm_end_move_phase';
+		return;
+	}
+
 	clear_undo();
 	game.who = null;
 	game.where = null;
@@ -1567,6 +1573,25 @@ function end_move_phase() {
 		goto_select_jihad();
 	else
 		end_player_turn();
+}
+
+states.confirm_end_move_phase = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Move Phase: Waiting for " + game.active + ".";
+		if (game.moves > 1)
+			view.prompt = "Move Phase: You have " + game.moves + " moves left";
+		else
+			view.prompt = "Move Phase: You have 1 move left";
+		view.prompt += " \u2014 are you sure you want to end the move phase?";
+		gen_action_undo(view);
+		gen_action(view, 'end_move_phase');
+	},
+	end_move_phase: function () {
+		game.moves = 0;
+		end_move_phase();
+	},
+	undo: pop_undo
 }
 
 states.move_phase = {

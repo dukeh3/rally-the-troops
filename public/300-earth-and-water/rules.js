@@ -1474,12 +1474,17 @@ function resume_greek_naval_battle() {
 
 states.persian_naval_retreat_attacker = {
 	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Persian Naval Battle: Attacker retreat?";
-		view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		gen_action(view, 'port', game.where); // shortcut for battle
-		if (game.greek.event !== THEMISTOCLES)
+		if (game.greek.event === THEMISTOCLES) {
+			if (is_inactive_player(current))
+				return view.prompt = "Persian Naval Battle: Continue the battle.";
+			view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + ".";
+		} else {
+			if (is_inactive_player(current))
+				return view.prompt = "Persian Naval Battle: Attacker retreat?";
+			view.prompt = "Persian Naval Battle: Continue the battle in " + game.where + " or retreat?";
 			gen_action(view, 'port', game.from);
+		}
+		gen_action(view, 'port', game.where); // shortcut for battle
 		gen_action(view, 'battle');
 	},
 	port: function (to) {
@@ -1501,12 +1506,17 @@ states.persian_naval_retreat_attacker = {
 
 states.greek_naval_retreat_attacker = {
 	prompt: function (view, current) {
-		if (is_inactive_player(current))
-			return view.prompt = "Greek Naval Battle: Attacker retreat?";
-		view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
-		gen_action(view, 'port', game.where); // shortcut for battle
-		if (game.greek.event !== THEMISTOCLES)
+		if (game.greek.event === THEMISTOCLES) {
+			if (is_inactive_player(current))
+				return view.prompt = "Greek Naval Battle: Continue the battle.";
+			view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + ".";
+		} else {
+			if (is_inactive_player(current))
+				return view.prompt = "Greek Naval Battle: Attacker retreat?";
+			view.prompt = "Greek Naval Battle: Continue the battle in " + game.where + " or retreat?";
 			gen_action(view, 'port', game.from);
+		}
+		gen_action(view, 'port', game.where); // shortcut for battle
 		gen_action(view, 'battle');
 	},
 	port: function (to) {

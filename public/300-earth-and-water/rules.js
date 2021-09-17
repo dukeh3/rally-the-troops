@@ -3229,7 +3229,7 @@ exports.resign = function (state, current) {
 		game.active = "None";
 		game.state = 'game_over';
 		game.victory = current + " resigned.";
-		if (game.current === PERSIA)
+		if (current === PERSIA)
 			game.result = GREECE;
 		else
 			game.result = PERSIA;

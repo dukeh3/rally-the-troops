@@ -78,17 +78,23 @@
 /* MAP */
 
 .mapwrap {
+	position: relative;
+	background-color: #224467;
 	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
 	width: 1275px;
 	height: 2475px;
 }
 
 .map {
-	position: relative;
+	position: absolute;
 	width: 1275px;
 	height: 2475px;
 	background-repeat: no-repeat;
 	background-color: #224467;
+}
+
+.map > * {
+	position: absolute;
 }
 
 .map.hide_blocks div.blocks {
@@ -226,6 +232,26 @@ body.shift .block.known:hover {
 	transition-property: top, left, transform;
 	transition-duration: 700ms, 700ms, 200ms;
 	transition-timing-function: ease;
+}
+
+/* LANDSCAPE MAP */
+
+@media (min-width: 2000px) {
+	.mapwrap:not(.fit) {
+		box-shadow: 1px 0px 10px rgba(0,0,0,0.5);
+		height: 1275px;
+		width: 2475px;
+		margin-bottom: 40px;
+		margin-top: 30px;
+	}
+	.mapwrap:not(.fit) .map {
+		transform: translateY(1275px) rotate(-90deg);
+		transform-origin: 0 0;
+	}
+	.mapwrap:not(.fit) .map .block.r0 { transform: rotate(90deg); }
+	.mapwrap:not(.fit) .map .block.r1 { transform: rotate(0deg); }
+	.mapwrap:not(.fit) .map .block.r2 { transform: rotate(-90deg); }
+	.mapwrap:not(.fit) .map .block.r3 { transform: rotate(-180deg); }
 }
 
 /* BATTLE BOARD */

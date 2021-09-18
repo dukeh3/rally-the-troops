@@ -3119,10 +3119,10 @@ function end_campaign() {
 	if (game.campaign === 5) {
 		if (game.vp < 0) {
 			game.victory = $("Greece wins with " + (-game.vp) + " points.");
-			game.result = "Greek";
+			game.result = GREECE;
 		} else if (game.vp > 0) {
 			game.victory = $("Persia wins with " + game.vp + "points.");
-			game.result = "Persian";
+			game.result = PERSIA;
 		} else {
 			game.victory = "Nobody wins.";
 			game.result = "Tie";

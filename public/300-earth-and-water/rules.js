@@ -1193,10 +1193,10 @@ states.persian_naval_movement = {
 		push_undo();
 		if (armies > 0)
 			log("Persia moves " + fleets + " fleets with " + armies + " armies:\n"
-				+ game.from + " to " + to);
+				+ game.from + " to " + to + ".");
 		else
 			log("Persia moves " + fleets + " fleets:\n"
-				+ game.from + " to " + to);
+				+ game.from + " to " + to + ".");
 		move_persian_fleet(game.from, to, fleets);
 		move_persian_army(game.from, to, armies);
 		game.transport = armies;
@@ -1230,10 +1230,10 @@ states.greek_naval_movement = {
 		push_undo();
 		if (armies > 0)
 			log("Greece moves " + fleets + " fleets with " + armies + " armies:\n"
-				+ game.from + " to " + to);
+				+ game.from + " to " + to + ".");
 		else
 			log("Greece moves " + fleets + " fleets:\n"
-				+ game.from + " to " + to);
+				+ game.from + " to " + to + ".");
 		move_greek_fleet(game.from, to, fleets);
 		if (game.greek.event !== THEMISTOCLES) {
 			move_greek_army(game.from, to, armies);

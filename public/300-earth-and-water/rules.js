@@ -1229,10 +1229,10 @@ states.greek_naval_movement = {
 	port: function ([to, fleets, armies]) {
 		push_undo();
 		if (armies > 0)
-			log("Persia moves " + fleets + " fleets with " + armies + " armies:\n"
+			log("Greece moves " + fleets + " fleets with " + armies + " armies:\n"
 				+ game.from + " to " + to);
 		else
-			log("Persia moves " + fleets + " fleets:\n"
+			log("Greece moves " + fleets + " fleets:\n"
 				+ game.from + " to " + to);
 		move_greek_fleet(game.from, to, fleets);
 		if (game.greek.event !== THEMISTOCLES) {
@@ -3121,7 +3121,7 @@ function end_campaign() {
 			game.victory = $("Greece wins with " + (-game.vp) + " points.");
 			game.result = GREECE;
 		} else if (game.vp > 0) {
-			game.victory = $("Persia wins with " + game.vp + "points.");
+			game.victory = $("Persia wins with " + game.vp + " points.");
 			game.result = PERSIA;
 		} else {
 			game.victory = "Nobody wins.";

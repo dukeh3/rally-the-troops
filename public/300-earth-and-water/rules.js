@@ -3130,7 +3130,7 @@ function end_campaign() {
 			game.result = PERSIA;
 		} else {
 			game.victory = "Nobody wins.";
-			game.result = "Tie";
+			game.result = "Draw";
 		}
 		game.state = 'game_over';
 		log("");

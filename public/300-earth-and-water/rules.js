@@ -3091,11 +3091,13 @@ function goto_scoring_phase() {
 	if (is_persian_control(ATHENAI) && is_persian_control(SPARTA)) {
 		game.victory = "Persia wins by controlling Athenai and Sparta!";
 		game.state = 'game_over';
+		game.result = PERSIA;
 		return;
 	}
 	if (is_greek_control(ABYDOS) && is_greek_control(EPHESOS)) {
 		game.victory = "Greece wins by controlling Abydos and Ephesos!";
 		game.state = 'game_over';
+		game.result = GREECE;
 		return;
 	}
 	let greek_vp = 0;

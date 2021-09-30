@@ -2166,7 +2166,7 @@ function play_the_great_king() {
 function can_play_the_royal_road_in(city) {
 	if (count_greek_armies(city) > 0)
 		return true;
-	if (count_persian_armies(RESERVE) > 0 && count_persian_armies(city) === 0)
+	if (count_persian_armies(RESERVE) > 0)
 		return true;
 	return false;
 }
@@ -2197,6 +2197,7 @@ states.the_royal_road_select = {
 		} else {
 			game.where = city;
 			game.state = 'the_royal_road_place';
+			game.royal_road_count = 0;
 		}
 	},
 }
@@ -2206,20 +2207,22 @@ states.the_royal_road_place = {
 		if (is_inactive_player(current))
 			return view.prompt = "The Royal Road.";
 		view.prompt = "The Royal Road: Place 1-3 armies in " + game.where + ".";
-		if (count_persian_armies(game.where) < 3 && count_persian_armies(RESERVE) > 0)
+		if (game.royal_road_count < 3 && count_persian_armies(RESERVE) > 0)
 			gen_action(view, 'city', game.where);
-		if (count_persian_armies(game.where) > 0)
+		if (game.royal_road_count > 0)
 			gen_action(view, 'next');
 		gen_action_undo(view);
 	},
 	city: function (city) {
 		push_undo();
 		move_persian_army(RESERVE, city, 1);
+		game.royal_road_count += 1;
 	},
 	next: function () {
-		log("Persia places " + count_persian_armies(game.where) + " armies in " + game.where + ".");
+		log("Persia places " + game.royal_road_count + " armies in " + game.where + ".");
 		clear_undo();
 		game.where = null;
+		delete game.royal_road_count;
 		end_persian_operation();
 	},
 	undo: pop_undo,

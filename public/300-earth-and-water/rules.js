@@ -186,7 +186,7 @@ const ROADS = {
 	"Delphi": [ "Larissa", "Thebai" ],
 	"Ephesos": [ "Abydos" ],
 	"Eretria": [],
-	"Korinthos": [ "Athenai", "Sparta" ],
+	"Korinthos": [ "Athenai", "Sparta", "Thebai" ],
 	"Larissa": [ "Delphi", "Pella", "Thebai" ],
 	"Naxos": [],
 	"Pella": [ "Abydos", "Larissa" ],

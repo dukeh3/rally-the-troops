@@ -267,6 +267,26 @@ function show_marker(id, class_name, show = 1, enabled = 0) {
 	elt.className = class_name;
 }
 
+function show_undo_button(sel, action, use_label = false) {
+	let button = document.querySelector(sel);
+	if (game.actions) {
+		button.classList.remove("hide");
+		if (game.actions && action in game.actions) {
+			if (game.actions[action]) {
+				if (use_label)
+					button.textContent = game.actions[action];
+				button.disabled = false;
+			} else {
+				button.disabled = true;
+			}
+		} else {
+			button.disabled = true;
+		}
+	} else {
+		button.classList.add("hide");
+	}
+}
+
 function on_update() {
 	document.getElementById("greek_info").textContent = greek_info();
 	document.getElementById("persian_info").textContent = persian_info();
@@ -285,7 +305,7 @@ function on_update() {
 	show_action_button("#button_draw", "draw");
 	show_action_button("#button_next", "next");
 	show_action_button("#button_pass", "pass");
-	show_action_button("#button_undo", "undo");
+	show_undo_button("#button_undo", "undo");
 
 	if (game.actions && game.actions.destroy)
 		document.getElementById("bridge").className = "show destroy";

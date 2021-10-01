@@ -9,6 +9,7 @@
 // Diary: 2021-05-03 - Monday Night - Clean up reaction event game states.
 // Diary: 2021-05-04 - Tuesday Night - Event code cleanup.
 // Diary: 2021-05-08 - Saturday Afternoon - Polish game log messages.
+// Diary: 2021-10-01 - Friday Afternoon - Fix bugs.
 
 // Acropolis on Fire -- if sudden death of the great king, does greece get 6 or 5 talents for the next campaign?
 // leonidas + miltiades -- forbid combination?

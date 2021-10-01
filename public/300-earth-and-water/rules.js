@@ -488,6 +488,8 @@ function gen_greek_land_movement(view) {
 // DEATH OF A KING
 
 function goto_sudden_death_of_darius(skip_scoring) {
+	if (skip_scoring)
+		game.trigger.acropolis_on_fire = 0;
 	game.skip_scoring = skip_scoring;
 	game.trigger.darius = 1;
 	log("Sudden Death of Darius!");
@@ -529,6 +531,8 @@ states.sudden_death_of_darius = {
 }
 
 function goto_assassination_of_xerxes(skip_scoring) {
+	if (skip_scoring)
+		game.trigger.acropolis_on_fire = 0;
 	game.skip_scoring = skip_scoring;
 	game.trigger.xerxes = 1;
 	log("Assassination of Xerxes!");
@@ -2938,7 +2942,7 @@ function play_artemisia() {
 	game.trigger.artemisia = 1;
 
 	remove_persian_fleet(game.where);
-	if (game.attacker == PERSIA) {
+	if (game.attacker === PERSIA) {
 		if (count_persian_fleets(game.where) < game.transport) {
 			log("Persia loses one fleet and one army.");
 			move_persian_army(game.where, RESERVE);
@@ -3209,6 +3213,8 @@ function goto_scoring_phase() {
 	let greek_vp = 0;
 	let persian_vp = 0;
 	for (let city of CITIES) {
+		if (city === ATHENAI && game.trigger.acropolis_on_fire)
+			continue;
 		if (is_greek_control(city))
 			greek_vp += SCORE[city];
 		if (is_persian_control(city))

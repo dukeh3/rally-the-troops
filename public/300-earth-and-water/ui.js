@@ -325,7 +325,6 @@ function on_update() {
 			ui.backs[c].classList.remove('show');
 	}
 
-	console.log("show_greek_hand", game.show_greek_hand);
 	if (game.show_greek_hand)
 		document.querySelector(".hand").classList.add("greek");
 	else

@@ -390,6 +390,10 @@ function remove_persian_army(from) {
 	game.units[from][1] -= 1;
 }
 
+function remove_persian_fleet(from) {
+	game.units[from][3] -= 1;
+}
+
 function move_greek_army(from, to, n = 1) {
 	game.units[from][0] -= n;
 	game.units[to][0] += n;
@@ -1325,21 +1329,6 @@ function roll_battle_dice(who, count, cap) {
 	return result;
 }
 
-function remove_persian_transport_fleet() {
-	move_persian_fleet(game.where, RESERVE);
-	if (!game.themistocles) {
-		if (count_persian_fleets(game.where) < game.transport) {
-			log("Persia loses one fleet and one army.");
-			move_persian_army(game.where, RESERVE);
-			--game.transport;
-		} else {
-			log("Persia loses one fleet.");
-		}
-	} else {
-		log("Persia loses one fleet in " + game.where + ".");
-	}
-}
-
 function goto_persian_naval_battle() {
 	game.naval_battle = 1;
 	if (count_greek_fleets(game.where) > 0 && count_persian_fleets(game.where) > 0) {
@@ -1375,7 +1364,14 @@ function persian_naval_battle_round() {
 	let p_hit = roll_battle_dice("Persia", count_persian_fleets(game.where), p_max);
 	let g_hit = roll_battle_dice("Greece", count_greek_fleets(game.where), g_max);
 	if (g_hit >= p_hit) {
-		remove_persian_transport_fleet();
+		move_persian_fleet(game.where, RESERVE);
+		if (count_persian_fleets(game.where) < game.transport) {
+			log("Persia loses one fleet and one army.");
+			move_persian_army(game.where, RESERVE);
+			--game.transport;
+		} else {
+			log("Persia loses one fleet.");
+		}
 		persia_lost_fleet = 1;
 	}
 	if (p_hit >= g_hit) {
@@ -2842,7 +2838,19 @@ function can_play_artemisia(persia_lost_fleet) {
 function play_artemisia() {
 	play_greek_event_card(ARTEMISIA);
 	game.trigger.artemisia = 1;
-	remove_persian_transport_fleet();
+
+	remove_persian_fleet(game.where);
+	if (game.attacker == PERSIA) {
+		if (count_persian_fleets(game.where) < game.transport) {
+			log("Persia loses one fleet and one army.");
+			move_persian_army(game.where, RESERVE);
+			--game.transport;
+		} else {
+			log("Persia loses one fleet.");
+		}
+	} else {
+		log("Persia loses one fleet.");
+	}
 }
 
 // PERSIAN REACTION EVENTS

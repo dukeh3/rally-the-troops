@@ -33,9 +33,6 @@
 // in any land battle, after persian annihilation: the immortals
 // in any naval battle, after persian lose 1 fleet: artemisia
 
-// 'immediately in response' -- interrupt play before or after event is completed?
-// pausanias, molon labe
-
 const CHEAP_PERSIAN_FLEETS = "Cheap Fleets";
 
 exports.scenarios = [
@@ -54,6 +51,7 @@ const EPHESOS = "Ephesos";
 const ATHENAI = "Athenai";
 const THEBAI = "Thebai";
 const SPARTA = "Sparta";
+const DELPHI = "Delphi";
 const PELLA = "Pella";
 
 // Greek event numbers
@@ -2065,10 +2063,10 @@ function play_persian_event(card) {
 	case 2: return play_tribute_of_earth_and_water();
 	case 3: return play_tribute_of_earth_and_water();
 	case 4: return play_carneia_festival();
-	case 6: return play_ostracism();
+	case 6: return play_ostracism(); // NO UNDO
 	case 7: return play_the_great_king();
 	case 8: return play_the_royal_road();
-	case 9: return play_hippias();
+	case 9: return play_hippias(); // NO UNDO
 	case 10: return play_separate_peace();
 	case 12: return play_defection_of_thebes();
 	case 13: return play_tribute_of_earth_and_water();
@@ -2140,9 +2138,22 @@ function can_play_carneia_festival() {
 }
 
 function play_carneia_festival() {
-	// TODO: confirm event by clicking on Sparta?
-	game.trigger.carneia_festival = 1;
-	end_persian_operation();
+	game.state = 'carneia_festival';
+}
+
+states.carneia_festival = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Carneia Festival.";
+		view.prompt = "Carneia Festival: Select Sparta to confirm event.";
+		gen_action(view, 'city', SPARTA);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		game.trigger.carneia_festival = 1;
+		end_persian_operation();
+	},
+	undo: pop_undo,
 }
 
 function can_play_ostracism() {
@@ -2259,18 +2270,31 @@ function can_play_separate_peace() {
 }
 
 function play_separate_peace() {
-	// TODO: confirm event by clicking on Sparta?
-	let g_die = roll_d6();
-	let p_die = roll_d6();
-	log("Greece rolls " + g_die + ".");
-	log("Persia rolls " + p_die + ".");
-	if (p_die > g_die) {
-		log("The Athens and Sparta alliance breaks!");
-		game.state = 'separate_peace';
-	} else {
-		log("The Athens and Sparta alliance remains unbroken.");
-		end_persian_operation();
-	}
+	game.state = 'separate_peace_confirm';
+}
+
+states.separate_peace_confirm = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Separate Peace.";
+		view.prompt = "Separate Peace: Select Sparta to confirm event.";
+		gen_action(view, 'city', SPARTA);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		let g_die = roll_d6();
+		let p_die = roll_d6();
+		log("Greece rolls " + g_die + ".");
+		log("Persia rolls " + p_die + ".");
+		if (p_die > g_die) {
+			log("The Athens and Sparta alliance breaks!");
+			game.state = 'separate_peace';
+		} else {
+			log("The Athens and Sparta alliance remains unbroken.");
+			end_persian_operation();
+		}
+	},
+	undo: pop_undo,
 }
 
 states.separate_peace = {
@@ -2310,17 +2334,30 @@ function can_play_defection_of_thebes() {
 }
 
 function play_defection_of_thebes() {
-	// TODO: confirm event by clicking on Thebes to allow undo?
-	if (count_greek_armies(THEBAI) > 0) {
-		game.active = GREECE;
-		game.state = 'defection_of_thebes';
-	} else {
-		if (count_persian_armies(RESERVE) > 0) {
-			log("Persia places 1 army in Thebai.");
-			move_persian_army(RESERVE, THEBAI, 1);
+	game.state = 'defection_of_thebes_confirm';
+}
+
+states.defection_of_thebes_confirm = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Defection of Thebes.";
+		view.prompt = "Defection of Thebes: Select Thebai to confirm event.";
+		gen_action(view, 'city', THEBAI);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		if (count_greek_armies(THEBAI) > 0) {
+			game.active = GREECE;
+			game.state = 'defection_of_thebes';
+		} else {
+			if (count_persian_armies(RESERVE) > 0) {
+				log("Persia places 1 army in Thebai.");
+				move_persian_army(RESERVE, THEBAI, 1);
+			}
+			end_persian_operation();
 		}
-		end_persian_operation();
-	}
+	},
+	undo: pop_undo,
 }
 
 states.defection_of_thebes = {
@@ -2348,9 +2385,22 @@ function can_play_acropolis_on_fire() {
 }
 
 function play_acropolis_on_fire() {
-	// TODO: confirm by clicking on Athens?
-	game.trigger.acropolis_on_fire = 1;
-	end_persian_operation();
+	game.state = 'acropolis_on_fire';
+}
+
+states.acropolis_on_fire = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Acropolis on Fire.";
+		view.prompt = "Acropolis on Fire: Select Athenai to confirm event.";
+		gen_action(view, 'city', ATHENAI);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		game.trigger.acropolis_on_fire = 1;
+		end_persian_operation();
+	},
+	undo: pop_undo,
 }
 
 function can_play_pacification_of_babylon_or_egypt() {
@@ -2518,13 +2568,27 @@ function can_play_oracle_of_delphi() {
 }
 
 function play_oracle_of_delphi() {
-	let n = game.greek.hand.length;
-	discard_greek_hand();
-	log("Greece discards " + n + " cards.");
-	log("Greece draws " + (n+1) + " cards.");
-	for (let i = 0; i < n+1; ++i)
-		game.greek.hand.push(draw_card(game.deck))
-	end_greek_operation();
+	game.state = 'oracle_of_delphi';
+}
+
+states.oracle_of_delphi = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Oracle of Delphi.";
+		view.prompt = "Oracle of Delphi: Select Delphi to confirm event.";
+		gen_action(view, 'city', DELPHI);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		let n = game.greek.hand.length;
+		discard_greek_hand();
+		log("Greece discards " + n + " cards.");
+		log("Greece draws " + (n+1) + " cards.");
+		for (let i = 0; i < n+1; ++i)
+			game.greek.hand.push(draw_card(game.deck))
+				end_greek_operation();
+	},
+	undo: pop_undo,
 }
 
 function can_play_leonidas() {
@@ -2586,10 +2650,23 @@ function can_play_melas_zomos() {
 }
 
 function play_melas_zomos() {
-	// TODO: confirm by clicking on Sparta
-	log("Greece places one army in Sparta.");
-	move_greek_army(RESERVE, SPARTA, 1);
-	end_greek_operation();
+	game.state = 'melas_zomos';
+}
+
+states.melas_zomos = {
+	prompt: function (view, current) {
+		if (is_inactive_player(current))
+			return view.prompt = "Melas Zomos.";
+		view.prompt = "Melas Zomos: Place one Greek army in Sparta.";
+		gen_action(view, 'city', SPARTA);
+		gen_action_undo(view);
+	},
+	city: function (city) {
+		log("Greece places one army in Sparta.");
+		move_greek_army(RESERVE, SPARTA, 1);
+		end_greek_operation();
+	},
+	undo: pop_undo,
 }
 
 function can_play_triremes() {

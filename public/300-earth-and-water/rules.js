@@ -2057,6 +2057,7 @@ function can_play_persian_event(card) {
 }
 
 function play_persian_event(card) {
+	push_undo();
 	play_persian_event_card(card);
 	switch (card) {
 	case 1: return play_cavalry_of_mardonius();
@@ -2093,6 +2094,7 @@ states.tribute_of_earth_and_water = {
 		if (is_inactive_player(current))
 			return view.prompt = "Tribute of Earth and Water.";
 		view.prompt = "Tribute of Earth and Water: Place an army in a city that is not controlled by either side.";
+		gen_action_undo(view);
 		for (let city of CITIES)
 			if (!is_greek_control(city) && !is_persian_control(city))
 				gen_action(view, 'city', city);
@@ -2108,6 +2110,7 @@ states.tribute_of_earth_and_water = {
 			end_persian_operation();
 		}
 	},
+	undo: pop_undo,
 }
 
 states.tribute_of_earth_and_water_react = {
@@ -2136,6 +2139,7 @@ function can_play_carneia_festival() {
 }
 
 function play_carneia_festival() {
+	// TODO: confirm event by clicking on Sparta?
 	game.trigger.carneia_festival = 1;
 	end_persian_operation();
 }
@@ -2180,6 +2184,7 @@ states.the_royal_road_select = {
 		if (is_inactive_player(current))
 			return view.prompt = "The Royal Road.";
 		view.prompt = "The Royal Road: Select Ephesos or Abydos.";
+		gen_action_undo(view);
 		if (can_play_the_royal_road_in(ABYDOS))
 			gen_action(view, 'city', ABYDOS);
 		if (can_play_the_royal_road_in(EPHESOS))
@@ -2196,6 +2201,7 @@ states.the_royal_road_select = {
 			game.royal_road_count = 0;
 		}
 	},
+	undo: pop_undo,
 }
 
 states.the_royal_road_place = {
@@ -2252,6 +2258,7 @@ function can_play_separate_peace() {
 }
 
 function play_separate_peace() {
+	// TODO: confirm event by clicking on Sparta?
 	let g_die = roll_d6();
 	let p_die = roll_d6();
 	log("Greece rolls " + g_die + ".");
@@ -2302,6 +2309,7 @@ function can_play_defection_of_thebes() {
 }
 
 function play_defection_of_thebes() {
+	// TODO: confirm event by clicking on Thebes to allow undo?
 	if (count_greek_armies(THEBAI) > 0) {
 		game.active = GREECE;
 		game.state = 'defection_of_thebes';
@@ -2339,6 +2347,7 @@ function can_play_acropolis_on_fire() {
 }
 
 function play_acropolis_on_fire() {
+	// TODO: confirm by clicking on Athens?
 	game.trigger.acropolis_on_fire = 1;
 	end_persian_operation();
 }
@@ -2419,6 +2428,7 @@ function can_play_greek_event(card) {
 }
 
 function play_greek_event(card) {
+	push_undo();
 	play_greek_event_card(card);
 	switch (card) {
 	case 1: return play_mines_of_laurion();
@@ -2460,6 +2470,7 @@ states.ionian_revolt = {
 		if (is_inactive_player(current))
 			return view.prompt = "Ionian Revolt.";
 		view.prompt = "Ionian Revolt: Remove one Persian army from a major Persian city.";
+		gen_action_undo(view);
 		for (let city of [ABYDOS, EPHESOS])
 			if (count_persian_armies(city) > 0)
 				gen_action(view, 'city', city);
@@ -2468,7 +2479,8 @@ states.ionian_revolt = {
 		log("Greece removes one Persian army in " + city + ".");
 		move_persian_army(city, RESERVE, 1);
 		end_greek_operation();
-	}
+	},
+	undo: pop_undo,
 }
 
 function can_play_wrath_of_poseidon() {
@@ -2487,6 +2499,7 @@ states.wrath_of_poseidon = {
 		if (is_inactive_player(current))
 			return view.prompt = "Wrath of Poseidon.";
 		view.prompt = "Wrath of Poseidon: Remove one Persian fleet from the map.";
+		gen_action_undo(view);
 		for (let port of PORTS)
 			if (count_persian_fleets(port) > 0)
 				gen_action(view, 'port', port);
@@ -2495,7 +2508,8 @@ states.wrath_of_poseidon = {
 		log("Greece removes one Persian fleet in " + port + ".");
 		move_persian_fleet(port, RESERVE, 1);
 		end_greek_operation();
-	}
+	},
+	undo: pop_undo,
 }
 
 function can_play_oracle_of_delphi() {
@@ -2532,6 +2546,7 @@ states.leonidas_pay = {
 		if (is_inactive_player(current))
 			return view.prompt = "Leonidas.";
 		view.prompt = "Leonidas: Remove one Greek army to pay for the event.";
+		gen_action_undo(view);
 		gen_greek_armies(view);
 	},
 	city: function (space) {
@@ -2540,6 +2555,7 @@ states.leonidas_pay = {
 		remove_greek_army(space);
 		game.state = 'leonidas';
 	},
+	undo: pop_undo,
 }
 
 states.leonidas = {
@@ -2569,6 +2585,7 @@ function can_play_melas_zomos() {
 }
 
 function play_melas_zomos() {
+	// TODO: confirm by clicking on Sparta
 	log("Greece places one army in Sparta.");
 	move_greek_army(RESERVE, SPARTA, 1);
 	end_greek_operation();
@@ -2631,6 +2648,7 @@ states.desertion_of_greek_soldiers = {
 		if (is_inactive_player(current))
 			return view.prompt = "Desertion of Greek Soldiers.";
 		view.prompt = "Desertion of Greek Soldiers: Remove one Persian army from the map.";
+		gen_action_undo(view);
 		for (let city of CITIES)
 			if (count_persian_armies(city) > 0)
 				gen_action(view, 'city', city);
@@ -2639,7 +2657,8 @@ states.desertion_of_greek_soldiers = {
 		log("Greece removes one Persian army in " + city + ".");
 		move_persian_army(city, RESERVE, 1);
 		end_greek_operation();
-	}
+	},
+	undo: pop_undo,
 }
 
 // GREEK REACTION EVENTS

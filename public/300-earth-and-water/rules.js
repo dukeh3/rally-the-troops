@@ -2340,6 +2340,7 @@ function can_play_acropolis_on_fire() {
 
 function play_acropolis_on_fire() {
 	game.trigger.acropolis_on_fire = 1;
+	end_persian_operation();
 }
 
 function can_play_pacification_of_babylon_or_egypt() {

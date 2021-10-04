@@ -48,11 +48,100 @@ const TRACK_1804 = get_space_id("1804");
 const TRACK_1805 = get_space_id("1805");
 const TRACK_1806 = get_space_id("1806");
 
+const US_CARD_NAMES = [
+	"Thomas Jefferson",
+	"Swedish Frigates Arrive",
+	"Hamet\u{2019}s Army Created",
+	"Treaty of Peace and Amity",
+	"Assault on Tripoli",
+	"Naval Movement",
+	"Naval Movement",
+	"Naval Movement",
+	"Naval Movement",
+	"Early Deployment",
+	"A Show of Force",
+	"Tribute Paid",
+	"Constantinople Demands Tribute",
+	"Hamet Recruits Bedouins",
+	"Bainbridge Supplies Intel",
+	"Congress Authorizes Action",
+	"Corsairs Confiscated",
+	"Burn the Philadelphia",
+	"Launch the Intrepid",
+	"General Eaton Attacks Derne",
+	"General Eaton Attacks Benghazi",
+	"Lieutenant Sterett in Pursuit",
+	"Preble\u{2019}s Boys Take Aim",
+	"The Daring Stephen Decatur",
+	"Send in the Marines",
+	"Lieutenant O'Bannon Leads the Charge",
+	"Marine Sharpshooters",
+];
+
+const TR_CARD_NAMES = [
+	"Yusuf Qaramanli",
+	"Murad Reis Breaks Out",
+	"Constantinople Sends Aid",
+	"US Supplies Run Low",
+	"Algerine Corsairs Raid",
+	"Algerine Corsairs Raid",
+	"Moroccan Corsairs Raid",
+	"Moroccan Corsairs Raid",
+	"Tunisian Corsairs Raid",
+	"Tunisian Corsairs Raid",
+	"Troops to Derne",
+	"Troops to Benghazi",
+	"Troops to Tripoli",
+	"Storms",
+	"Tripoli Attacks",
+	"Sweden Pays Tribute",
+	"Tripoli Acquires Corsairs",
+	"The Philadelphia Runs Aground",
+	"Algiers Declares War",
+	"Morocco Declares War",
+	"Tunis Declares War",
+	"US Signal Books Overboard",
+	"Uncharted Waters",
+	"Merchant Ship Converted",
+	"Happy Hunting",
+	"The Guns of Tripoli",
+	"Mercenaries Desert",
+];
+
 let ui = {
 	spaces: {},
 	pieces: {},
 	gold: [],
 	cards: {},
+}
+
+function sub_log_entry_tip(match, p1, offset, string) {
+	let card_number;
+	card_number = US_CARD_NAMES.indexOf(p1) + 1;
+	if (card_number > 0)
+		return `\u201c<span class="us_tip" onmouseenter="on_focus_card_tip('us_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>\u201d`;
+	card_number = TR_CARD_NAMES.indexOf(p1) + 1;
+	if (card_number > 0)
+		return `\u201c<span class="tr_tip" onmouseenter="on_focus_card_tip('tr_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>\u201d`;
+	return match;
+}
+
+create_log_entry = function (text) {
+	let p = document.createElement("div");
+	text = text.replace(/&/g, "&amp;");
+	text = text.replace(/</g, "&lt;");
+	text = text.replace(/>/g, "&gt;");
+	text = text.replace(/\u201c(.*)\u201d/g, sub_log_entry_tip);
+	p.innerHTML = text;
+	return p;
+}
+
+function on_focus_card_tip(card_name) {
+	document.getElementById("tooltip").classList = "card show " + card_name;
+}
+
+function on_blur_card_tip() {
+	document.getElementById("tooltip").classList = "card";
 }
 
 function on_focus_space(evt) {

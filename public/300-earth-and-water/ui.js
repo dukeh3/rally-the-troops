@@ -59,10 +59,29 @@ let ui = {
 	selected_fleets: null,
 };
 
+create_log_entry = function (text) {
+	let p = document.createElement("div");
+	text = text.replace(/&/g, "&amp;");
+	text = text.replace(/</g, "&lt;");
+	text = text.replace(/>/g, "&gt;");
+	text = text.replace(/card (\d+)/g,
+		'<span class="tip" onmouseenter="on_focus_card_tip($1)" onmouseleave="on_blur_card_tip()">card $1</span>');
+	p.innerHTML = text;
+	return p;
+}
+
 function remove_from_array(array, item) {
 	let i = array.indexOf(item);
 	if (i >= 0)
 		array.splice(i, 1);
+}
+
+function on_focus_card_tip(card_number) {
+	document.getElementById("tooltip").className = "card show card_" + card_number;
+}
+
+function on_blur_card_tip() {
+	document.getElementById("tooltip").classList = "card";
 }
 
 function on_focus_discard(evt) {

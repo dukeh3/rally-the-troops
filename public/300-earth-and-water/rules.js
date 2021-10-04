@@ -2167,7 +2167,7 @@ function can_play_ostracism() {
 function play_ostracism() {
 	let card = draw_card(game.greek.hand);
 	game.discard.push(card);
-	log("Card " + card + " is discarded.");
+	log("Persia discards Greek card " + card + ".");
 	end_persian_operation();
 }
 

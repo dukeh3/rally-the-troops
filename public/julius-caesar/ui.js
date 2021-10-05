@@ -746,7 +746,12 @@ function select_undo() { send_action('undo'); }
 function select_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
 function select_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
 function select_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
-function select_battle_pass(evt) { send_action('battle_pass', evt.target.block); }
+
+function select_battle_pass(evt) {
+	if (window.confirm("Are you sure that you want to PASS with " + block_name(evt.target.block) + "?"))
+		send_action('battle_pass', evt.target.block);
+}
+
 
 build_map();
 

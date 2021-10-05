@@ -162,7 +162,11 @@ function on_blur_battle_button(evt) {
 function on_click_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
 function on_click_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
 function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
-function on_click_battle_pass(evt) { send_action('battle_pass', evt.target.block); }
+
+function on_click_battle_pass(evt) {
+	if (window.confirm("Are you sure that you want to PASS with " + block_name(evt.target.block) + "?"))
+		send_action('battle_pass', evt.target.block);
+}
 
 function on_click_card(evt) {
 	let c = evt.target.id.split("+")[1] | 0;

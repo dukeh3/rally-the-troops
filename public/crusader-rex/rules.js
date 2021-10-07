@@ -917,7 +917,6 @@ function can_muster_anywhere() {
 function lift_siege(where) {
 	if (is_under_siege(where) && !is_contested_town(where)) {
 		log("Siege lifted in " + where + ".");
-		console.log("SIEGE LIFTED IN", where);
 		for (let b in BLOCKS)
 			if (is_block_in_castle_in(b, where))
 				remove_from_array(game.castle, b);
@@ -1316,7 +1315,6 @@ function end_player_turn() {
 // EVENTS
 
 function goto_event_card(event) {
-	console.log("EVENT", event);
 	switch (event) {
 	case 'assassins': goto_assassins(); break;
 	case 'guide': goto_guide(); break;
@@ -1518,7 +1516,6 @@ function move_block(who, from, to) {
 		// 6.56 Main Attack relief force by Player 2 arrives one round later than normal
 		let relief_delay = 0;
 		if (game.active === game.p2 && besieged_player(to) === game.p2) {
-			console.log("DELAYED RELIEF BY P2", who, from, to);
 			relief_delay = 1;
 		}
 
@@ -2151,8 +2148,6 @@ states.combat_phase = {
 }
 
 function start_combat() {
-	console.log("START COMBAT");
-
 	game.flash = "";
 	log("");
 	log("Battle in " + game.where + ".");
@@ -2166,7 +2161,6 @@ function start_combat() {
 
 	if (is_castle_town(game.where)) {
 		if (!is_under_siege(game.where)) {
-			console.log("START SIEGE");
 			log("~ Combat Deployment ~");
 			game.castle_owner = enemy(game.attacker[game.where]);
 			game.active = game.castle_owner;
@@ -2176,13 +2170,11 @@ function start_combat() {
 			game.castle_owner = besieged_player(game.where);
 			if (!game.attacker[game.where])
 				game.attacker[game.where] = enemy(game.castle_owner);
-			console.log("CONTINUE SIEGE", game.attacker[game.where]);
 			log("Existing siege continues.");
 			game.is_existing_siege = 1;
 			next_combat_round();
 		}
 	} else {
-		console.log("START NON-SIEGE");
 		game.castle_owner = null;
 		next_combat_round();
 	}
@@ -2190,8 +2182,6 @@ function start_combat() {
 
 function end_combat() {
 	log("~ Combat Ends ~");
-
-	console.log("END COMBAT IN", game.where);
 
 	lift_siege(game.where);
 
@@ -2255,7 +2245,6 @@ states.combat_deployment = {
 			log(game.active + " withdraw " + n + " blocks.");
 		game.active = game.attacker[game.where];
 		if (count_enemy_in_field_and_reserve(game.where) === 0) {
-			console.log("DEFENDER REFUSED FIELD BATTLE");
 			return goto_regroup();
 		}
 		next_combat_round();
@@ -2272,7 +2261,6 @@ function print_retreat_summary() {
 
 function goto_regroup() {
 	lift_siege(game.where);
-	console.log("REGROUP", game.active);
 	if (!is_under_siege(game.where))
 		clear_reserves(); // no siege battle, reserves arrive before regroup
 	reset_road_limits();
@@ -2342,7 +2330,6 @@ states.regroup_to = {
 // COMBAT ROUND
 
 function next_combat_round() {
-	console.log("NEXT COMBAT ROUND");
 	print_retreat_summary();
 	if (game.jihad === game.where && game.combat_round === 1)
 		game.jihad = null;
@@ -2401,12 +2388,10 @@ function goto_combat_round(new_combat_round) {
 		game.active = besieging_player(game.where);
 		if (count_friendly_in_field_excluding_reserves(game.where) === 0) {
 			log("Combat round skipped because main attack regrouped away.");
-			console.log("MAIN ATTACK REGROUPED AWAY, SKIP ROUND 1");
 			game.combat_round = 2;
 		}
 	}
 
-	console.log("COMBAT ROUND", game.combat_round);
 	log("~ Combat Round " + game.combat_round + " ~");
 
 	if (game.combat_round === 2)
@@ -2420,17 +2405,14 @@ function goto_combat_round(new_combat_round) {
 		if (is_under_siege(game.where)) {
 			if (!was_contested) {
 				log("Relief forces arrive!");
-				console.log("RELIEF FORCE ARRIVED");
 				if (game.storming.length > 0) {
 					log("Storming canceled by arriving relief force.");
-					console.log("STORMING CANCELED");
 					game.halfhit = null;
 					game.storming.length = 0;
 				}
 				let old_attacker = game.attacker[game.where];
 				game.attacker[game.where] = besieged_player(game.where);
 				if (old_attacker !== game.attacker[game.where]) {
-					console.log("NEW ATTACKER IS", game.attacker[game.where]);
 					log(game.attacker[game.where] + " are now the attacker.");
 				}
 			}
@@ -2485,7 +2467,6 @@ states.declare_storm = {
 	next: function () {
 		clear_undo();
 		let n = game.storming.length;
-		console.log("STORM DECLARATION", n);
 		if (n === 0) {
 			game.flash = game.active + " decline to storm.";
 			if (game.jihad === game.where)
@@ -2546,7 +2527,6 @@ states.declare_sally = {
 	next: function () {
 		clear_undo();
 		let n = game.sallying.length;
-		console.log("SALLY DECLARATION", n);
 		if (n === 0) {
 			game.flash = game.active + " decline to sally.";
 			log(game.active + " decline to sally.");
@@ -2554,7 +2534,6 @@ states.declare_sally = {
 		if (is_contested_battle_field()) {
 			if (!game.was_contested) {
 				log(game.active + " are now the attacker.");
-				console.log("NEW ATTACKER IS", game.active);
 				game.attacker[game.where] = game.active;
 			}
 			goto_field_battle();
@@ -2584,7 +2563,6 @@ function sally_with_block(who) {
 // RETREAT AFTER COMBAT
 
 function goto_retreat_after_combat() {
-	console.log("RETREAT AFTER COMBAT");
 	reset_moved_for_combat();
 
 	// withdraw all sallying blocks to castle.
@@ -2633,7 +2611,6 @@ states.retreat = {
 				eliminate_block(b);
 		print_summary(game.active + " retreat:");
 		game.active = enemy(game.active);
-		console.log("ATTACKER RETREATED FROM THE FIELD");
 		goto_regroup();
 	},
 	block: function (who) {
@@ -2680,7 +2657,6 @@ states.retreat_to = {
 // SIEGE ATTRITION
 
 function goto_siege_attrition() {
-	console.log("SIEGE ATTRITION");
 	log("~ Siege Attrition ~");
 	game.active = besieged_player(game.where);
 	game.state = 'siege_attrition';
@@ -2791,10 +2767,7 @@ function resume_field_battle() {
 
 	game.active = game.attacker[game.where];
 
-	console.log("FIELD BATTLE ATTACKER=", game.attacker[game.where]);
-
 	if (is_friendly_field(game.where)) {
-		console.log("FIELD BATTLE WON BY ATTACKER", game.active);
 		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
 		game.show_field = 0;
@@ -2803,7 +2776,6 @@ function resume_field_battle() {
 
 	if (is_enemy_field(game.where)) {
 		game.active = enemy(game.active);
-		console.log("FIELD BATTLE WON BY DEFENDER", game.active);
 		print_retreat_summary();
 		log("Field battle won by " + game.active + ".");
 		game.show_field = 0;
@@ -2811,14 +2783,12 @@ function resume_field_battle() {
 	}
 
 	if (is_enemy_battle_field()) {
-		console.log("ATTACKER ELIMINATED", game.active);
 		print_retreat_summary();
 		log("Attacking main force was eliminated.");
 		return next_combat_round();
 	}
 
 	if (is_friendly_battle_field()) {
-		console.log("DEFENDER ELIMINATED, SWAP ATTACKER/DEFENDER", game.active);
 		print_retreat_summary();
 		log("Defending main force was eliminated.");
 		log(game.active + " are now the defender.");
@@ -2878,7 +2848,6 @@ states.field_battle = {
 
 function goto_siege_battle() {
 	game.attacker[game.where] = besieging_player(game.where);
-	console.log("SIEGE BATTLE", game.attacker[game.where]);
 	game.show_castle = 1;
 	resume_siege_battle();
 }
@@ -2887,13 +2856,11 @@ function resume_siege_battle() {
 	game.active = game.attacker[game.where];
 
 	if (is_friendly_town(game.where)) {
-		console.log("SIEGE BATTLE WON BY ATTACKER", game.active);
 		log("Siege battle won by " + game.active + ".");
 		return goto_regroup();
 	}
 
 	if (is_enemy_town(game.where)) {
-		console.log("SIEGE BATTLE WON BY DEFENDER", enemy(game.active));
 		game.active = enemy(game.active);
 		game.halfhit = null;
 		log("Siege battle won by " + game.active + ".");
@@ -2901,7 +2868,6 @@ function resume_siege_battle() {
 	}
 
 	if (game.storming.length === 0) {
-		console.log("SIEGE BATTLE WON BY DEFENDER", enemy(game.active));
 		game.halfhit = null;
 		log("Storming repulsed.");
 		return next_combat_round();
@@ -3315,7 +3281,6 @@ states.draw_phase = {
 
 		game.location[game.who] = where;
 		if (type === 'turcopoles' || type === 'outremers' || type === 'emirs' || type === 'nomads') {
-			console.log("DRAW", type, where, game.who, is_home_seat(where, game.who));
 			if (is_home_seat(where, game.who))
 				game.steps[game.who] = block_max_steps(game.who);
 			else
@@ -3368,7 +3333,6 @@ function goto_winter_siege_attrition() {
 	log(game.active + " winter campaign in " + game.winter_campaign + ".");
 	game.where = game.winter_campaign;
 
-	console.log("WINTER SIEGE ATTRITION");
 	game.active = besieged_player(game.where);
 	game.state = 'winter_siege_attrition';
 	game.attrition_list = [];

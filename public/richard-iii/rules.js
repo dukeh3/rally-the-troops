@@ -33,6 +33,10 @@ let states = {};
 
 let game = null;
 
+function random(n) {
+	return Math.floor(((game.seed = game.seed * 48271 % 0x7fffffff) / 0x7fffffff) * n);
+}
+
 function log(...args) {
 	let s = Array.from(args).join("");
 	game.log.push(s);
@@ -160,7 +164,7 @@ function gen_action(view, action, argument) {
 }
 
 function roll_d6() {
-	return Math.floor(Math.random() * 6) + 1;
+	return random(6) + 1;
 }
 
 function shuffle_deck() {
@@ -173,7 +177,7 @@ function shuffle_deck() {
 function deal_cards(deck, n) {
 	let hand = [];
 	for (let i = 0; i < n; ++i) {
-		let k = Math.floor(Math.random() * deck.length);
+		let k = random(deck.length);
 		hand.push(deck[k]);
 		deck.splice(k, 1);
 	}
@@ -3338,8 +3342,9 @@ exports.ready = function (scenario, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (scenario) {
+exports.setup = function (seed, scenario) {
 	game = {
+		seed: seed,
 		attacker: {},
 		border_limit: {},
 		last_used: {},

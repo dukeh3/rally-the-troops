@@ -196,6 +196,10 @@ const ROADS = {
 let states = {};
 let game = null;
 
+function random(n) {
+	return Math.floor(((game.seed = game.seed * 48271 % 0x7fffffff) / 0x7fffffff) * n);
+}
+
 function $(msg) {
 	return msg
 		.replace(/ 1 cards/, " 1 card")
@@ -300,7 +304,7 @@ function gen_action(view, action, argument) {
 }
 
 function roll_d6() {
-	return Math.floor(Math.random() * 6) + 1;
+	return random(6) + 1;
 }
 
 function create_deck() {
@@ -321,7 +325,7 @@ function draw_card(deck) {
 		reshuffle();
 	if (deck.length === 0)
 		throw Error("can't draw from empty deck");
-	let k = Math.floor(Math.random() * deck.length);
+	let k = random(deck.length);
 	let card = deck[k];
 	deck.splice(k, 1);
 	return card;
@@ -2251,6 +2255,7 @@ function can_play_hippias() {
 }
 
 function play_hippias() {
+	clear_undo();
 	game.state = 'hippias';
 }
 
@@ -3263,10 +3268,9 @@ exports.ready = function (scenario, players) {
 	return (players.length === 2);
 }
 
-exports.setup = function (scenario) {
+exports.setup = function (seed, scenario) {
 	game = {
-		log: [],
-		undo: [],
+		seed: seed,
 
 		// game board state
 		campaign: 1,
@@ -3321,6 +3325,9 @@ exports.setup = function (scenario) {
 		attrition: 0,
 		from: null,
 		where: null,
+
+		undo: [],
+		log: [],
 	};
 
 	start_campaign();

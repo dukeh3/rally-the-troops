@@ -35,6 +35,10 @@ const RESERVE_MARK = "";
 
 let game = null;
 
+function random(n) {
+	return Math.floor(((game.seed = game.seed * 48271 % 0x7fffffff) / 0x7fffffff) * n);
+}
+
 function log(...args) {
 	let s = Array.from(args).join("");
 	game.log.push(s);
@@ -171,7 +175,7 @@ function edge_id(A, B) {
 }
 
 function roll_d6() {
-	return Math.floor(Math.random() * 6) + 1;
+	return random(6) + 1;
 }
 
 function reset_deck() {
@@ -184,7 +188,7 @@ function reset_deck() {
 function deal_cards(deck, n) {
 	let hand = [];
 	for (let i = 0; i < n; ++i) {
-		let c = Math.floor(Math.random() * deck.length);
+		let c = random(deck.length);
 		hand.push(deck[c]);
 		deck.splice(c, 1);
 	}
@@ -1138,7 +1142,7 @@ states.jupiter = {
 		for (let x in BLOCKS)
 			if (game.location[x] === where)
 				list.push(x);
-		let i = Math.floor(Math.random() * list.length);
+		let i = random(list.length);
 		jupiter_block(list[i]);
 	},
 	secret: function (args) {
@@ -1151,7 +1155,7 @@ states.jupiter = {
 			for (let b in BLOCKS)
 				if (game.location[b] === where && BLOCKS[b].owner === owner)
 					list.push(b);
-			let i = Math.floor(Math.random() * list.length);
+			let i = random(list.length);
 			jupiter_block(list[i]);
 		}
 	},
@@ -2376,8 +2380,9 @@ exports.ready = function (scenario, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (scenario) {
+exports.setup = function (seed, scenario) {
 	game = {
+		seed: seed,
 		tournament: (scenario === "Tournament"),
 		c_hand: [],
 		p_hand: [],

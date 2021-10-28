@@ -386,6 +386,14 @@ function reset_road_limits() {
 	game.road_limit = {};
 }
 
+function count_player(p, where) {
+	let count = 0;
+	for (let b in BLOCKS)
+		if (game.location[b] === where && block_owner(b) === p)
+			++count;
+	return count;
+}
+
 function count_friendly(where) {
 	let p = game.active;
 	let count = 0;
@@ -468,6 +476,10 @@ function count_reserves(where) {
 			if (game.location[b] === where && is_reserve(b))
 				++n;
 	return n;
+}
+
+function is_player_kingdom(p, where) {
+	return KINGDOMS[TOWNS[where].region] === p;
 }
 
 function is_friendly_kingdom(where) {
@@ -1083,34 +1095,28 @@ states.saracen_deployment = {
 
 // GAME TURN
 
-function is_friendly_town_for_vp(town) {
-	if (is_friendly_town(town))
+function is_friendly_town_for_player(p, where) {
+	return (count_player(enemy(p), where) === 0) && (count_player(p, where) > 0 || is_player_kingdom(p, where));
+}
+
+function is_friendly_town_for_vp(p, town) {
+	if (is_friendly_town_for_player(p, town))
 		return true;
 	if (is_under_siege(town))
-		return besieged_player(town) === game.active;
+		return besieged_player(town) === p;
 	return false;
 }
 
-function count_victory_points() {
-	let save_active = game.active;
-
-	game.f_vp = 0;
-	game.active = FRANKS;
+function count_victory_points(p) {
+	let vp = 0;
 	for (let town of VICTORY_TOWNS)
-		if (is_friendly_town_for_vp(town))
-			++ game.f_vp;
-
-	game.s_vp = 0;
-	game.active = SARACENS;
-	for (let town of VICTORY_TOWNS)
-		if (is_friendly_town_for_vp(town))
-			++ game.s_vp;
-
-	game.active = save_active;
+		if (is_friendly_town_for_vp(p, town))
+			++ vp;
+	return vp;
 }
 
 function check_sudden_death() {
-	if (game.f_vp === 7) {
+	if (count_victory_points(FRANKS) === 7) {
 		game.state = 'game_over';
 		game.result = FRANKS;
 		game.victory = "Franks control all seven victory cities."
@@ -1118,7 +1124,7 @@ function check_sudden_death() {
 		log(game.victory);
 		return true;
 	}
-	if (game.s_vp === 7) {
+	if (count_victory_points(SARACENS) === 7) {
 		game.state = 'game_over';
 		game.result = SARACENS;
 		game.victory = "Saracens control all seven victory cities."
@@ -3311,7 +3317,6 @@ function end_draw_phase() {
 }
 
 function end_game_turn() {
-	count_victory_points();
 	if (is_winter()) {
 		goto_winter_1();
 	} else {
@@ -3386,7 +3391,6 @@ function goto_winter_2() {
 	eliminate_besieging_blocks(FRANKS);
 	eliminate_besieging_blocks(SARACENS);
 	lift_all_sieges();
-	count_victory_points();
 	if (check_sudden_death())
 		return;
 	if (game.year === 1192)
@@ -3560,10 +3564,12 @@ function end_winter_replacements() {
 function goto_year_end() {
 	if (game.year === 1192) {
 		game.state = 'game_over';
-		if (game.f_vp > game.s_vp) {
+		let f_vp = count_victory_points(FRANKS);
+		let s_vp = count_victory_points(SARACENS);
+		if (f_vp > s_vp) {
 			game.result = FRANKS;
 			game.victory = "Franks win!";
-		} else if (game.f_vp < game.s_vp) {
+		} else if (f_vp < s_vp) {
 			game.victory = "Saracens win!";
 			game.result = SARACENS;
 		} else {
@@ -3622,7 +3628,6 @@ function setup_game() {
 			deploy(b, block_home(b));
 		}
 	}
-	count_victory_points();
 	goto_frank_deployment();
 }
 
@@ -3749,8 +3754,8 @@ exports.view = function(state, current) {
 		turn: game.turn,
 		active: game.active,
 		p1: game.p1,
-		f_vp: game.f_vp,
-		s_vp: game.s_vp,
+		f_vp: count_victory_points(FRANKS),
+		s_vp: count_victory_points(SARACENS),
 		f_card: (game.show_cards || current === FRANKS) ? game.f_card : 0,
 		s_card: (game.show_cards || current === SARACENS) ? game.s_card : 0,
 		hand: (current === FRANKS) ? game.f_hand : (current === SARACENS) ? game.s_hand : [],

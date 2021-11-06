@@ -643,7 +643,7 @@ function is_enemy_exile_area(where) {
 }
 
 function is_pretender_exile_area(where) {
-	return (game.pretender === LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
+	return (block_owner(game.pretender) === LANCASTER) ? is_lancaster_exile_area(where) : is_york_exile_area(where);
 }
 
 function can_recruit_to(who, to) {

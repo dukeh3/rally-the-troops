@@ -3358,6 +3358,7 @@ exports.resign = function (state, current) {
 		else
 			game.result = PERSIA;
 	}
+	return state;
 }
 
 exports.view = function(state, current) {

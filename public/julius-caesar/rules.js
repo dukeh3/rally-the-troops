@@ -2482,6 +2482,7 @@ exports.resign = function (state, current) {
 		game.result = enemy(current);
 		game.victory = current + " resigned."
 	}
+	return state;
 }
 
 function make_battle_view() {

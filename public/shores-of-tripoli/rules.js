@@ -2877,6 +2877,7 @@ exports.resign = function (state, current) {
 		if (current === TR)
 			goto_game_over(US, "Tripolitania resigned.");
 	}
+	return state;
 }
 
 exports.view = function(state, current) {

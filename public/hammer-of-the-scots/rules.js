@@ -2882,6 +2882,7 @@ exports.resign = function (state, current) {
 		game.victory = current + " resigned.";
 		game.result = ENEMY[current];
 	}
+	return state;
 }
 
 exports.view = function(state, current) {

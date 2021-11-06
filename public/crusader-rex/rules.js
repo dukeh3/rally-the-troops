@@ -3735,6 +3735,7 @@ exports.resign = function (state, current) {
 		game.victory = current + " resigned.";
 		game.result = enemy(current);
 	}
+	return state;
 }
 
 function make_siege_view() {

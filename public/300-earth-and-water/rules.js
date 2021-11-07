@@ -33,11 +33,9 @@
 // in any land battle, after persian annihilation: the immortals
 // in any naval battle, after persian lose 1 fleet: artemisia
 
-const CHEAP_PERSIAN_FLEETS = "Cheap Fleets";
 
 exports.scenarios = [
-	"Standard",
-	CHEAP_PERSIAN_FLEETS,
+	"Standard"
 ];
 
 const OBSERVER = "Observer";
@@ -3264,11 +3262,11 @@ states.game_over = {
 	}
 }
 
-exports.ready = function (scenario, players) {
-	return (players.length === 2);
+exports.ready = function (scenario, options, players) {
+	return players.length === 2;
 }
 
-exports.setup = function (seed, scenario) {
+exports.setup = function (seed, scenario, options) {
 	game = {
 		seed: seed,
 
@@ -3282,7 +3280,7 @@ exports.setup = function (seed, scenario) {
 			draw: 0,
 			pass: 0,
 			event: 0,
-			fleet_cost: (scenario === CHEAP_PERSIAN_FLEETS ? 1 : 2),
+			fleet_cost: options.cheap_fleets ? 1 : 2,
 		},
 		greek: {
 			hand: [],

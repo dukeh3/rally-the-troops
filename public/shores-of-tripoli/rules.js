@@ -2758,11 +2758,11 @@ states.game_over = {
 
 // SETUP
 
-exports.ready = function (scenario, players) {
+exports.ready = function (scenario, options, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (seed, scenario) {
+exports.setup = function (seed, scenario, options) {
 	game = {
 		seed: seed,
 		state: null,

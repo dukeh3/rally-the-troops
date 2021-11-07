@@ -2,7 +2,6 @@
 
 exports.scenarios = [
 	"Historical",
-	"Tournament",
 	"Free Deployment",
 	// TODO: Avalon Digital scenarios?
 ];
@@ -2376,14 +2375,14 @@ states.game_over = {
 	},
 }
 
-exports.ready = function (scenario, players) {
+exports.ready = function (scenario, options, players) {
 	return players.length === 2;
 }
 
-exports.setup = function (seed, scenario) {
+exports.setup = function (seed, scenario, options) {
 	game = {
 		seed: seed,
-		tournament: (scenario === "Tournament"),
+		tournament: options.tournament ? 1 : 0,
 		c_hand: [],
 		p_hand: [],
 		c_card: 0,

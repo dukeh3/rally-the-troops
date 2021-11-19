@@ -9,7 +9,7 @@ const TR = "Tripolitania";
 const { SPACES, PIECES } = require('./data');
 
 exports.scenarios = [
-	"Tournament",
+	"Standard",
 ];
 
 function get_piece_id(name) {

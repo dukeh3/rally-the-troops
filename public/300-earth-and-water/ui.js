@@ -641,8 +641,7 @@ function toggle_markers() {
 	document.querySelector(".map").classList.toggle("hide_markers");
 }
 
-player = new URLSearchParams(window.location.search).get("role");
-if (player == GREECE)
+if (param_role == GREECE)
 	document.getElementById("map").classList.add("greek");
 
 build_ui();

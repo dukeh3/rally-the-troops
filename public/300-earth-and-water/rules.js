@@ -691,20 +691,29 @@ states.persian_preparation_build = {
 			return view.prompt = "Persian Preparation Phase.";
 		view.prompt = "Persian Preparation Phase: Build fleets, armies, and/or the bridge. ";
 		view.prompt += game.talents + " talents left.";
+		let has_options = false;
 		if (game.talents >= 1 && count_persian_armies(RESERVE) > 0) {
-			for (let space of CITIES)
-				if (is_persian_control(space))
+			for (let space of CITIES) {
+				if (is_persian_control(space)) {
 					gen_action(view, 'city', space);
+					has_options = true;
+				}
+			}
 		}
 		if (game.built_fleets < 2 && game.talents >= game.persian.fleet_cost && count_persian_fleets(RESERVE) > 0) {
-			for (let space of PORTS)
-				if (is_persian_control(space) && count_greek_fleets(space) === 0)
+			for (let space of PORTS) {
+				if (is_persian_control(space) && count_greek_fleets(space) === 0) {
 					gen_action(view, 'port', space);
+					has_options = true;
+				}
+			}
 		}
 		if (!game.trigger.hellespont && game.talents >= 6 && is_persian_control(ABYDOS)) {
 			gen_action(view, 'build');
+			has_options = true;
 		}
-		gen_action(view, 'next');
+		if (!has_options)
+			gen_action(view, 'next');
 		gen_action_undo(view);
 	},
 	city: function (space) {
@@ -749,19 +758,27 @@ states.greek_preparation_build = {
 			return view.prompt = name + ".";
 		view.prompt = name + ": Build fleets and armies. ";
 		view.prompt += game.talents + " talents left.";
+		let has_options = false;
 		if (game.talents >= 1 && count_greek_armies(RESERVE) > 0) {
-			for (let space of CITIES)
-				if (is_greek_control(space))
+			for (let space of CITIES) {
+				if (is_greek_control(space)) {
 					gen_action(view, 'city', space);
+					has_options = true;
+				}
+			}
 		}
 		let can_build_fleet = (game.greek.event === MINES_OF_LAURION) || (game.built_fleets < 2);
 		if (can_build_fleet && game.talents >= 1 && count_greek_fleets(RESERVE) > 0) {
-			for (let space of PORTS)
-				if (is_greek_control(space) && count_persian_fleets(space) === 0)
+			for (let space of PORTS) {
+				if (is_greek_control(space) && count_persian_fleets(space) === 0) {
 					gen_action(view, 'port', space);
+					has_options = true;
+				}
+			}
 		}
+		if (!has_options)
+			gen_action(view, 'next');
 		gen_action_undo(view);
-		gen_action(view, 'next');
 	},
 	city: function (space) {
 		push_undo();

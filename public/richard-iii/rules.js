@@ -2269,7 +2269,7 @@ function find_minor_heir(owner) {
 function find_senior_heir(owner) {
 	let candidate = null;
 	for (let b in BLOCKS)
-		if (block_owner(b) === owner && block_type(b) === 'heir' && is_block_on_map(b))
+		if (block_owner(b) === owner && block_type(b) === 'heir' && !is_dead(b))
 			if (!candidate || BLOCKS[b].heir < BLOCKS[candidate].heir)
 				candidate = b;
 	return candidate;

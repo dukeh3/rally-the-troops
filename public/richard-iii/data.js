@@ -37,8 +37,12 @@ let AREAS = {
 	"Irish Sea":{"x":280,"y":685},
 	"North Sea":{"x":1425,"y":460},
 	"English Channel":{"x":915,"y":1820},
-	"Pool":{x:1688-87,y:87},
-	"Minor":{x:1688-87-66-10,y:87},
+	"Pool":{x:0,y:0},
+	"Minor":{x:0,y:0},
+	"LPool":{x:1688-50,y:50},
+	"LMinor":{x:1688-50-210,y:50},
+	"YPool":{x:50,y:1950-50},
+	"YMinor":{x:50+210,y:1950-50},
 }
 
 let BORDERS = {};
@@ -102,8 +106,11 @@ const CARDS = {
 		AREAS[a].layout_minor = (1 - minor) / 2;
 	}
 
-	layout("Pool", 50, 'Y', 1, 0);
-	layout("Minor", 10, 'Y', 1, 0);
+	layout("LPool", 13, 'Y', 1, -1);
+	layout("LMinor", 5, 'X', -1, 0);
+	layout("YPool", 13, 'Y', -1, 1);
+	layout("YMinor", 5, 'X', 1, 0);
+
 	layout("France", 4, 'X', 0, 0);
 	layout("Calais", 4, 'X', 0, 0);
 

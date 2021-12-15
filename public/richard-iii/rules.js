@@ -13,6 +13,11 @@ exports.scenarios = [
 
 const { CARDS, BLOCKS, AREAS, BORDERS } = require('./data');
 
+delete AREAS.LPool;
+delete AREAS.YPool;
+delete AREAS.LMinor;
+delete AREAS.YMinor;
+
 const LANCASTER = "Lancaster";
 const YORK = "York";
 const REBEL = "Rebel";
@@ -1761,7 +1766,7 @@ states.action_phase = {
 states.recruit_where = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to recruit.";
+			return view.prompt = "Action Phase: Waiting for " + game.active + ".";
 		view.prompt = "Recruit " + block_name(game.who) + " where?";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
@@ -1783,7 +1788,7 @@ states.recruit_where = {
 states.move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Action Phase: Waiting for " + game.active + ".";
 		view.prompt = "Move " + block_name(game.who) + ".";
 		gen_action_undo(view);
 		gen_action(view, 'block', game.who);
@@ -1844,7 +1849,7 @@ states.move_to = {
 states.sea_move_to = {
 	prompt: function (view, current) {
 		if (is_inactive_player(current))
-			return view.prompt = "Waiting for " + game.active + " to move.";
+			return view.prompt = "Action Phase: Waiting for " + game.active + ".";
 		if (game.active === game.piracy) {
 			view.prompt = "Piracy: Sea Move " + block_name(game.who) + " to a coastal area.";
 		} else {
@@ -3434,7 +3439,7 @@ exports.view = function(state, current) {
 
 		if (is_known) {
 			view.known[b] = [a, game.steps[b], (game.moved[b] || game.dead[b]) ? 1 : 0];
-		} else if (a !== POOL && a !== MINOR) {
+		} else {
 			let list = view.secret[BLOCKS[b].owner];
 			if (!(a in list))
 				list[a] = [0, 0];

@@ -583,8 +583,17 @@ function update_map() {
 	}
 
 	// Layout blocks on map
-	for (let area in AREAS)
-		layout_blocks(area, layout[area].Lancaster, layout[area].York);
+	for (let area in AREAS) {
+		if (area === POOL) {
+			layout_blocks("LPool", layout[area].Lancaster, []);
+			layout_blocks("YPool", layout[area].York, []);
+		} else if (area === MINOR) {
+			layout_blocks("LMinor", layout[area].Lancaster, []);
+			layout_blocks("YMinor", layout[area].York, []);
+		} else {
+			layout_blocks(area, layout[area].Lancaster, layout[area].York);
+		}
+	}
 
 	for (let where in AREAS) {
 		if (ui.areas[where]) {

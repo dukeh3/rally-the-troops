@@ -2877,6 +2877,16 @@ function resume_siege_battle() {
 		return goto_regroup();
 	}
 
+	if (count_blocks_in_castle(game.where) === 0) {
+		log("Defending main force was eliminated.");
+		log(game.active + " are now the defender.");
+		game.attacker[game.where] = enemy(game.active);
+		// The new defender takes control of the empty castle
+		game.castle_owner = game.active;
+		game.storming.length = 0;
+		return next_combat_round();
+	}
+
 	if (game.storming.length === 0) {
 		game.halfhit = null;
 		log("Storming repulsed.");

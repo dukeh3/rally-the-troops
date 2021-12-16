@@ -248,11 +248,13 @@ body.shift .block.known:hover {
 		transform: translateY(1275px) rotate(-90deg);
 		transform-origin: 0 0;
 	}
-	.mapwrap:not(.fit) .map .block.r0 { transform: rotate(90deg); }
+	body.shift .mapwrap:not(.fit) .map .block.known:hover {
+		transform: rotate(90deg) scale(2) !important;
+	}
+	.mapwrap:not(.fit) .map .block { transform: rotate(90deg); }
 	.mapwrap:not(.fit) .map .block.r1 { transform: rotate(0deg); }
 	.mapwrap:not(.fit) .map .block.r2 { transform: rotate(-90deg); }
 	.mapwrap:not(.fit) .map .block.r3 { transform: rotate(-180deg); }
-	.mapwrap:not(.fit) .map .block:not(.known) { transform: rotate(90deg); }
 }
 
 /* BATTLE BOARD */

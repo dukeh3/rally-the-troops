@@ -16,13 +16,19 @@
 
 .grid_center { background-color: slategray; }
 .grid_role { background-color: silver; }
-.grid_log { background-color: ghostwhite; }
 .grid_top { background-color: gainsboro; }
 .Franks .grid_top.your_turn { background-color: #f7de46; /* 50% mix of khaki and gold */ }
 .Saracens .grid_top.your_turn { background-color: lightgreen; }
 .one .role_name { background-color: khaki; }
 .two .role_name { background-color: darkseagreen; }
 .turn_info { background-color: gainsboro; }
+
+#log { background-color: ghostwhite; }
+#log .st { background-color: #246; color: white; font-weight: bold; }
+#log .F { background-color: khaki; }
+#log .S { background-color: darkseagreen; }
+#log .bs { background-color: lightgray; }
+#log .br { font-style: italic; text-decoration: underline; }
 
 .map #timeline {
 	position: absolute;
@@ -488,9 +494,7 @@ body.shift .block.known:hover {
 
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

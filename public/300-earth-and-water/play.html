@@ -14,7 +14,6 @@
 
 .grid_center { background-color: slategray; }
 .grid_role { background-color: gainsboro; }
-.grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
 .Persia .grid_top.your_turn { background-color: skyblue; }
 .Greece .grid_top.your_turn { background-color: salmon; }
@@ -22,6 +21,24 @@
 .role_info { background-color: silver; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: skyblue; }
+
+#log {
+	background-color: gainsboro;
+}
+
+#log .tip {
+	cursor: help;
+	text-decoration: underline;
+	color: blue;
+}
+
+#log .st {
+	font-weight: bold;
+	background-color: gray;
+	color: white;
+	text-align: center;
+	padding: 3px;
+}
 
 .hand.greek {
 	background-color: rosybrown;
@@ -38,9 +55,6 @@
 }
 #deck_info {
 	text-align: center;
-}
-.grid_role {
-	width: 240px;
 }
 
 /* CARDS */
@@ -72,24 +86,16 @@
 
 .card_info .card {
 	margin: 15px auto;
-	width: 200px;
-	height: 280px;
+	width: 125px;
+	height: 175px;
 	border-radius: 10px;
-}
-
-.log span.tip {
-	cursor: help;
-	text-decoration: underline;
-	color: blue;
 }
 
 #tooltip.card {
 	position: fixed;
 	z-index: 200;
-	right: 270px;
+	right: 230px;
 	top: 60px;
-	width: 375px;
-	height: 525px;
 }
 
 /* PHONE SIZE: squeeze side bar on small screens */
@@ -321,9 +327,7 @@
 		<div class="role_info card_info"><div id="discard" class="card show card_back"></div><div id="deck_info"></div></div>
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

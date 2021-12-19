@@ -1428,6 +1428,7 @@ states.play_card = {
 }
 
 function reveal_cards() {
+	log("");
 	log("Lancaster plays " + CARDS[game.l_card].name + ".");
 	log("York plays " + CARDS[game.y_card].name + ".");
 	game.show_cards = true;
@@ -1748,6 +1749,9 @@ states.action_phase = {
 		}
 	},
 	end_action_phase: function () {
+		if (game.moves > 0 && game.turn_log.length === 0 && game.recruit_log.length === 0)
+			logp("does nothing.");
+
 		if (game.turn_log.length > 0)
 			print_turn_log(game.active + " moves:");
 		game.turn_log = game.recruit_log;
@@ -2659,6 +2663,8 @@ states.regroup_to = {
 	},
 	area: function (to) {
 		if (is_sea_area(to)) {
+			log_move_start(game.where);
+			log_move_continue(to);
 			game.location[game.who] = to;
 			game.state = 'sea_regroup_to';
 		} else {
@@ -2684,7 +2690,8 @@ states.sea_regroup_to = {
 				gen_action(view, 'area', to);
 	},
 	area: function (to) {
-		logp("sea regroups to " + to + ".");
+		log_move_continue(to);
+		log_move_end();
 		game.location[game.who] = to;
 		game.who = null;
 		game.state = 'regroup'
@@ -2797,6 +2804,7 @@ states.enter_pretender_heir = {
 		game.who = null;
 	},
 	area: function (to) {
+		log("");
 		log(block_name(game.who) + " comes of age in " + to + ".");
 		--game.killed_heirs[game.active];
 		game.location[game.who] = to;
@@ -2879,6 +2887,7 @@ states.enter_royal_heir = {
 		game.who = null;
 	},
 	area: function (to) {
+		log("");
 		log(block_name(game.who) + " comes of age in " + to + ".");
 		--game.killed_heirs[game.active];
 		game.location[game.who] = to;
@@ -2940,6 +2949,7 @@ states.supply_limits_king = {
 function goto_political_turn() {
 	log("");
 	log("Start Political Turn.");
+	log("");
 
 	game.turn_log = [];
 

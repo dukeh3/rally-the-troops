@@ -40,6 +40,7 @@ const TR_INFANTRY = create_piece_list(20, 'tr_infantry_');
 const SPRING = 0;
 const FALL = 2;
 const WINTER = 3;
+const SEASON_NAMES = [ "Spring", "Summer", "Fall", "Winter" ];
 
 const ALEXANDRIA = get_space_id("Alexandria");
 const ALGIERS = get_space_id("Algiers");
@@ -689,11 +690,21 @@ states.hand_size = {
 	},
 	next: function (_, current) {
 		if (current === TR) {
+			let n = game.tr.queue.length;
+			if (n > 1)
+				log(current + " discards " + n + " cards.");
+			else if (n === 1)
+				log(current + " discards " + n + " card.");
 			for (let card of game.tr.queue)
 				game.tr.discard.push(card);
 			delete game.tr.queue;
 		}
 		if (current === US) {
+			let n = game.us.queue.length;
+			if (n > 1)
+				log(current + " discards " + n + " cards.");
+			else if (n === 1)
+				log(current + " discards " + n + " card.");
 			for (let card of game.us.queue)
 				game.us.discard.push(card);
 			delete game.us.queue;
@@ -720,6 +731,10 @@ states.hand_size = {
 }
 
 function goto_american_play() {
+	log("");
+	log("Start of " + SEASON_NAMES[game.season] + ".");
+	log("");
+
 	game.active = US;
 	game.state = 'american_play';
 }
@@ -744,8 +759,7 @@ function end_of_season() {
 		end_of_year();
 	} else {
 		++game.season;
-		game.active = US;
-		game.state = 'american_play';
+		goto_american_play();
 	}
 }
 
@@ -815,12 +829,12 @@ states.tripolitan_play = {
 			gen_action(view, 'pass');
 	},
 	card_build_corsair: function (c) {
-		discard_card(game.tr, c, " to build a Tripolitan corsair in Tripoli");
+		discard_card(game.tr, c, " to build a corsair in Tripoli");
 		move_one_piece(TR_CORSAIRS, TRIPOLITAN_SUPPLY, TRIPOLI);
 		end_tripolitan_play();
 	},
 	card_pirate_raid: function (c) {
-		discard_card(game.tr, c, " to Pirate Raid with the corsairs from Tripoli");
+		discard_card(game.tr, c, " to Pirate Raid from Tripoli");
 		goto_pirate_raid(TRIPOLI);
 	},
 	card_event: play_tripolitan_event,
@@ -2476,7 +2490,7 @@ states.bainbridge_supplies_intel = {
 	},
 	card_event: play_american_event,
 	card_take: function (card) {
-		log("Card placed in hard.");
+		log("Card placed in hand.");
 		remove_from_array(game.us.discard, card);
 		game.us.hand.push(card);
 		end_american_play();
@@ -2740,9 +2754,9 @@ function goto_game_over(result, message) {
 	game.active = "None";
 	game.result = result;
 	if (result === TR)
-		game.victory = "Tripolitan victory: " + message;
+		game.victory = "Tripolitan victory:\n" + message;
 	else if (result === US)
-		game.victory = "United States victory: " + message;
+		game.victory = "United States victory:\n" + message;
 	else
 		game.victory = message;
 	log("");

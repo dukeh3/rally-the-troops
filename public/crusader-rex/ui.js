@@ -50,6 +50,34 @@ let ui = {
 	present: new Set(),
 }
 
+create_log_entry = function (text) {
+	let p = document.createElement("div");
+	text = text.replace(/&/g, "&amp;");
+	text = text.replace(/</g, "&lt;");
+	text = text.replace(/>/g, "&gt;");
+
+	text = text.replace(/\u2192 /g, "\u2192\xa0");
+
+	text = text.replace(/^([A-Z]):/, '<span class="$1"> $1 </span>');
+
+	if (text.match(/^~ .* ~$/))
+		p.className = 'br', text = text.substring(2, text.length-2);
+	else if (text.match(/^Start Frank turn/))
+		p.className = 'F';
+	else if (text.match(/^Start Saracen turn/))
+		p.className = 'S';
+	else if (text.match(/^Start /))
+		p.className = 'st';
+	else if (text.match(/^(Battle in)/))
+		p.className = 'bs';
+
+	if (text.match(/^Start /))
+		text = text.substring(6);
+
+	p.innerHTML = text;
+	return p;
+}
+
 function on_focus_town(evt) {
 	let where = evt.target.town;
 	let text = where;

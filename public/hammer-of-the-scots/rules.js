@@ -860,6 +860,7 @@ states.play_card = {
 }
 
 function reveal_cards() {
+	log("");
 	log("England plays " + CARDS[game.e_card].name + ".");
 	log("Scotland plays " + CARDS[game.s_card].name + ".");
 	game.show_cards = true;
@@ -2046,7 +2047,8 @@ states.border_raids = {
 function goto_winter_turn() {
 	game.moved = {};
 	log("");
-	log("Start Wintering.");
+	log("Start Winter of " + game.year + ".");
+	log("");
 	english_nobles_go_home();
 }
 

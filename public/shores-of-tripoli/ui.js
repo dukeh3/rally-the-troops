@@ -119,19 +119,29 @@ function sub_log_entry_tip(match, p1, offset, string) {
 	let card_number;
 	card_number = US_CARD_NAMES.indexOf(p1) + 1;
 	if (card_number > 0)
-		return `\u201c<span class="us_tip" onmouseenter="on_focus_card_tip('us_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>\u201d`;
+		return `\n<span class="us_tip" onmouseenter="on_focus_card_tip('us_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>`;
 	card_number = TR_CARD_NAMES.indexOf(p1) + 1;
 	if (card_number > 0)
-		return `\u201c<span class="tr_tip" onmouseenter="on_focus_card_tip('tr_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>\u201d`;
+		return `\n<span class="tr_tip" onmouseenter="on_focus_card_tip('tr_card_${card_number}')" onmouseleave="on_blur_card_tip()">${p1}</span>`;
 	return match;
 }
 
+let last_log_who = 'st';
 create_log_entry = function (text) {
 	let p = document.createElement("div");
 	text = text.replace(/&/g, "&amp;");
 	text = text.replace(/</g, "&lt;");
 	text = text.replace(/>/g, "&gt;");
 	text = text.replace(/\u201c(.*)\u201d/g, sub_log_entry_tip);
+	if (text.match(/^Start of \d+/)) {
+		text = text.substring(9, text.length-1);
+		p.className = 'st';
+	} else if (text.match(/^Start of /)) {
+		text = text.substring(9, text.length-1);
+		p.className = 'ss';
+	} else if (text.match(/(victory:|ends in a draw)/)) {
+		p.className = 'end';
+	}
 	p.innerHTML = text;
 	return p;
 }
@@ -264,16 +274,16 @@ function update_cards() {
 
 function tr_info() {
 	let text = "";
-	text += "Hand: " + game.tr.hand + "\n";
-	text += "Draw: " + game.tr.draw + "\n";
+	text += "Hand: " + game.tr.hand + " / ";
+	text += "Draw: " + game.tr.draw + " / ";
 	text += "Discard: " + game.tr.discard + "\n";
 	return text;
 }
 
 function us_info() {
 	let text = "";
-	text += "Hand: " + game.us.hand + "\n";
-	text += "Draw: " + game.us.draw + "\n";
+	text += "Hand: " + game.us.hand + " / ";
+	text += "Draw: " + game.us.draw + " / ";
 	text += "Discard: " + game.us.discard + "\n";
 	return text;
 }

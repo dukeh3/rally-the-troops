@@ -1242,6 +1242,7 @@ states.play_card = {
 }
 
 function reveal_cards() {
+	log("");
 	log("Franks play " + CARDS[game.f_card].name + ".");
 	log("Saracens play " + CARDS[game.s_card].name + ".");
 	game.show_cards = true;
@@ -1595,6 +1596,10 @@ states.confirm_end_move_phase = {
 		gen_action(view, 'end_move_phase');
 	},
 	end_move_phase: function () {
+		if (game.moves === 1)
+			log(game.active + " do nothing with " + game.moves + " move.");
+		else
+			log(game.active + " do nothing with " + game.moves + " moves.");
 		game.moves = 0;
 		end_move_phase();
 	},
@@ -2191,8 +2196,6 @@ function start_combat() {
 }
 
 function end_combat() {
-	log("~ Combat Ends ~");
-
 	lift_siege(game.where);
 
 	if (game.jihad === game.where)
@@ -3235,6 +3238,7 @@ function goto_draw_phase() {
 	delete game.combat_list;
 	if (game.year > 1187 && !is_winter()) {
 		game.active = game.p1;
+		log("");
 		start_draw_phase();
 	} else {
 		end_game_turn();
@@ -3342,6 +3346,7 @@ function end_game_turn() {
 function goto_winter_1() {
 	log("");
 	log("Start Winter of " + game.year + ".");
+	log("");
 	if (game.winter_campaign)
 		goto_winter_siege_attrition();
 	else

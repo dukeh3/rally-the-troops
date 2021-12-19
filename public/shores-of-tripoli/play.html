@@ -17,12 +17,18 @@
 .grid_center { background-color: slategray; }
 .grid_role { background-color: gainsboro; }
 .card_info { background-color: silver; }
-.grid_log { background-color: gainsboro; }
 .grid_top { background-color: silver; }
 .Tripolitania .grid_top.your_turn { background-color: salmon; }
 .United_States .grid_top.your_turn { background-color: skyblue; }
 .one .role_name { background-color: skyblue; }
 .two .role_name { background-color: salmon; }
+
+#log { background-color: white; }
+#log .st { background-color: gray; color: white; font-weight: bold; padding:3px; text-align: center; }
+#log .ss { background-color: gainsboro; color: dimgray; font-weight: bold; padding:3px; text-align: center; }
+#log .end { font-style: italic; }
+#log .us_tip { color: blue; text-decoration: dotted underline; cursor: help; }
+#log .tr_tip { color: #d00; text-decoration: dotted underline; cursor: help; }
 
 #turn {
 	padding: 8px 0px 8px 8px;
@@ -66,18 +72,17 @@
 
 .card_info .card {
 	margin: 0 auto;
-	width: 100px;
-	height: 140px;
-	border-radius: 5px;
+	width: 125px;
+	height: 175px;
+	border-radius: 6px;
 }
 
-.role_info {
-	padding: 5px 15px;
+#tr_info, #us_info {
 	white-space: pre-line;
 	font-family: "Source Serif SmText";
 	font-size: 12px;
-	line-height: 18px;
-	padding: 4px 8px;
+	text-align: center;
+	padding: 3px;
 }
 
 #tooltip.card {
@@ -88,18 +93,6 @@
 }
 #tooltip.show {
 	display: block;
-}
-
-.log span.us_tip {
-	cursor: help;
-	text-decoration: underline dotted;
-	color: navy;
-}
-
-.log span.tr_tip {
-	cursor: help;
-	text-decoration: underline dotted;
-	color: darkred;
 }
 
 /* MAP */
@@ -340,7 +333,7 @@ body.United_States #popup div.us_always { display: block; }
 				<div class="role_vp" id="us_score">30</div>
 				<div class="role_user">-</div>
 			</div>
-			<div class="role_info" id="us_info">Hand:&#x0a;Draw:&#x0a;Discard:</div>
+			<div class="role_info" id="us_info">Hand: X / Draw: X / Discard: X</div>
 		</div>
 		<div class="role two">
 			<div class="role_name">
@@ -348,14 +341,12 @@ body.United_States #popup div.us_always { display: block; }
 				<div class="role_vp" id="tr_score">0</div>
 				<div class="role_user">-</div>
 			</div>
-			<div class="role_info" id="tr_info">Hand:&#x0a;Draw:&#x0a;Discard:</div>
+			<div class="role_info" id="tr_info">Hand: X / Draw: X / Discard: X</div>
 		</div>
 		<div class="card_info"><div id="active_card" class="card show blank"></div></div>
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

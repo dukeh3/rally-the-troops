@@ -18,12 +18,18 @@
 
 .grid_center { background-color: #461145; }
 .grid_role { background-color: tan; }
-.grid_log { background-color: wheat; }
 .grid_top { background-color: tan; }
 .grid_top.your_turn { background-color: orange; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: #eb5; }
 .turn_info { background-color: burlywood; }
+
+#log { background-color: wheat; }
+#log .st { background-color: brown; color: gold; font-weight: bold; }
+#log .C { background-color: salmon; }
+#log .P { background-color: #eb5; }
+#log .bs { background-color: tan; }
+#log .br { font-style: italic; text-decoration: underline; }
 
 /* CARDS */
 
@@ -80,7 +86,7 @@
 
 .battle { background-color: tan; }
 .battle .battle_message { background-color: wheat; }
-.battle .battle_header { background-color: brown; color: white; font-weight: bold; }
+.battle .battle_header { background-color: brown; color: wheat; font-weight: bold; }
 .battle .battle_separator { background-color: brown; }
 
 .battle_line.enemy .battle_menu_list { min-height: 0; }
@@ -319,9 +325,7 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 		<div class="turn_info">-</div>
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

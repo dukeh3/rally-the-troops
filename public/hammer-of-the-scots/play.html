@@ -23,6 +23,13 @@
 .two .role_name { background-color: skyblue; }
 .turn_info { background-color: gainsboro; }
 
+#log { background-color: ghostwhite; }
+#log .st { background-color: #053; color: white; font-weight: bold; }
+#log .S { background-color: salmon; }
+#log .E { background-color: skyblue; }
+#log .bs { background-color: gainsboro; }
+#log .br { font-style: italic; text-decoration: underline; }
+
 /* CARDS */
 
 .card_back{background-image: url('cards/card_back.svg')}
@@ -306,7 +313,7 @@ div.block {
 			<div class="menu_popup">
 				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
 				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="old_block_style()">Old labels</div>
+				<div class="menu_item" onclick="old_block_style()">Classic labels</div>
 				<div class="menu_item" onclick="new_block_style()">New labels</div>
 				<div class="menu_separator"></div>
 				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
@@ -402,9 +409,7 @@ div.block {
 		<div class="turn_info">-</div>
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

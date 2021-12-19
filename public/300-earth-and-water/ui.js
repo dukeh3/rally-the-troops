@@ -66,6 +66,10 @@ create_log_entry = function (text) {
 	text = text.replace(/>/g, "&gt;");
 	text = text.replace(/card (\d+)/g,
 		'<span class="tip" onmouseenter="on_focus_card_tip($1)" onmouseleave="on_blur_card_tip()">card $1</span>');
+	if (text.match(/^Start Campaign /)) {
+		p.className = 'st';
+		text = text.substring(6);
+	}
 	p.innerHTML = text;
 	return p;
 }

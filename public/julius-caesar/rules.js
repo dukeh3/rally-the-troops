@@ -997,6 +997,7 @@ function reveal_cards() {
 	delete game.neptune;
 	delete game.pluto;
 
+	log("");
 	log("Caesar plays ", CARDS[game.c_card].name, ".");
 	log("Pompeius plays ", CARDS[game.p_card].name, ".");
 
@@ -1684,10 +1685,9 @@ function start_battle() {
 	game.battle_round = 0;
 	game.flash = "";
 	log("");
+	log("Battle in ", game.where, ".");
 	if (game.surprise === game.where)
-		log("Surprise attack in ", game.where, ".");
-	else
-		log("Battle in ", game.where, ".");
+		log("Surprise attack.");
 	game.state = 'battle_round';
 	start_battle_round();
 }
@@ -2177,6 +2177,7 @@ function check_victory() {
 		} else {
 			log("");
 			log("Start Winter Turn of Year " + game.year);
+			log("");
 			start_navis_to_port();
 		}
 	}

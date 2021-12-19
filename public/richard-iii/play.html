@@ -16,12 +16,18 @@
 
 .grid_center { background-color: #788; }
 .grid_role { background-color: silver; }
-.grid_log { background-color: ghostwhite; }
 .grid_top { background-color: silver; }
 .grid_top.your_turn { background-color: orange; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: ghostwhite; }
 .turn_info { background-color: gainsboro; }
+
+#log { background-color: ghostwhite; }
+#log .st { background-color: steelblue; color: white; font-weight: bold; }
+#log .L { background-color: pink; }
+#log .Y { background-color: gainsboro; }
+#log .bs { background-color: lightsteelblue; }
+#log .br { font-style: italic; text-decoration: underline; }
 
 .battle_header { background-color: silver; }
 .battle_message { background-color: silver; }
@@ -390,9 +396,7 @@ div.block {
 
 	</div>
 
-	<div class="grid_log">
-		<div class="log" id="log"></div>
-	</div>
+	<div id="log"></div>
 
 	<div class="grid_center">
 

@@ -3222,12 +3222,16 @@ function goto_scoring_phase() {
 		game.victory = "Persia wins by controlling Athenai and Sparta!";
 		game.state = 'game_over';
 		game.result = PERSIA;
+		log("");
+		log(game.victory);
 		return;
 	}
 	if (is_greek_control(ABYDOS) && is_greek_control(EPHESOS)) {
 		game.victory = "Greece wins by controlling Abydos and Ephesos!";
 		game.state = 'game_over';
 		game.result = GREECE;
+		log("");
+		log(game.victory);
 		return;
 	}
 	let greek_vp = 0;

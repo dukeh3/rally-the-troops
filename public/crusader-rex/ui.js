@@ -508,13 +508,13 @@ function update_map() {
 	document.getElementById("saracen_vp").textContent = game.s_vp + " VP";
 	document.getElementById("timeline").className = "year_" + game.year;
 	if (game.turn < 1)
-		document.querySelector(".turn_info").textContent =
+		document.getElementById("turn_info").textContent =
 			"Year " + game.year;
 	else if (game.turn < 6)
-		document.querySelector(".turn_info").textContent =
+		document.getElementById("turn_info").textContent =
 			"Turn " + game.turn + " of Year " + game.year;
 	else
-		document.querySelector(".turn_info").textContent =
+		document.getElementById("turn_info").textContent =
 			"Winter Turn of Year " + game.year;
 
 	for (let town in TOWNS)

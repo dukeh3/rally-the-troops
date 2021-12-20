@@ -99,13 +99,13 @@
 
 /* MAP WITH BLOCKS AND SPACES */
 
-.mapwrap {
+#mapwrap {
 	position: relative;
 	width: 2475px;
 	height: 1275px;
 }
 
-.map {
+#map {
 	position: absolute;
 	width: 2475px;
 	height: 1275px;
@@ -161,10 +161,10 @@ body.shift .block.known:hover {
 }
 
 .battle .block { position: relative; }
-.map .block { position: absolute; z-index: 2; }
-.map .block.highlight { z-index: 3; }
-.map .block.selected { z-index: 4; }
-.map .block.known:hover { z-index: 5; }
+#map .block { position: absolute; z-index: 2; }
+#map .block.highlight { z-index: 3; }
+#map .block.selected { z-index: 4; }
+#map .block.known:hover { z-index: 5; }
 
 .block.highlight { cursor: pointer; }
 
@@ -329,9 +329,9 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 
 	<div id="grid_center">
 
-		<div id="mapwrap" class="mapwrap">
-		<div id="map" class="map">
-			<div id="blocks" class="blocks">
+		<div id="mapwrap">
+		<div id="map">
+			<div id="blocks">
 				<div id="secret_blocks"></div>
 				<div id="known_blocks"></div>
 			</div>

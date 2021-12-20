@@ -142,12 +142,12 @@
 
 /* MAP WITH ARMIES, FLEETS, AND MARKERS */
 
-.map.greek, .map.greek > div {
+#map.greek, #map.greek > div {
 	transform: rotate(180deg);
 	transform-origin: center;
 }
 
-.map {
+#map {
 	position: relative;
 	width: 1240px;
 	height: 878px;
@@ -157,7 +157,7 @@
 	margin: 0 auto;
 }
 
-.map.hide_markers > div {
+#map.hide_markers > div {
 	visibility: hidden;
 }
 
@@ -331,7 +331,7 @@
 
 	<div id="grid_center">
 
-		<div id="map" class="map">
+		<div id="map">
 
 			<div id="campaign" class="marker campaign_1"></div>
 			<div id="bridge" class="bridge"></div>

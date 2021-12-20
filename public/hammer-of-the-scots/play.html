@@ -73,44 +73,44 @@
 
 /* MAP */
 
-.mapwrap {
+#mapwrap {
 	position: relative;
 	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
 	width: 1688px;
 	height: 1950px;
 }
 
-.map {
+#map {
 	position: absolute;
 	background-color: darkslategray;
 	width: 1688px;
 	height: 1950px;
 }
 
-.map svg {
+#map svg {
 	position: absolute;
 }
 
-.map svg image {
+#map svg image {
 	pointer-events: none;
 }
 
-.map svg path.area {
+#map svg path.area {
 	opacity: 0;
 	fill-opacity: 0.4;
 	fill: white;
 }
-.map svg path.area.where {
+#map svg path.area.where {
 	opacity: 1;
 	fill: darkslategray;
 }
-.map svg path.area.highlight {
+#map svg path.area.highlight {
 	cursor: pointer;
 	opacity: 1;
 	fill: white;
 }
 
-.map.hide_blocks div.blocks {
+#map.hide_blocks div.blocks {
 	visibility: hidden;
 }
 
@@ -160,7 +160,7 @@ body.shift .block.known:hover {
 .oldblocks div.block { border-radius: 8px; }
 .newblocks div.block { border-radius: 4px; }
 
-.map div.block {
+#map div.block {
 	position: absolute;
 }
 
@@ -413,8 +413,8 @@ div.block {
 
 	<div id="grid_center">
 
-<div id="mapwrap" class="mapwrap">
-<div id="map" class="map">
+<div id="mapwrap">
+<div id="map">
 
 <svg id="svgmap" width="1688px" height="1950px" viewBox="0 0 1688 1950">
 <image href="map.jpg" x="0" y="0" width="1688" height="1950" />
@@ -887,8 +887,8 @@ c50 53 55 80 28 143 -18 42 -21 62 -16 107 17 147 18 179 6 245 -15 91 -56
 </svg>
 
 <div id="turn" class="turn year_1297"></div>
-<div id="blocks" class="blocks"></div>
-<div id="offmap" class="offmap" style="visibility:hidden"></div>
+<div id="blocks"></div>
+<div id="offmap" style="visibility:hidden"></div>
 
 </div>
 </div>

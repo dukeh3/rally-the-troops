@@ -642,7 +642,7 @@ function on_card(evt) {
 }
 
 function toggle_markers() {
-	document.querySelector(".map").classList.toggle("hide_markers");
+	document.getElementById("map").classList.toggle("hide_markers");
 }
 
 if (param_role == GREECE)

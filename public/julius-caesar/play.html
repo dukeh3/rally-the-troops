@@ -84,10 +84,10 @@
 
 /* BATTLE BOARD */
 
-.battle { background-color: tan; }
-.battle .battle_message { background-color: wheat; }
-.battle .battle_header { background-color: brown; color: wheat; font-weight: bold; }
-.battle .battle_separator { background-color: brown; }
+#battle { background-color: tan; }
+#battle_message { background-color: wheat; }
+#battle_header { background-color: brown; color: wheat; font-weight: bold; }
+.battle_separator { background-color: brown; }
 
 .battle_line.enemy .battle_menu_list { min-height: 0; }
 .battle_reserves .battle_menu_list { min-height: 0; }
@@ -160,7 +160,7 @@ body.shift .block.known:hover {
 	z-index: 100;
 }
 
-.battle .block { position: relative; }
+#battle .block { position: relative; }
 #map .block { position: absolute; z-index: 2; }
 #map .block.highlight { z-index: 3; }
 #map .block.selected { z-index: 4; }
@@ -239,9 +239,9 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 <form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<table class="battle">
+<table id="battle">
 <tr>
-<th class="battle_header" colspan=4></th>
+<th id="battle_header" colspan=4></th>
 <tr class="battle_reserves enemy">
 <td colspan=4><div id="ER"></div></td>
 <tr class="battle_line enemy">
@@ -259,7 +259,7 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 <tr class="battle_reserves friendly">
 <td colspan=4><div id="FR"></div></td>
 <tr>
-<th class="battle_message" colspan=4></th>
+<th id="battle_message" colspan=4></th>
 </table>
 
 <div id="grid_window">

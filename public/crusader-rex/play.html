@@ -147,7 +147,7 @@ body.shift .block.known:hover {
 	z-index: 100;
 }
 
-.battle .block { position: relative; }
+#battle .block { position: relative; }
 #map .block { position: absolute; z-index: 2; }
 #map .block.highlight { z-index: 3; }
 #map .block.selected { z-index: 4; }
@@ -265,16 +265,16 @@ body.shift .block.known:hover {
 
 /* BATTLE BOARD */
 
-.battle {
+#battle {
 	background-color: tan;
 	min-width: 700px;
 }
-.battle .battle_message {
+#battle_message {
 	background-color: gainsboro;
 	text-align: center;
 	border-top: 1px solid black;
 }
-.battle .battle_header {
+#battle_header {
 	Xbackground-color: #224467;
 	background-color: steelblue;
 	color: white;
@@ -282,7 +282,7 @@ body.shift .block.known:hover {
 	text-align: center;
 	border-bottom: 1px solid black;
 }
-.battle .battle_menu {
+.battle_menu {
 	margin: 5px 5px;
 }
 
@@ -412,15 +412,15 @@ body.shift .block.known:hover {
 <form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<div class="battle">
-<div class="battle_header"></div>
+<div id="battle">
+<div id="battle_header"></div>
 <div id="ER"></div>
 <div id="EC"></div>
 <div id="EF"></div>
 <div id="FF"></div>
 <div id="FC"></div>
 <div id="FR"></div>
-<div class="battle_message"></div>
+<div id="battle_message"></div>
 </div>
 
 <div id="grid_window">

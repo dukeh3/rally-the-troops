@@ -744,7 +744,7 @@ function update_battle() {
 
 let flash_timer = 0;
 function start_flash() {
-	let element = document.querySelector(".battle_message");
+	let element = document.getElementById("battle_message");
 	let tick = true;
 	if (flash_timer)
 		return;
@@ -783,20 +783,20 @@ function on_update() {
 	update_map();
 
 	if (game.battle) {
-		document.querySelector(".battle_header").textContent = game.battle.title;
-		document.querySelector(".battle_message").textContent = game.battle.flash;
+		document.getElementById("battle_header").textContent = game.battle.title;
+		document.getElementById("battle_message").textContent = game.battle.flash;
 		if (game.flash_next)
 			start_flash();
-		document.querySelector(".battle").classList.add("show");
+		document.getElementById("battle").classList.add("show");
 		update_battle();
 	} else {
-		document.querySelector(".battle").classList.remove("show");
+		document.getElementById("battle").classList.remove("show");
 	}
 }
 
 build_map();
 
-drag_element_with_mouse(".battle", ".battle_header");
+drag_element_with_mouse("#battle", "#battle_header");
 scroll_with_middle_mouse("#grid_center", 3);
 init_map_zoom();
 init_shift_zoom();

@@ -164,7 +164,7 @@ body.shift .block.known:hover {
 	position: absolute;
 }
 
-.battle div.block {
+#battle div.block {
 	position: relative;
 }
 
@@ -244,10 +244,10 @@ div.block {
 
 /* BATTLE BOARD */
 
-.battle { background-color: silver; }
-.battle .battle_message { background-color: lightsteelblue; }
-.battle .battle_header { background-color: steelblue; color: white; font-weight: bold; }
-.battle .battle_separator { background-color: steelblue; }
+#battle { background-color: silver; }
+#battle_message { background-color: lightsteelblue; }
+#battle_header { background-color: steelblue; color: white; font-weight: bold; }
+.battle_separator { background-color: steelblue; }
 
 .battle_line.enemy .battle_menu_list { min-height: 0; }
 .battle_reserves > td > div { height: 66px; }
@@ -267,9 +267,9 @@ div.block {
 <form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<table class="battle">
+<table id="battle">
 <tr>
-<th class="battle_header" colspan=4></th>
+<th id="battle_header" colspan=4></th>
 <tr class="battle_reserves enemy">
 <td colspan=4><div id="ER"></div></td>
 <tr class="battle_line enemy">
@@ -285,7 +285,7 @@ div.block {
 <tr class="battle_reserves friendly">
 <td colspan=4><div id="FR"></div></td>
 <tr>
-<th class="battle_message" colspan=4></th>
+<th id="battle_message" colspan=4></th>
 </table>
 
 <div class="herald">

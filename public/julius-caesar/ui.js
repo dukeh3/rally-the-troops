@@ -14,20 +14,20 @@ function toggle_blocks() {
 
 function set_simple_labels() {
 	label_style = 'simple';
-	document.querySelector(".blocks").classList.remove("columbia-labels");
-	document.querySelector(".battle").classList.remove("columbia-labels");
-	document.querySelector(".blocks").classList.add("simple-labels");
-	document.querySelector(".battle").classList.add("simple-labels");
+	document.getElementById("blocks").classList.remove("columbia-labels");
+	document.getElementById("battle").classList.remove("columbia-labels");
+	document.getElementById("blocks").classList.add("simple-labels");
+	document.getElementById("battle").classList.add("simple-labels");
 	window.localStorage['julius-caesar/label-style'] = label_style;
 	update_map();
 }
 
 function set_columbia_labels() {
 	label_style = 'columbia';
-	document.querySelector(".blocks").classList.remove("simple-labels");
-	document.querySelector(".battle").classList.remove("simple-labels");
-	document.querySelector(".blocks").classList.add("columbia-labels");
-	document.querySelector(".battle").classList.add("columbia-labels");
+	document.getElementById("blocks").classList.remove("simple-labels");
+	document.getElementById("battle").classList.remove("simple-labels");
+	document.getElementById("blocks").classList.add("columbia-labels");
+	document.getElementById("battle").classList.add("columbia-labels");
 	window.localStorage['julius-caesar/label-style'] = label_style;
 	update_map();
 }
@@ -719,12 +719,12 @@ function on_update() {
 	ui.seen.clear();
 
 	if (game.battle) {
-		document.querySelector(".battle_header").textContent = game.battle.title;
-		document.querySelector(".battle_message").textContent = game.battle.flash;
-		document.querySelector(".battle").classList.add("show");
+		document.getElementById("battle_header").textContent = game.battle.title;
+		document.getElementById("battle_message").textContent = game.battle.flash;
+		document.getElementById("battle").classList.add("show");
 		update_battle();
 	} else {
-		document.querySelector(".battle").classList.remove("show");
+		document.getElementById("battle").classList.remove("show");
 	}
 
 	for (let b in BLOCKS)
@@ -784,10 +784,10 @@ function select_battle_pass(evt) {
 
 build_map();
 
-document.querySelector(".blocks").classList.add(label_style+'-labels');
-document.querySelector(".battle").classList.add(label_style+'-labels');
+document.getElementById("blocks").classList.add(label_style+'-labels');
+document.getElementById("battle").classList.add(label_style+'-labels');
 
-drag_element_with_mouse(".battle", ".battle_header");
+drag_element_with_mouse("#battle", "#battle_header");
 scroll_with_middle_mouse("#grid_center");
 init_map_zoom();
 init_shift_zoom();

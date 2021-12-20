@@ -783,7 +783,7 @@ function on_update() {
 
 drag_element_with_mouse(".battle", ".battle_header");
 drag_element_with_mouse(".herald", ".herald_header");
-scroll_with_middle_mouse(".grid_center", 2);
+scroll_with_middle_mouse("#grid_center", 2);
 init_map_zoom();
 init_shift_zoom();
 init_client([ "England", "Scotland" ]);

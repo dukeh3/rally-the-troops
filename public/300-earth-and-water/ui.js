@@ -649,5 +649,5 @@ if (param_role == GREECE)
 	document.getElementById("map").classList.add("greek");
 
 build_ui();
-scroll_with_middle_mouse(".grid_center", 2);
+scroll_with_middle_mouse("#grid_center", 2);
 init_client(["Greece", "Persia"]);

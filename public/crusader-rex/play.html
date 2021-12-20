@@ -14,11 +14,11 @@
 <script defer src="ui.js"></script>
 <style>
 
-.grid_center { background-color: slategray; }
-.grid_role { background-color: silver; }
-.grid_top { background-color: gainsboro; }
-.Franks .grid_top.your_turn { background-color: #f7de46; /* 50% mix of khaki and gold */ }
-.Saracens .grid_top.your_turn { background-color: lightgreen; }
+#grid_center { background-color: slategray; }
+#grid_role { background-color: silver; }
+#grid_top { background-color: gainsboro; }
+.Franks #grid_top.your_turn { background-color: #f7de46; /* 50% mix of khaki and gold */ }
+.Saracens #grid_top.your_turn { background-color: lightgreen; }
 .one .role_name { background-color: khaki; }
 .two .role_name { background-color: darkseagreen; }
 .turn_info { background-color: gainsboro; }
@@ -423,9 +423,9 @@ body.shift .block.known:hover {
 <div class="battle_message"></div>
 </div>
 
-<div class="grid_window">
+<div id="grid_window">
 
-	<div class="grid_top">
+	<div id="grid_top">
 
 		<div class="menu">
 			<div class="menu_title"><img src="/images/cog.svg"></div>
@@ -470,7 +470,7 @@ body.shift .block.known:hover {
 		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
 
-	<div class="grid_role">
+	<div id="grid_role">
 
 		<div class="role one">
 			<div class="role_name">
@@ -496,7 +496,7 @@ body.shift .block.known:hover {
 
 	<div id="log"></div>
 
-	<div class="grid_center">
+	<div id="grid_center">
 
 <div class="mapwrap" id="mapwrap">
 <div class="map" id="map">

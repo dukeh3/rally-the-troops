@@ -12,12 +12,12 @@
 <script defer src="ui.js"></script>
 <style>
 
-.grid_center { background-color: slategray; }
-.grid_role { background-color: gainsboro; }
-.grid_top { background-color: silver; }
-.Persia .grid_top.your_turn { background-color: skyblue; }
-.Greece .grid_top.your_turn { background-color: salmon; }
-.grid_top.disconnected { background-color: red; }
+#grid_center { background-color: slategray; }
+#grid_role { background-color: gainsboro; }
+#grid_top { background-color: silver; }
+.Persia #grid_top.your_turn { background-color: skyblue; }
+.Greece #grid_top.your_turn { background-color: salmon; }
+#grid_top.disconnected { background-color: red; }
 .role_info { background-color: silver; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: skyblue; }
@@ -273,9 +273,9 @@
 <form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<div class="grid_window">
+<div id="grid_window">
 
-	<div class="grid_top">
+	<div id="grid_top">
 
 		<div class="menu">
 			<div class="menu_title"><img src="/images/cog.svg"></div>
@@ -312,7 +312,7 @@
 		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
 
-	<div class="grid_role">
+	<div id="grid_role">
 
 		<div class="role one">
 			<div class="role_name">Greece &#x2013; <span class="role_user">$USER</span></div>
@@ -329,7 +329,7 @@
 
 	<div id="log"></div>
 
-	<div class="grid_center">
+	<div id="grid_center">
 
 		<div id="map" class="map">
 

@@ -14,10 +14,10 @@
 <script defer src="ui.js"></script>
 <style>
 
-.grid_center { background-color: #788; }
-.grid_role { background-color: silver; }
-.grid_top { background-color: silver; }
-.grid_top.your_turn { background-color: orange; }
+#grid_center { background-color: #788; }
+#grid_role { background-color: silver; }
+#grid_top { background-color: silver; }
+#grid_top.your_turn { background-color: orange; }
 .one .role_name { background-color: salmon; }
 .two .role_name { background-color: ghostwhite; }
 .turn_info { background-color: gainsboro; }
@@ -306,9 +306,9 @@ div.block {
 <th class="battle_message" colspan=4></th>
 </table>
 
-<div class="grid_window">
+<div id="grid_window">
 
-	<div class="grid_top">
+	<div id="grid_top">
 
 		<div class="menu">
 			<div class="menu_title"><img src="/images/cog.svg"></div>
@@ -372,7 +372,7 @@ div.block {
 		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
 
-	<div class="grid_role">
+	<div id="grid_role">
 
 		<div class="role one">
 			<div class="role_name">
@@ -398,7 +398,7 @@ div.block {
 
 	<div id="log"></div>
 
-	<div class="grid_center">
+	<div id="grid_center">
 
 <div class="mapwrap" id="mapwrap">
 <div class="map" id="map">

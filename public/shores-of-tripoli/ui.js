@@ -551,6 +551,6 @@ function on_click_card(evt) {
 /* INITIALIZE CLIENT */
 
 build_map();
-scroll_with_middle_mouse(".grid_center");
+scroll_with_middle_mouse("#grid_center");
 init_map_zoom();
 init_client([ "United States", "Tripolitania" ]);

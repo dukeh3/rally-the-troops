@@ -14,12 +14,12 @@
 <script defer src="ui.js"></script>
 <style>
 
-.grid_center { background-color: slategray; }
-.grid_role { background-color: gainsboro; }
+#grid_center { background-color: slategray; }
+#grid_role { background-color: gainsboro; }
 .card_info { background-color: silver; }
-.grid_top { background-color: silver; }
-.Tripolitania .grid_top.your_turn { background-color: salmon; }
-.United_States .grid_top.your_turn { background-color: skyblue; }
+#grid_top { background-color: silver; }
+.Tripolitania #grid_top.your_turn { background-color: salmon; }
+.United_States #grid_top.your_turn { background-color: skyblue; }
 .one .role_name { background-color: skyblue; }
 .two .role_name { background-color: salmon; }
 
@@ -51,8 +51,8 @@
 	border-bottom: 2px dotted gainsboro;
 }
 
-.Observer .grid_center > #hand_cards { display: none; }
-.Observer .grid_center > .hand_separator { display: none; }
+.Observer #grid_center > #hand_cards { display: none; }
+.Observer #grid_center > .hand_separator { display: none; }
 
 .card {
 	width: 250px;
@@ -294,9 +294,9 @@ body.United_States #popup div.us_always { display: block; }
 <form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
-<div class="grid_window">
+<div id="grid_window">
 
-	<div class="grid_top">
+	<div id="grid_top">
 
 		<div class="menu">
 			<div class="menu_title"><img src="/images/cog.svg"></div>
@@ -326,7 +326,7 @@ body.United_States #popup div.us_always { display: block; }
 		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
 
-	<div class="grid_role">
+	<div id="grid_role">
 		<div class="role one">
 			<div class="role_name">
 				United States
@@ -348,7 +348,7 @@ body.United_States #popup div.us_always { display: block; }
 
 	<div id="log"></div>
 
-	<div class="grid_center">
+	<div id="grid_center">
 
 <div id="mapwrap" class="mapwrap fit">
 <div id="map" class="map">

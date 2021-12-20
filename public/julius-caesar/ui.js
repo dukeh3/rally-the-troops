@@ -788,7 +788,7 @@ document.querySelector(".blocks").classList.add(label_style+'-labels');
 document.querySelector(".battle").classList.add(label_style+'-labels');
 
 drag_element_with_mouse(".battle", ".battle_header");
-scroll_with_middle_mouse(".grid_center");
+scroll_with_middle_mouse("#grid_center");
 init_map_zoom();
 init_shift_zoom();
 init_client([ "Caesar", "Pompeius" ]);

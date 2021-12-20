@@ -369,9 +369,9 @@ function on_update() {
 	}
 
 	if (game.show_greek_hand)
-		document.querySelector(".hand").classList.add("greek");
+		document.getElementById("hand").classList.add("greek");
 	else
-		document.querySelector(".hand").classList.remove("greek");
+		document.getElementById("hand").classList.remove("greek");
 
 	function update_units(index, elements) {
 		let overflow = [];

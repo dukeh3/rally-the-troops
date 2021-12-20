@@ -404,12 +404,12 @@ body.shift .block.known:hover {
 </head>
 <body>
 
-<div class="status" id="status"></div>
+<div id="status"></div>
 
-<div class="chat_window">
-<div class="chat_header">Chat</div>
-<div class="chat_text"></div>
-<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+<div id="chat_window">
+<div id="chat_header">Chat</div>
+<div id="chat_text"></div>
+<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
 <div class="battle">
@@ -447,9 +447,9 @@ body.shift .block.known:hover {
 		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
 		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">Connecting...</div>
+		<div id="prompt">Connecting...</div>
 
 		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
 		<button id="winter_campaign_button" class="hide" onclick="on_button_winter_campaign()">Winter campaign</button>

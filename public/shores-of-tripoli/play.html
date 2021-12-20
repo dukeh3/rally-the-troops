@@ -285,13 +285,13 @@ body.United_States #popup div.us_always { display: block; }
 </head>
 <body>
 
-<div class="status" id="status"></div>
+<div id="status"></div>
 <div id="tooltip" class="card"></div>
 
-<div class="chat_window">
-<div class="chat_header">Chat</div>
-<div class="chat_text"></div>
-<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+<div id="chat_window">
+<div id="chat_header">Chat</div>
+<div id="chat_text"></div>
+<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
 <div id="grid_window">
@@ -314,9 +314,9 @@ body.United_States #popup div.us_always { display: block; }
 		</div>
 
 		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">Connecting...</div>
+		<div id="prompt">Connecting...</div>
 
 		<button id="button_pass" onclick="on_pass()" class="hide">Pass</button>
 		<button id="button_next" onclick="on_next()" class="hide">Next</button>

@@ -100,7 +100,7 @@
 
 /* PHONE SIZE: squeeze side bar on small screens */
 
-.log_button { display: none }
+#log_button { display: none }
 
 @media (max-height: 700px) {
 	.card_info .card {
@@ -115,11 +115,11 @@
 }
 
 @media (max-width: 1200px) {
-	.prompt {
+	#prompt {
 		font-size: medium;
 		margin: 0 5px;
 	}
-	.log_button { display: block }
+	#log_button { display: block }
 }
 
 /* CARD ACTION POPUP MENU */
@@ -264,13 +264,13 @@
 </head>
 <body>
 
-<div id="status" class="status"></div>
+<div id="status"></div>
 <div id="tooltip" class="card"></div>
 
-<div class="chat_window">
-<div class="chat_header">Chat</div>
-<div class="chat_text"></div>
-<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+<div id="chat_window">
+<div id="chat_header">Chat</div>
+<div id="chat_text"></div>
+<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
 <div id="grid_window">
@@ -295,10 +295,10 @@
 			</div>
 		</div>
 
-		<div class="image_button log_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+		<div id="log_button" class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">Connecting...</div>
+		<div id="prompt">Connecting...</div>
 
 		<button id="button_build" onclick="on_build()" class="hide">Build bridge</button>
 		<button id="button_destroy" onclick="on_destroy()" class="hide">Destroy bridge</button>

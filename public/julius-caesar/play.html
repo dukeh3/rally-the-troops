@@ -231,12 +231,12 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 </head>
 <body>
 
-<div class="status" id="status"></div>
+<div id="status"></div>
 
-<div class="chat_window">
-<div class="chat_header">Chat</div>
-<div class="chat_text"></div>
-<form class="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+<div id="chat_window">
+<div id="chat_header">Chat</div>
+<div id="chat_text"></div>
+<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
 </div>
 
 <table class="battle">
@@ -288,9 +288,9 @@ body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822
 		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
 		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
 		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div class="image_button chat_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
+		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
 
-		<div id="prompt" class="prompt">Connecting...</div>
+		<div id="prompt">Connecting...</div>
 
 		<button id="surprise_button" onclick="select_surprise()" class="hide">Surprise!</button>
 		<button id="pass_button" onclick="select_pass()" class="hide">Pass</button>

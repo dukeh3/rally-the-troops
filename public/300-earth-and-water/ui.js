@@ -59,6 +59,7 @@ let ui = {
 	selected_fleets: null,
 };
 
+let was_blank = true;
 create_log_entry = function (text) {
 	let p = document.createElement("div");
 	text = text.replace(/&/g, "&amp;");
@@ -66,10 +67,23 @@ create_log_entry = function (text) {
 	text = text.replace(/>/g, "&gt;");
 	text = text.replace(/card (\d+)/g,
 		'<span class="tip" onmouseenter="on_focus_card_tip($1)" onmouseleave="on_blur_card_tip()">card $1</span>');
+	if (text.match(/Greece plays.*:\n/))
+		text = text.replace(/:\n(.*)/, ':\n<span class="G">$1</span>');
+	if (text.match(/Persia plays.*:\n/))
+		text = text.replace(/:\n(.*)/, ':\n<span class="P">$1</span>');
 	if (text.match(/^Start Campaign /)) {
 		p.className = 'st';
 		text = text.substring(6);
 	}
+	if (text.match(/Supply Phase$/))
+		p.className = 'hr';
+	if (text.match(/(Greece|Persia|Nobody) scores/))
+		p.className = 'hr';
+	if (text.match(/Greek Preparation Phase$/))
+		p.className = 'hr';
+	if (was_blank && text.match(/^(Greece|Persia) (plays|passes)/))
+		p.className = 'hr';
+	was_blank = (text.length === 0)
 	p.innerHTML = text;
 	return p;
 }

@@ -578,7 +578,8 @@ states.assassination_of_xerxes = {
 // PREPARATION PHASE
 
 function start_campaign() {
-	log("");
+	if (game.campaign > 1)
+		log("");
 	log("Start Campaign " + game.campaign);
 	goto_persian_preparation_draw();
 }

@@ -92,7 +92,7 @@ create_log_entry = function (text) {
 	else if (text.match(/^Start Pompeius turn/))
 		p.className = 'P';
 	else if (text.match(/^Start /))
-		p.className = 'st';
+		p.className = 'st', text = text.replace(/\.$/, "");
 	else if (text.match(/^Battle in/))
 		p.className = 'bs';
 

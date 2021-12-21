@@ -65,7 +65,7 @@ create_log_entry = function (text) {
 	else if (text.match(/^Start Scotland turn/))
 		p.className = 'S';
 	else if (text.match(/^Start /))
-		p.className = 'st';
+		p.className = 'st', text = text.replace(/\.$/, "");
 	else if (text.match(/^(Battle in|Defection battle in)/))
 		p.className = 'bs';
 

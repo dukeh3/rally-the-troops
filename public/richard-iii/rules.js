@@ -931,12 +931,13 @@ function disband(who) {
 }
 
 function check_instant_victory() {
-	if (is_dead("York") && is_dead("March") && is_dead("Rutland") && is_dead("Clarence") && is_dead("Gloucester")) {
+	// Check Clarence/Y and Exeter/L specifically (they're not heirs if converted)
+	if (is_dead("York") && is_dead("March") && is_dead("Rutland") && is_dead("Clarence/Y") && is_dead("Gloucester")) {
 		log("All York heirs are dead!");
 		game.victory = "Lancaster wins by eliminating all enemy heirs!";
 		game.result = LANCASTER;
 	}
-	if (is_dead("Henry VI") && is_dead("Prince Edward") && is_dead("Exeter") && is_dead("Somerset") && is_dead("Richmond")) {
+	if (is_dead("Henry VI") && is_dead("Prince Edward") && is_dead("Exeter/L") && is_dead("Somerset") && is_dead("Richmond")) {
 		log("All Lancaster heirs are dead!");
 		game.victory = "York wins by eliminating all enemy heirs!";
 		game.result = YORK;

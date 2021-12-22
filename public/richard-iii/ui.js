@@ -122,8 +122,13 @@ function block_name(who) {
 }
 
 function block_owner(who) {
-	if (who === REBEL)
-		return BLOCKS[game.pretender].owner;
+	if (who === REBEL) {
+		if (game.pretender)
+			return BLOCKS[game.pretender].owner;
+		if (game.king)
+			return ENEMY[BLOCKS[game.king].owner];
+		return YORK;
+	}
 	return BLOCKS[who].owner;
 }
 

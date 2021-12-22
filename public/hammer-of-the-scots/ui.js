@@ -40,6 +40,7 @@ function toggle_blocks() {
 
 let ui = {
 	cards: {},
+	card_backs: {},
 	areas: {},
 	known: {},
 	secret: { England: {}, Scotland: {} },
@@ -348,6 +349,9 @@ function build_map() {
 		ui.cards[c].addEventListener("click", on_click_card);
 	}
 
+	for (let c = 1; c <= 5; ++c)
+		ui.card_backs[c] = document.getElementById("back+"+c);
+
 	for (let name in AREAS) {
 		let area = AREAS[name];
 		let element = svgmap.getElementById("area+"+name);
@@ -639,6 +643,15 @@ function update_cards() {
 			ui.cards[c].classList.add('show');
 		else
 			ui.cards[c].classList.remove('show');
+	}
+
+	if (player === 'Observer') {
+		let n = game.hand.length;
+		for (let c = 1; c <= 5; ++c)
+			if (c <= n)
+				ui.card_backs[c].classList.add("show");
+			else
+				ui.card_backs[c].classList.remove("show");
 	}
 
 	if (game.actions && game.actions.play) {

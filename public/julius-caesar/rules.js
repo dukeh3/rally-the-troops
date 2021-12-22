@@ -2526,6 +2526,13 @@ function make_battle_view() {
 	return bv;
 }
 
+function observer_hand() {
+	let hand = [];
+	hand.length = Math.max(game.c_hand.length, game.p_hand.length);
+	hand.fill(0);
+	return hand;
+}
+
 exports.view = function(state, current) {
 	game = state;
 
@@ -2539,7 +2546,7 @@ exports.view = function(state, current) {
 		p_vp: game.p_vp,
 		c_card: (game.show_cards || current === CAESAR) ? game.c_card : 0,
 		p_card: (game.show_cards || current === POMPEIUS) ? game.p_card : 0,
-		hand: (current === CAESAR) ? game.c_hand : (current === POMPEIUS) ? game.p_hand : [],
+		hand: (current === CAESAR) ? game.c_hand : (current === POMPEIUS) ? game.p_hand : observer_hand(),
 		who: (game.active === current) ? game.who : null,
 		where: game.where,
 		known: {},

@@ -72,6 +72,7 @@ let ui = {
 	map_location: {},
 	battle_steps: {},
 	cards: {},
+	card_backs: {},
 };
 
 create_log_entry = function (text) {
@@ -288,9 +289,10 @@ function build_map() {
 		build_battle_block(b, block, color);
 	}
 
-	for (let c = 1; c <= 27; ++c) {
+	for (let c = 1; c <= 27; ++c)
 		ui.cards[c] = document.getElementById("card+" + c);
-	}
+	for (let c = 1; c <= 6; ++c)
+		ui.card_backs[c] = document.getElementById("back+" + c);
 }
 
 function update_steps(memo, block, steps, element, animate) {
@@ -691,6 +693,15 @@ function update_cards() {
 		} else {
 			element.classList.remove("show");
 		}
+	}
+
+	if (player === 'Observer') {
+		let n = game.hand.length;
+		for (let c = 1; c <= 6; ++c)
+			if (c <= n)
+				ui.card_backs[c].classList.add("show");
+			else
+				ui.card_backs[c].classList.remove("show");
 	}
 }
 

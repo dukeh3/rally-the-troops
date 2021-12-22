@@ -3761,6 +3761,13 @@ function make_siege_view() {
 	return list;
 }
 
+function observer_hand() {
+	let hand = [];
+	hand.length = Math.max(game.s_hand.length, game.f_hand.length);
+	hand.fill(0);
+	return hand;
+}
+
 exports.view = function(state, current) {
 	game = state;
 
@@ -3774,7 +3781,7 @@ exports.view = function(state, current) {
 		s_vp: count_victory_points(SARACENS),
 		f_card: (game.show_cards || current === FRANKS) ? game.f_card : 0,
 		s_card: (game.show_cards || current === SARACENS) ? game.s_card : 0,
-		hand: (current === FRANKS) ? game.f_hand : (current === SARACENS) ? game.s_hand : [],
+		hand: (current === FRANKS) ? game.f_hand : (current === SARACENS) ? game.s_hand : observer_hand(),
 		who: (game.active === current) ? game.who : null,
 		location: game.location,
 		castle: game.castle,

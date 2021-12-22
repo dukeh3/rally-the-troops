@@ -2887,6 +2887,13 @@ exports.resign = function (state, current) {
 	return state;
 }
 
+function observer_hand() {
+	let hand = [];
+	hand.length = Math.max(game.e_hand.length, game.s_hand.length);
+	hand.fill(0);
+	return hand;
+}
+
 exports.view = function(state, current) {
 	game = state;
 
@@ -2899,7 +2906,7 @@ exports.view = function(state, current) {
 		s_vp: count_scottish_nobles(),
 		e_card: (game.show_cards || current === ENGLAND) ? game.e_card : 0,
 		s_card: (game.show_cards || current === SCOTLAND) ? game.s_card : 0,
-		hand: (current === ENGLAND) ? game.e_hand : (current === SCOTLAND) ? game.s_hand : [],
+		hand: (current === ENGLAND) ? game.e_hand : (current === SCOTLAND) ? game.s_hand : observer_hand(),
 		who: (game.active === current) ? game.who : null,
 		where: game.where,
 		known: {},

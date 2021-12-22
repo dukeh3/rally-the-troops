@@ -3413,6 +3413,13 @@ exports.resign = function (state, current) {
 	return state;
 }
 
+function observer_hand() {
+	let hand = [];
+	hand.length = Math.max(game.l_hand.length, game.y_hand.length);
+	hand.fill(0);
+	return hand;
+}
+
 exports.view = function(state, current) {
 	game = state;
 
@@ -3424,7 +3431,7 @@ exports.view = function(state, current) {
 		pretender: game.pretender,
 		l_card: (game.show_cards || current === LANCASTER) ? game.l_card : 0,
 		y_card: (game.show_cards || current === YORK) ? game.y_card : 0,
-		hand: (current === LANCASTER) ? game.l_hand : (current === YORK) ? game.y_hand : [],
+		hand: (current === LANCASTER) ? game.l_hand : (current === YORK) ? game.y_hand : observer_hand(),
 		who: (game.active === current) ? game.who : null,
 		where: game.where,
 		known: {},

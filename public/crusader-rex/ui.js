@@ -43,6 +43,7 @@ function toggle_blocks() {
 
 let ui = {
 	cards: {},
+	card_backs: {},
 	towns: {},
 	blocks: {},
 	battle_menu: {},
@@ -342,6 +343,9 @@ function build_map() {
 		ui.cards[c].addEventListener("click", on_click_card);
 	}
 
+	for (let c = 1; c <= 6; ++c)
+		ui.card_backs[c] = document.getElementById("back+"+c);
+
 	for (let name in TOWNS) {
 		let town = TOWNS[name];
 		if (name === F_POOL || name === S_POOL || name === DEAD)
@@ -631,6 +635,15 @@ function update_cards() {
 		} else {
 			element.classList.remove("show");
 		}
+	}
+
+	if (player === 'Observer') {
+		let n = game.hand.length;
+		for (let c = 1; c <= 6; ++c)
+			if (c <= n)
+				ui.card_backs[c].classList.add("show");
+			else
+				ui.card_backs[c].classList.remove("show");
 	}
 }
 

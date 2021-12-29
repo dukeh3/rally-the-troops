@@ -1,0 +1,253 @@
+main { background-color: slategray; }
+aside { background-color: gainsboro; }
+header { background-color: silver; }
+.card_info { background-color: silver; }
+body.Tripolitania header.your_turn { background-color: salmon; }
+body.United_States header.your_turn { background-color: skyblue; }
+.one .role_name { background-color: skyblue; }
+.two .role_name { background-color: salmon; }
+
+#log { background-color: #eee; }
+#log .st { background-color: #777; color: white; font-weight: bold; padding:3px; text-align: center; }
+#log .ss { background-color: #ccc; color: #444; font-weight: bold; padding:3px; text-align: center; }
+#log .end { font-style: italic; }
+#log .us_tip { color: blue; text-decoration: dotted underline; cursor: help; }
+#log .tr_tip { color: #d00; text-decoration: dotted underline; cursor: help; }
+
+.hand {
+	min-height: 300px;
+	justify-content: left;
+	max-width: 2476px;
+	margin: 15px auto;
+}
+
+.hand_separator {
+	border-bottom: 2px dotted gainsboro;
+}
+
+body.Observer #hand_cards { display: none; }
+body.Observer .hand_separator { display: none; }
+
+.card {
+	width: 250px;
+	height: 350px;
+	border-radius: 12px;
+}
+
+.card.blank {
+	background-color: dimgray;
+	transform: none !important;
+}
+
+.card_info {
+	padding: 10px 0;
+}
+
+.card_info .card {
+	margin: 0 auto;
+	width: 125px;
+	height: 175px;
+	border-radius: 6px;
+}
+
+#tr_info, #us_info {
+	white-space: pre-line;
+	font-family: "Source Serif SmText";
+	font-size: 12px;
+	text-align: center;
+	padding: 4px;
+}
+
+#tooltip.card {
+	position: fixed;
+	z-index: 100;
+	right: 240px;
+	top: 60px;
+}
+#tooltip.show {
+	display: block;
+}
+
+/* MAP */
+
+#mapwrap {
+	box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
+	width: 2476px;
+	height: 801px;
+}
+
+#map {
+	display: block;
+	width: 2476px;
+	height: 801px;
+	background-color: black;
+}
+
+svg {
+	position: absolute;
+}
+
+svg image {
+	pointer-events: none;
+}
+
+svg circle, .piece {
+	transition-property: x, y, cx, cy, top, left;
+	transition-duration: 1s;
+	transition-timing-function: ease;
+}
+
+.piece {
+	position: absolute;
+	pointer-events: none;
+	background-size: cover;
+	background-repeat: no-repeat;
+	filter: drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
+}
+
+.piece.highlight {
+	pointer-events: all;
+	cursor: pointer;
+	filter: brightness(150%) drop-shadow(0 0 3px white);
+}
+
+.piece.damaged {
+	filter: brightness(60%) drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
+}
+
+.piece.us_frigate { width: 42px; height: 29px; background-image: url("icons/us_frigate.svg"); }
+.piece.se_frigate { width: 42px; height: 29px; background-image: url("icons/se_frigate.svg"); }
+.piece.tr_frigate { width: 42px; height: 29px; background-image: url("icons/tr_frigate.svg"); }
+.piece.us_gunboat { width: 33px; height: 27px; background-image: url("icons/us_gunboat.svg"); }
+.piece.tr_corsair { width: 33px; height: 27px; background-image: url("icons/tr_corsair.svg"); }
+.piece.al_corsair { width: 33px; height: 27px; background-image: url("icons/al_corsair.svg"); }
+.piece.us_marine { width: 21px; height: 21px; background-image: url("icons/us_marine.svg"); }
+.piece.ar_infantry { width: 21px; height: 21px; background-image: url("icons/ar_infantry.svg"); }
+.piece.tr_infantry { width: 21px; height: 21px; background-image: url("icons/tr_infantry.svg"); }
+.piece.gold { width: 40px; height: 40px; background-image: url("icons/gold.png"); }
+.piece.marker { width: 50px; height: 50px; border-radius: 50%; background-color: #444; border: 2px solid black; }
+
+.harbor {
+	fill-opacity: 0;
+	stroke: white;
+	stroke-width: 4;
+	opacity: 0;
+}
+
+.patrol_zone {
+	fill-opacity: 0;
+	stroke: white;
+	stroke-width: 4;
+	opacity: 0;
+}
+
+.patrol_zone.highlight, .harbor.highlight {
+	opacity: 1;
+	cursor: pointer;
+}
+
+#map .harbor.where {
+	opacity: 1;
+	fill-opacity: 0.5;
+	fill: gold;
+	stroke: gold;
+}
+
+#map .patrol_zone.where {
+	opacity: 1;
+	fill-opacity: 0.5;
+	fill: gold;
+	stroke: white;
+}
+
+/* CARD ACTION POPUP MENU */
+
+#popup {
+	position: fixed;
+	user-select: none;
+	background-color: gainsboro;
+	left: 10px;
+	top: 100px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
+	z-index: 200;
+	min-width: 20ex;
+	white-space: nowrap;
+	display: none;
+}
+#popup div { padding: 3pt 8pt; color: gray; display: none; }
+#popup div.enabled { color: black; display: block; }
+#popup div.enabled:hover { background-color: teal; color: white; }
+#popup div.always { display: block; }
+body.Tripolitania #popup div.tr_always { display: block; }
+body.United_States #popup div.us_always { display: block; }
+
+/* CARD IMAGES */
+
+.card {
+	text-align: center;
+	color: white;
+	font-weight: bold;
+	font-size: 25px;
+	line-height: 40px;
+}
+
+.tr_card_1{background-image:url('cards/tr_card_1.jpg')}
+.tr_card_2{background-image:url('cards/tr_card_2.jpg')}
+.tr_card_3{background-image:url('cards/tr_card_3.jpg')}
+.tr_card_4{background-image:url('cards/tr_card_4.jpg')}
+.tr_card_5{background-image:url('cards/tr_card_5.jpg')}
+.tr_card_6{background-image:url('cards/tr_card_5.jpg')}
+.tr_card_7{background-image:url('cards/tr_card_7.jpg')}
+.tr_card_8{background-image:url('cards/tr_card_7.jpg')}
+.tr_card_9{background-image:url('cards/tr_card_9.jpg')}
+.tr_card_10{background-image:url('cards/tr_card_9.jpg')}
+.tr_card_11{background-image:url('cards/tr_card_11.jpg')}
+.tr_card_12{background-image:url('cards/tr_card_12.jpg')}
+.tr_card_13{background-image:url('cards/tr_card_13.jpg')}
+.tr_card_14{background-image:url('cards/tr_card_14.jpg')}
+.tr_card_15{background-image:url('cards/tr_card_15.jpg')}
+.tr_card_16{background-image:url('cards/tr_card_16.jpg')}
+.tr_card_17{background-image:url('cards/tr_card_17.jpg')}
+.tr_card_18{background-image:url('cards/tr_card_18.jpg')}
+.tr_card_19{background-image:url('cards/tr_card_19.jpg')}
+.tr_card_20{background-image:url('cards/tr_card_20.jpg')}
+.tr_card_21{background-image:url('cards/tr_card_21.jpg')}
+.tr_card_22{background-image:url('cards/tr_card_22.jpg')}
+.tr_card_23{background-image:url('cards/tr_card_23.jpg')}
+.tr_card_24{background-image:url('cards/tr_card_24.jpg')}
+.tr_card_25{background-image:url('cards/tr_card_25.jpg')}
+.tr_card_26{background-image:url('cards/tr_card_26.jpg')}
+.tr_card_27{background-image:url('cards/tr_card_27.jpg')}
+.tr_card_28{background-image:url('cards/tr_card_28.jpg')}
+.tr_card_29{background-image:url('cards/tr_card_29.jpg')}
+.tr_card_30{background-image:url('cards/tr_card_30.jpg')}
+.tr_card_back{background-image:url('cards/tr_card_31.jpg')}
+
+.us_card_1{background-image:url('cards/us_card_1.jpg')}
+.us_card_2{background-image:url('cards/us_card_2.jpg')}
+.us_card_3{background-image:url('cards/us_card_3.jpg')}
+.us_card_4{background-image:url('cards/us_card_4.jpg')}
+.us_card_5{background-image:url('cards/us_card_5.jpg')}
+.us_card_6{background-image:url('cards/us_card_6.jpg')}
+.us_card_7{background-image:url('cards/us_card_6.jpg')}
+.us_card_8{background-image:url('cards/us_card_6.jpg')}
+.us_card_9{background-image:url('cards/us_card_6.jpg')}
+.us_card_10{background-image:url('cards/us_card_10.jpg')}
+.us_card_11{background-image:url('cards/us_card_11.jpg')}
+.us_card_12{background-image:url('cards/us_card_12.jpg')}
+.us_card_13{background-image:url('cards/us_card_13.jpg')}
+.us_card_14{background-image:url('cards/us_card_14.jpg')}
+.us_card_15{background-image:url('cards/us_card_15.jpg')}
+.us_card_16{background-image:url('cards/us_card_16.jpg')}
+.us_card_17{background-image:url('cards/us_card_17.jpg')}
+.us_card_18{background-image:url('cards/us_card_18.jpg')}
+.us_card_19{background-image:url('cards/us_card_19.jpg')}
+.us_card_20{background-image:url('cards/us_card_20.jpg')}
+.us_card_21{background-image:url('cards/us_card_21.jpg')}
+.us_card_22{background-image:url('cards/us_card_22.jpg')}
+.us_card_23{background-image:url('cards/us_card_23.jpg')}
+.us_card_24{background-image:url('cards/us_card_24.jpg')}
+.us_card_25{background-image:url('cards/us_card_25.jpg')}
+.us_card_26{background-image:url('cards/us_card_26.jpg')}
+.us_card_27{background-image:url('cards/us_card_27.jpg')}
+.us_card_back{background-image:url('cards/us_card_28.jpg')}

@@ -1,0 +1,366 @@
+main { background-color: slategray; }
+aside { background-color: silver; }
+header { background-color: silver; }
+header.your_turn { background-color: orange; }
+.one .role_name { background-color: salmon; }
+.two .role_name { background-color: skyblue; }
+#turn_info { background-color: gainsboro; }
+
+#log { background-color: whitesmoke; }
+#log .st { background-color: darkslategray; color: white; font-weight: bold; }
+#log .S { background-color: pink; }
+#log .E { background-color: lightblue; }
+#log .bs { background-color: gainsboro; }
+#log .br { font-style: italic; text-decoration: underline; }
+
+/* CARDS */
+
+.card_back{background-image: url('cards/card_back.svg')}
+.card_truce{background-image:url('cards/card_truce.jpg')}
+.card_herald{background-image:url('cards/card_herald.jpg')}
+.card_sea_move{background-image:url('cards/card_sea_move.jpg')}
+.card_pillage{background-image:url('cards/card_pillage.jpg')}
+.card_victuals{background-image:url('cards/card_victuals.jpg')}
+.card_1{background-image:url('cards/card_1.jpg')}
+.card_2{background-image:url('cards/card_2.jpg')}
+.card_3{background-image:url('cards/card_3.jpg')}
+
+.card, .small_card {
+	background-color: #893739;
+}
+
+.card {
+	width: 225px;
+	height: 350px;
+	border-radius: 10px;
+	background-color: #883737;
+}
+
+.card.enabled:hover {
+	transform: scale(1.1);
+}
+
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 4px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 8px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 180px; height: 80px; border-radius: 8px 8px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 8px; margin-bottom: 15px; }
+}
+
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 8px; }
+}
+
+/* MAP */
+
+#mapwrap {
+	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
+	width: 1688px;
+	height: 1950px;
+}
+
+#map {
+	background-color: darkslategray;
+	width: 1688px;
+	height: 1950px;
+}
+
+#map svg {
+	position: absolute;
+}
+
+#map svg image {
+	pointer-events: none;
+}
+
+#map svg path.area {
+	opacity: 0;
+	fill-opacity: 0.4;
+	fill: white;
+}
+#map svg path.area.where {
+	opacity: 1;
+	fill: darkslategray;
+}
+#map svg path.area.highlight {
+	cursor: pointer;
+	opacity: 1;
+	fill: white;
+}
+
+#map.hide_blocks #blocks {
+	visibility: hidden;
+}
+
+/* TURN MARKER */
+
+div.turn {
+	pointer-events: none;
+	position: absolute;
+	width: 66px;
+	height: 66px;
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-image: url(turn_marker.jpg);
+	box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+	border-radius: 4px;
+	transition: 700ms ease;
+}
+
+div.turn.year_1297 { left: 1511px; top: 221px; }
+div.turn.year_1298 { left: 1511px; top: 306px; }
+div.turn.year_1299 { left: 1511px; top: 392px; }
+div.turn.year_1300 { left: 1511px; top: 478px; }
+div.turn.year_1301 { left: 1511px; top: 563px; }
+div.turn.year_1302 { left: 1511px; top: 649px; }
+div.turn.year_1303 { left: 1511px; top: 734px; }
+div.turn.year_1304 { left: 1511px; top: 820px; }
+div.turn.year_1305 { left: 1511px; top: 906px; }
+div.turn.year_1306 { left: 1511px; top: 992px; }
+div.turn.year_1307 { left: 1511px; top: 1077px; }
+div.turn.year_1308 { left: 1511px; top: 1163px; }
+div.turn.year_1309 { left: 1511px; top: 1249px; }
+div.turn.year_1310 { left: 1511px; top: 1334px; }
+div.turn.year_1311 { left: 1511px; top: 1420px; }
+div.turn.year_1312 { left: 1511px; top: 1506px; }
+div.turn.year_1313 { left: 1511px; top: 1591px; }
+div.turn.year_1314 { left: 1511px; top: 1677px; }
+
+/* BLOCKS */
+
+body.shift .block.known:hover {
+	transform: scale(2) !important;
+	transition: 100ms;
+	z-index: 100;
+}
+
+.oldblocks div.block { border-radius: 8px; }
+.newblocks div.block { border-radius: 4px; }
+
+#map div.block {
+	position: absolute;
+}
+
+#battle div.block {
+	position: relative;
+}
+
+div.block {
+	background-size: cover;
+	background-repeat: no-repeat;
+	width: 60px;
+	height: 60px;
+	box-shadow: 0px 0px 3px black;
+}
+
+.oldblocks div.block.England { border: 3px solid brown; background-color: brown; }
+.oldblocks div.block.Scotland { border: 3px solid #06a; background-color: #06a; }
+.oldblocks div.block.highlight { border-color: white; }
+.oldblocks div.block.selected { border-color: yellow; }
+.oldblocks div.block.highlight { box-shadow: 0px 0px 4px 1px white; }
+.oldblocks div.block.selected { box-shadow: 0 0 4px 1px yellow; }
+
+.newblocks div.block.England { border: 2px solid #a12; background-color: #a12; }
+.newblocks div.block.Scotland { border: 2px solid #059; background-color: #059; }
+.newblocks div.block.highlight { box-shadow: 0px 0px 2px 3px white; }
+.newblocks div.block.selected { box-shadow: 0px 0px 2px 3px yellow; }
+
+.oldblocks .battle_menu.hit div.block.highlight { border: 3px solid black; box-shadow: 0px 0px 3px black; }
+.newblocks .battle_menu.hit div.block.highlight { box-shadow: 0px 0px 2px 3px black; }
+
+div.block.highlight { cursor: pointer; }
+div.block.moved { filter: grayscale(50%) brightness(80%); }
+div.block.highlight.moved { filter: grayscale(60%) brightness(95%); }
+
+div.block.r1 { transform: rotate(-90deg); }
+div.block.r2 { transform: rotate(-180deg); }
+div.block.r3 { transform: rotate(-270deg); }
+
+div.block:hover { z-index: 1; }
+
+div.block {
+	transition-property: top, left, transform;
+	transition-duration: 700ms, 700ms, 200ms;
+	transition-timing-function: ease;
+}
+
+/* HERALD DIALOG */
+
+#herald {
+	background-color: white;
+	border: 1px solid black;
+	position: absolute;
+	top: 100px;
+	left: 100px;
+	box-shadow: 0px 5px 10px 0px rgba(0,0,0,0.5);
+	z-index: 50;
+	user-select: none;
+	display: none;
+}
+#herald.show {
+	display: block;
+}
+#herald_header {
+	font-weight: bold;
+	cursor: move;
+	border-bottom: 1px solid black;
+	background-color: lightsteelblue;
+	padding: 3px 1em;
+}
+.herald_noble {
+	padding: 3px 1em;
+	display: none;
+}
+.herald_noble:hover {
+	color: white;
+	background-color: black;
+}
+.herald_noble.show {
+	display: block;
+}
+
+/* BATTLE BOARD */
+
+#battle { background-color: silver; }
+#battle_message { background-color: lightsteelblue; }
+#battle_header { background-color: steelblue; color: white; }
+.battle_separator { background-color: steelblue; }
+
+.battle_line.enemy .battle_menu_list { min-height: 0; }
+.battle_reserves > td > div { height: 66px; }
+.battle_a_cell > div { min-width: 240px; }
+.battle_b_cell > div { min-width: 240px; }
+.battle_c_cell > div { min-width: 240px; }
+
+/* BLOCKS */
+
+.oldblocks .known.block_11{background-image:url(blocks_old/block_11.png)}
+.oldblocks .known.block_12{background-image:url(blocks_old/block_12.png)}
+.oldblocks .known.block_13{background-image:url(blocks_old/block_13.png)}
+.oldblocks .known.block_14{background-image:url(blocks_old/block_14.png)}
+.oldblocks .known.block_15{background-image:url(blocks_old/block_15.png)}
+.oldblocks .known.block_16{background-image:url(blocks_old/block_16.png)}
+.oldblocks .known.block_17{background-image:url(blocks_old/block_17.png)}
+.oldblocks .known.block_21{background-image:url(blocks_old/block_21.png)}
+.oldblocks .known.block_22{background-image:url(blocks_old/block_22.png)}
+.oldblocks .known.block_23{background-image:url(blocks_old/block_23.png)}
+.oldblocks .known.block_24{background-image:url(blocks_old/block_24.png)}
+.oldblocks .known.block_25{background-image:url(blocks_old/block_25.png)}
+.oldblocks .known.block_26{background-image:url(blocks_old/block_26.png)}
+.oldblocks .known.block_27{background-image:url(blocks_old/block_27.png)}
+.oldblocks .known.block_31{background-image:url(blocks_old/block_31.png)}
+.oldblocks .known.block_32{background-image:url(blocks_old/block_32.png)}
+.oldblocks .known.block_33{background-image:url(blocks_old/block_33.png)}
+.oldblocks .known.block_34{background-image:url(blocks_old/block_34.png)}
+.oldblocks .known.block_35{background-image:url(blocks_old/block_35.png)}
+.oldblocks .known.block_36{background-image:url(blocks_old/block_36.png)}
+.oldblocks .known.block_37{background-image:url(blocks_old/block_37.png)}
+.oldblocks .known.block_41{background-image:url(blocks_old/block_41.png)}
+.oldblocks .known.block_42{background-image:url(blocks_old/block_42.png)}
+.oldblocks .known.block_43{background-image:url(blocks_old/block_43.png)}
+.oldblocks .known.block_44{background-image:url(blocks_old/block_44.png)}
+.oldblocks .known.block_45{background-image:url(blocks_old/block_45.png)}
+.oldblocks .known.block_46{background-image:url(blocks_old/block_46.png)}
+.oldblocks .known.block_47{background-image:url(blocks_old/block_47.png)}
+.oldblocks .known.block_51{background-image:url(blocks_old/block_51.png)}
+.oldblocks .known.block_52{background-image:url(blocks_old/block_52.png)}
+.oldblocks .known.block_53{background-image:url(blocks_old/block_53.png)}
+.oldblocks .known.block_54{background-image:url(blocks_old/block_54.png)}
+.oldblocks .known.block_55{background-image:url(blocks_old/block_55.png)}
+.oldblocks .known.block_56{background-image:url(blocks_old/block_56.png)}
+.oldblocks .known.block_57{background-image:url(blocks_old/block_57.png)}
+.oldblocks .known.block_61{background-image:url(blocks_old/block_61.png)}
+.oldblocks .known.block_62{background-image:url(blocks_old/block_62.png)}
+.oldblocks .known.block_63{background-image:url(blocks_old/block_63.png)}
+.oldblocks .known.block_64{background-image:url(blocks_old/block_64.png)}
+.oldblocks .known.block_65{background-image:url(blocks_old/block_65.png)}
+.oldblocks .known.block_66{background-image:url(blocks_old/block_66.png)}
+.oldblocks .known.block_67{background-image:url(blocks_old/block_67.png)}
+.oldblocks .known.block_71{background-image:url(blocks_old/block_71.png)}
+.oldblocks .known.block_72{background-image:url(blocks_old/block_72.png)}
+.oldblocks .known.block_73{background-image:url(blocks_old/block_73.png)}
+.oldblocks .known.block_74{background-image:url(blocks_old/block_74.png)}
+.oldblocks .known.block_75{background-image:url(blocks_old/block_75.png)}
+.oldblocks .known.block_76{background-image:url(blocks_old/block_76.png)}
+.oldblocks .known.block_77{background-image:url(blocks_old/block_77.png)}
+.oldblocks .known.block_81{background-image:url(blocks_old/block_81.png)}
+.oldblocks .known.block_82{background-image:url(blocks_old/block_82.png)}
+.oldblocks .known.block_83{background-image:url(blocks_old/block_83.png)}
+.oldblocks .known.block_84{background-image:url(blocks_old/block_84.png)}
+.oldblocks .known.block_85{background-image:url(blocks_old/block_85.png)}
+.oldblocks .known.block_86{background-image:url(blocks_old/block_86.png)}
+.oldblocks .known.block_87{background-image:url(blocks_old/block_87.png)}
+.oldblocks .known.block_91{background-image:url(blocks_old/block_91.png)}
+.oldblocks .known.block_92{background-image:url(blocks_old/block_92.png)}
+.oldblocks .known.block_93{background-image:url(blocks_old/block_93.png)}
+.oldblocks .known.block_94{background-image:url(blocks_old/block_94.png)}
+.oldblocks .known.block_95{background-image:url(blocks_old/block_95.png)}
+.oldblocks .known.block_96{background-image:url(blocks_old/block_96.png)}
+.oldblocks .known.block_97{background-image:url(blocks_old/block_97.png)}
+
+.newblocks .known.block_11{background-image:url(blocks_new/block_11.png)}
+.newblocks .known.block_12{background-image:url(blocks_new/block_12.png)}
+.newblocks .known.block_13{background-image:url(blocks_new/block_13.png)}
+.newblocks .known.block_14{background-image:url(blocks_new/block_14.png)}
+.newblocks .known.block_15{background-image:url(blocks_new/block_15.png)}
+.newblocks .known.block_16{background-image:url(blocks_new/block_16.png)}
+.newblocks .known.block_17{background-image:url(blocks_new/block_17.png)}
+.newblocks .known.block_21{background-image:url(blocks_new/block_21.png)}
+.newblocks .known.block_22{background-image:url(blocks_new/block_22.png)}
+.newblocks .known.block_23{background-image:url(blocks_new/block_23.png)}
+.newblocks .known.block_24{background-image:url(blocks_new/block_24.png)}
+.newblocks .known.block_25{background-image:url(blocks_new/block_25.png)}
+.newblocks .known.block_26{background-image:url(blocks_new/block_26.png)}
+.newblocks .known.block_27{background-image:url(blocks_new/block_27.png)}
+.newblocks .known.block_31{background-image:url(blocks_new/block_31.png)}
+.newblocks .known.block_32{background-image:url(blocks_new/block_32.png)}
+.newblocks .known.block_33{background-image:url(blocks_new/block_33.png)}
+.newblocks .known.block_34{background-image:url(blocks_new/block_34.png)}
+.newblocks .known.block_35{background-image:url(blocks_new/block_35.png)}
+.newblocks .known.block_36{background-image:url(blocks_new/block_36.png)}
+.newblocks .known.block_37{background-image:url(blocks_new/block_37.png)}
+.newblocks .known.block_41{background-image:url(blocks_new/block_41.png)}
+.newblocks .known.block_42{background-image:url(blocks_new/block_42.png)}
+.newblocks .known.block_43{background-image:url(blocks_new/block_43.png)}
+.newblocks .known.block_44{background-image:url(blocks_new/block_44.png)}
+.newblocks .known.block_45{background-image:url(blocks_new/block_45.png)}
+.newblocks .known.block_46{background-image:url(blocks_new/block_46.png)}
+.newblocks .known.block_47{background-image:url(blocks_new/block_47.png)}
+.newblocks .known.block_51{background-image:url(blocks_new/block_51.png)}
+.newblocks .known.block_52{background-image:url(blocks_new/block_52.png)}
+.newblocks .known.block_53{background-image:url(blocks_new/block_53.png)}
+.newblocks .known.block_54{background-image:url(blocks_new/block_54.png)}
+.newblocks .known.block_55{background-image:url(blocks_new/block_55.png)}
+.newblocks .known.block_56{background-image:url(blocks_new/block_56.png)}
+.newblocks .known.block_57{background-image:url(blocks_new/block_57.png)}
+.newblocks .known.block_61{background-image:url(blocks_new/block_61.png)}
+.newblocks .known.block_62{background-image:url(blocks_new/block_62.png)}
+.newblocks .known.block_63{background-image:url(blocks_new/block_63.png)}
+.newblocks .known.block_64{background-image:url(blocks_new/block_64.png)}
+.newblocks .known.block_65{background-image:url(blocks_new/block_65.png)}
+.newblocks .known.block_66{background-image:url(blocks_new/block_66.png)}
+.newblocks .known.block_67{background-image:url(blocks_new/block_67.png)}
+.newblocks .known.block_71{background-image:url(blocks_new/block_71.png)}
+.newblocks .known.block_72{background-image:url(blocks_new/block_72.png)}
+.newblocks .known.block_73{background-image:url(blocks_new/block_73.png)}
+.newblocks .known.block_74{background-image:url(blocks_new/block_74.png)}
+.newblocks .known.block_75{background-image:url(blocks_new/block_75.png)}
+.newblocks .known.block_76{background-image:url(blocks_new/block_76.png)}
+.newblocks .known.block_77{background-image:url(blocks_new/block_77.png)}
+.newblocks .known.block_81{background-image:url(blocks_new/block_81.png)}
+.newblocks .known.block_82{background-image:url(blocks_new/block_82.png)}
+.newblocks .known.block_83{background-image:url(blocks_new/block_83.png)}
+.newblocks .known.block_84{background-image:url(blocks_new/block_84.png)}
+.newblocks .known.block_85{background-image:url(blocks_new/block_85.png)}
+.newblocks .known.block_86{background-image:url(blocks_new/block_86.png)}
+.newblocks .known.block_87{background-image:url(blocks_new/block_87.png)}
+.newblocks .known.block_91{background-image:url(blocks_new/block_91.png)}
+.newblocks .known.block_92{background-image:url(blocks_new/block_92.png)}
+.newblocks .known.block_93{background-image:url(blocks_new/block_93.png)}
+.newblocks .known.block_94{background-image:url(blocks_new/block_94.png)}
+.newblocks .known.block_95{background-image:url(blocks_new/block_95.png)}
+.newblocks .known.block_96{background-image:url(blocks_new/block_96.png)}
+.newblocks .known.block_97{background-image:url(blocks_new/block_97.png)}

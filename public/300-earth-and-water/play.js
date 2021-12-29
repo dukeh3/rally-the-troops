@@ -304,26 +304,6 @@ function show_marker(id, class_name, show = 1, enabled = 0) {
 	elt.className = class_name;
 }
 
-function show_undo_button(sel, action, use_label = false) {
-	let button = document.querySelector(sel);
-	if (game.actions) {
-		button.classList.remove("hide");
-		if (game.actions && action in game.actions) {
-			if (game.actions[action]) {
-				if (use_label)
-					button.textContent = game.actions[action];
-				button.disabled = false;
-			} else {
-				button.disabled = true;
-			}
-		} else {
-			button.disabled = true;
-		}
-	} else {
-		button.classList.add("hide");
-	}
-}
-
 function on_update() {
 	document.getElementById("greek_info").textContent = greek_info();
 	document.getElementById("persian_info").textContent = persian_info();
@@ -336,13 +316,13 @@ function on_update() {
 	document.getElementById("deck_info").textContent =
 		"Deck: " + game.deck_size + " \u2014 Discard: " + game.discard_size;
 
-	show_action_button("#button_battle", "battle");
-	show_action_button("#button_build", "build");
-	show_action_button("#button_destroy", "destroy");
-	show_action_button("#button_draw", "draw");
-	show_action_button("#button_next", "next");
-	show_action_button("#button_pass", "pass");
-	show_undo_button("#button_undo", "undo");
+	action_button("battle", "Battle");
+	action_button("build", "Build bridge");
+	action_button("destroy", "Destroy bridge");
+	action_button("draw", "Draw");
+	action_button("pass", "Pass");
+	action_button("next", "Next");
+	action_button("undo", "Undo");
 
 	if (game.actions && game.actions.destroy)
 		document.getElementById("bridge").className = "show destroy";
@@ -591,14 +571,6 @@ function update_ui() {
 			e.classList.remove("selected");
 }
 
-function on_destroy() { if (game.actions) { send_action('destroy'); } }
-function on_battle() { if (game.actions) { send_action('battle'); } }
-function on_build() { if (game.actions) { send_action('build'); } }
-function on_draw() { if (game.actions) { send_action('draw'); } }
-function on_next() { if (game.actions) { send_action('next'); } }
-function on_pass() { if (game.actions) { send_action('pass'); } }
-function on_undo() { if (game.actions) { send_action('undo'); } }
-
 let current_popup_card = 0;
 
 function show_popup_menu(evt, list) {
@@ -663,5 +635,5 @@ if (param_role == GREECE)
 	document.getElementById("map").classList.add("greek");
 
 build_ui();
-scroll_with_middle_mouse("#grid_center", 2);
+scroll_with_middle_mouse("main", 2);
 init_client(["Greece", "Persia"]);

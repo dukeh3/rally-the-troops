@@ -1,0 +1,210 @@
+/* MAIN */
+
+main { background-color: #461145; }
+#roles { background-color: tan; }
+header { background-color: tan; }
+header.your_turn { background-color: orange; }
+.one .role_name { background-color: salmon; }
+.two .role_name { background-color: #eb5; }
+#turn_info { background-color: burlywood; }
+
+#log { background-color: wheat; }
+#log .st { background-color: brown; color: gold; font-weight: bold; }
+#log .C { background-color: salmon; }
+#log .P { background-color: #eb5; }
+#log .bs { background-color: tan; }
+#log .br { font-style: italic; text-decoration: underline; }
+
+/* CARDS */
+
+.card_back { background-image: url('cards/card_back.jpg'); }
+.card_apollo { background-image: url('cards/card_apollo.jpg'); }
+.card_jupiter { background-image: url('cards/card_jupiter.jpg'); }
+.card_mars { background-image: url('cards/card_mars.jpg'); }
+.card_mercury { background-image: url('cards/card_mercury.jpg'); }
+.card_neptune { background-image: url('cards/card_neptune.jpg'); }
+.card_pluto { background-image: url('cards/card_pluto.jpg'); }
+.card_vulcan { background-image: url('cards/card_vulcan.jpg'); }
+.card_12 { background-image: url('cards/card_12.jpg'); }
+.card_13 { background-image: url('cards/card_13.jpg'); }
+.card_21 { background-image: url('cards/card_21.jpg'); }
+.card_22 { background-image: url('cards/card_22.jpg'); }
+.card_23 { background-image: url('cards/card_23.jpg'); }
+.card_31 { background-image: url('cards/card_31.jpg'); }
+.card_32 { background-image: url('cards/card_32.jpg'); }
+.card_41 { background-image: url('cards/card_41.jpg'); }
+
+.card {
+	background-color: white;
+	width: 225px;
+	height: 350px;
+	border-radius: 12px;
+}
+
+.card.enabled:hover {
+	transform: scale(1.1);
+}
+
+.small_card.prior {
+	filter: grayscale(100%);
+}
+
+.card, .small_card { background-color: white; }
+.card_back { background-color: #822c1f; }
+
+.role_info { padding: 15px; }
+.small_card { width: 90px; height: 140px; border-radius: 5px; }
+.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
+
+@media (max-height: 800px) {
+	.role_info { padding: 15px 0 0 0; }
+	.small_card { width: 135px; height: 80px; border-radius: 8px 8px 0 0; }
+	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
+}
+
+@media (min-height: 1200px) {
+	.small_card { width: 180px; height: 280px; border-radius: 10px; }
+}
+
+/* BATTLE BOARD */
+
+#battle { background-color: tan; }
+#battle_message { background-color: wheat; }
+#battle_header { background-color: brown; color: lemonchiffon; }
+.battle_separator { background-color: brown; }
+
+.battle_line.enemy .battle_menu_list { min-height: 0; }
+.battle_reserves .battle_menu_list { min-height: 0; }
+.battle_reserves > td > div { height: 75px; padding: 5px; }
+.battle_a_cell > div { min-width: 90px; padding: 5px 5px; }
+.battle_b_cell > div { min-width: 270px; padding: 5px 5px; }
+.battle_c_cell > div { min-width: 270px; padding: 5px 5px; }
+.battle_d_cell > div { min-width: 90px; padding: 5px 5px; }
+
+/* MAP WITH BLOCKS AND SPACES */
+
+#mapwrap {
+	width: 2475px;
+	height: 1275px;
+}
+
+#map {
+	width: 2475px;
+	height: 1275px;
+	background-image: url("map.jpg");
+	background-size: cover;
+}
+
+#turn {
+	position: absolute;
+	width: 75px;
+	height: 75px;
+	left: 51px;
+	border-radius: 12px;
+	border: 3px solid white;
+	box-shadow: 0 0 12px white;
+}
+#turn.year_705 { top: 384px; }
+#turn.year_706 { top: 301px; }
+#turn.year_707 { top: 218px; }
+#turn.year_708 { top: 135px; }
+#turn.year_709 { top: 51px; }
+
+.space {
+	position: absolute;
+	opacity: 0;
+	z-index: 1;
+	border: 5px solid white;
+}
+.space.city {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+}
+.space.sea {
+	width: 70px;
+	height: 70px;
+	border-radius: 50%;
+}
+.space.highlight {
+	cursor: pointer;
+	opacity: 0.8;
+	z-index: 9;
+}
+
+#blocks.hide_blocks {
+	display: none;
+}
+
+body.shift .block.known:hover {
+	transform: scale(2) !important;
+	transition: 100ms;
+	z-index: 100;
+}
+
+#battle .block { position: relative; }
+#map .block { position: absolute; z-index: 2; }
+#map .block.highlight { z-index: 3; }
+#map .block.selected { z-index: 4; }
+#map .block.known:hover { z-index: 5; }
+
+.block.highlight { cursor: pointer; }
+
+.simple-labels .block { width: 48px; height: 48px; border-radius: 6px; }
+
+.simple-labels .block.Caesar { background-color: #b22; border: 2px solid #822; }
+.simple-labels .block.Pompeius { background-color: #eb2; border: 2px solid #862; }
+.simple-labels .block.Cleopatra { background-color: #09b; border: 2px solid #067; }
+.simple-labels .block.highlight { border: 2px solid white; }
+.simple-labels .block.selected { border: 2px solid yellow; }
+.simple-labels .block.moved { filter: grayscale(70%); }
+
+.columbia-labels .block{ width: 56px; height: 56px; border-radius: 6px; }
+
+.columbia-labels .block.Caesar { background-color: #c22; border: 3px solid #822; }
+.columbia-labels .block.Pompeius { background-color: #c91; border: 3px solid #862; }
+.columbia-labels .block.Cleopatra { background-color: #09a; border: 3px solid #067; }
+.columbia-labels .block.known.Caesar { background-color: #822; }
+.columbia-labels .block.known.Pompeius { background-color: #862; }
+.columbia-labels .block.known.Cleopatra { background-color: #067; }
+.columbia-labels .block.highlight { border: 3px solid white; }
+.columbia-labels .block.selected { border: 3px solid yellow; }
+.columbia-labels .block.moved { filter: grayscale(70%); }
+
+.battle_menu.hit .block.highlight { border-color: black; }
+
+.columbia-labels .block.r0 { transform: rotate(0deg); }
+.columbia-labels .block.r1 { transform: rotate(-90deg); }
+.columbia-labels .block.r2 { transform: rotate(-180deg); }
+.columbia-labels .block.r3 { transform: rotate(-270deg); }
+
+.block.mars {
+	background-image: url("mars.svg");
+	background-size: 80%;
+	background-position: center;
+}
+.block.neptune {
+	background-image: url("neptune.svg");
+	background-size: 80%;
+	background-position: center;
+}
+.block.jupiter:not(.known) {
+	background-image: url("jupiter.svg");
+	background-size: 80%;
+	background-position: center;
+}
+
+body.Observer .simple-labels .known.jupiter.Caesar { border: 2px solid #862; }
+body.Observer .simple-labels .known.jupiter.Pompeius { border: 2px solid #822; }
+body.Observer .simple-labels .known.jupiter.Cleopatra { border: 2px solid #822; }
+body.Observer .columbia-labels .known.jupiter.Caesar { border: 3px solid #862; }
+body.Observer .columbia-labels .known.jupiter.Pompeius { border: 3px solid #822; }
+body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822; }
+
+.block { box-shadow: 0px 0px 4px 0px black; }
+
+.block {
+	transition-property: top, left, transform, filter;
+	transition-duration: 700ms, 700ms, 300ms, 300ms;
+	transition-timing-function: ease;
+}

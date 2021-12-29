@@ -168,10 +168,6 @@ function on_blur(evt) {
 	document.getElementById("status").textContent = "";
 }
 
-function on_pass() { if (game.actions) { send_action('pass'); } }
-function on_undo() { if (game.actions) { send_action('undo'); } }
-function on_next() { if (game.actions) { send_action('next'); } }
-
 function on_click_space(evt) { send_action('space', evt.target.space); }
 function on_click_piece(evt) { send_action('piece', evt.target.piece); }
 
@@ -289,9 +285,9 @@ function us_info() {
 }
 
 function on_update() {
-	show_action_button("#button_pass", "pass");
-	show_action_button("#button_next", "next");
-	show_action_button("#button_undo", "undo");
+	action_button("pass", "Pass");
+	action_button("next", "Next");
+	action_button("undo", "Undo");
 
 	document.getElementById("tr_score").textContent = game.tr.score;
 	document.getElementById("us_score").textContent = game.us.score;
@@ -551,6 +547,6 @@ function on_click_card(evt) {
 /* INITIALIZE CLIENT */
 
 build_map();
-scroll_with_middle_mouse("#grid_center");
+scroll_with_middle_mouse("main");
 init_map_zoom();
 init_client([ "United States", "Tripolitania" ]);

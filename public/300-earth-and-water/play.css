@@ -1,0 +1,253 @@
+main { background-color: slategray; }
+aside { background-color: gainsboro; }
+header { background-color: silver; }
+body.Persia header.your_turn { background-color: skyblue; }
+body.Greece header.your_turn { background-color: salmon; }
+.role_info { background-color: silver; }
+.one .role_name { background-color: salmon; }
+.two .role_name { background-color: skyblue; }
+
+#log {
+	background-color: gainsboro;
+}
+
+#log .tip {
+	cursor: help;
+	text-decoration: dotted underline;
+}
+
+#log .st {
+	font-weight: bold;
+	background-color: gray;
+	color: white;
+	text-align: center;
+	padding: 3px;
+}
+
+#log .hr {
+	border-top: 1px solid darkgray;
+	padding-top: 9px;
+}
+
+#log .G { color: #c00; }
+#log .P { color: #00e; }
+
+#hand.greek {
+	background-color: rosybrown;
+	border-radius: 10px;
+}
+
+.role_info {
+	padding: 10px 20px;
+	background-color: gainsboro;
+	white-space: pre-wrap;
+}
+.card_info {
+	padding: 10px 20px;
+	background-color: silver;
+}
+#deck_info {
+	text-align: center;
+}
+
+/* CARDS */
+
+.card_back { background-image: url('cards/card_back.jpg'); }
+.card_1 { background-image: url('cards/card_en_01.jpg'); }
+.card_2 { background-image: url('cards/card_en_02.jpg'); }
+.card_3 { background-image: url('cards/card_en_03.jpg'); }
+.card_4 { background-image: url('cards/card_en_04.jpg'); }
+.card_5 { background-image: url('cards/card_en_05.jpg'); }
+.card_6 { background-image: url('cards/card_en_06.jpg'); }
+.card_7 { background-image: url('cards/card_en_07.jpg'); }
+.card_8 { background-image: url('cards/card_en_08.jpg'); }
+.card_9 { background-image: url('cards/card_en_09.jpg'); }
+.card_10 { background-image: url('cards/card_en_10.jpg'); }
+.card_11 { background-image: url('cards/card_en_11.jpg'); }
+.card_12 { background-image: url('cards/card_en_12.jpg'); }
+.card_13 { background-image: url('cards/card_en_13.jpg'); }
+.card_14 { background-image: url('cards/card_en_14.jpg'); }
+.card_15 { background-image: url('cards/card_en_15.jpg'); }
+.card_16 { background-image: url('cards/card_en_16.jpg'); }
+
+.card {
+	background-repeat: no-repeat;
+	width: 250px;
+	height: 350px;
+	border-radius: 12px;
+}
+
+.card_info .card {
+	margin: 15px auto;
+	width: 125px;
+	height: 175px;
+	border-radius: 10px;
+}
+
+#tooltip.card {
+	position: fixed;
+	z-index: 200;
+	right: 230px;
+	top: 60px;
+}
+
+/* PHONE SIZE: squeeze side bar on small screens */
+
+#log_button { display: none }
+
+@media (max-height: 700px) {
+	.card_info .card {
+		margin: 0 auto;
+		width: 100px;
+		height: 140px;
+		border-radius: 5px;
+	}
+	.role_info { padding: 3px 20px; }
+	.card_info { padding: 5px 0px; }
+	#deck_info { padding-top: 5px; }
+}
+
+@media (max-width: 1200px) {
+	#prompt {
+		font-size: medium;
+		margin: 0 5px;
+	}
+	#log_button { display: block }
+}
+
+/* CARD ACTION POPUP MENU */
+
+#popup {
+	position: fixed;
+	user-select: none;
+	background-color: gainsboro;
+	left: 10px;
+	top: 100px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
+	z-index: 200;
+	min-width: 20ex;
+	white-space: nowrap;
+	display: none;
+}
+#popup div { padding: 3pt 8pt; color: gray; }
+#popup div.enabled { color: black; }
+#popup div.enabled:hover { background-color: teal; color: white; }
+
+/* MAP WITH ARMIES, FLEETS, AND MARKERS */
+
+#map.greek, #map.greek > div {
+	transform: rotate(180deg);
+	transform-origin: center;
+}
+
+#map {
+	width: 1240px;
+	height: 878px;
+	background-image: url("map.jpg");
+	background-size: cover;
+	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
+	margin: 0 auto;
+}
+
+#map.hide_markers > div {
+	visibility: hidden;
+}
+
+.port {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 1;
+}
+.port.enabled {
+	box-shadow: 0 0 20px 2px white, inset 0 0 5px 2px white;
+	z-index: 3;
+}
+
+.persian_city {
+	position: absolute;
+	border-radius: 50%;
+	z-index: 4;
+}
+.persian_city.enabled {
+	box-shadow: 0 0 10px 2px white, inset 0 0 5px 2px white;
+	z-index: 100;
+}
+
+.greek_city {
+	position: absolute;
+	border-radius: 5px;
+	z-index: 4;
+}
+.greek_city.enabled {
+	box-shadow: 0 0 10px 4px white, inset 0 0 5px 4px white;
+	z-index: 100;
+}
+
+.greek_army, .greek_fleet, .persian_army, .persian_fleet, .marker {
+	transition-property: top, left, transform;
+	transition-duration: 700ms;
+	transition-timing-function: ease;
+	z-index: 2;
+}
+
+.greek_army, .greek_fleet, .persian_army, .persian_fleet, .marker, #bridge {
+	position: absolute;
+	display: none;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.marker { background-image: url("icons/black_cube.png"); }
+.greek_army { background-image: url("icons/red_cube.png"); }
+.greek_fleet { background-image: url("icons/red_disk.png"); }
+.persian_army { background-image: url("icons/blue_cube.png"); }
+.persian_fleet { background-image: url("icons/blue_disk.png"); }
+.greek_army, .persian_army, .marker { width: 22px; height: 26px; }
+.greek_fleet, .persian_fleet { width: 26px; height: 20px; }
+
+.campaign_1 { left: 1074px; top: 368px; }
+.campaign_2 { left: 1077px; top: 402px; }
+.campaign_3 { left: 1078px; top: 435px; }
+.campaign_4 { left: 1077px; top: 467px; }
+.campaign_5 { left: 1072px; top: 501px; }
+.vp_g6 { left: 181px; top: 228px; }
+.vp_g5 { left: 168px; top: 259px; }
+.vp_g4 { left: 157px; top: 291px; }
+.vp_g3 { left: 148px; top: 323px; }
+.vp_g2 { left: 142px; top: 357px; }
+.vp_g1 { left: 138px; top: 389px; }
+.vp_0 { left: 138px; top: 425px; }
+.vp_p1 { left: 138px; top: 460px; }
+.vp_p2 { left: 142px; top: 493px; }
+.vp_p3 { left: 148px; top: 526px; }
+.vp_p4 { left: 157px; top: 559px; }
+.vp_p5 { left: 168px; top: 590px; }
+.vp_p6 { left: 181px; top: 622px; }
+
+.greek_fleet.show, .persian_fleet.show, .greek_army.show, .persian_army.show, .marker.show, #bridge.show {
+	display: block;
+	filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.5));
+}
+
+.greek_fleet.selected, .persian_fleet.selected, .greek_army.selected, .persian_army.selected {
+	filter: brightness(150%) drop-shadow(0 0 3px white);
+}
+#bridge.destroy {
+	filter: brightness(150%) drop-shadow(0 0 10px skyblue);
+}
+#bridge.build {
+	filter: brightness(150%) drop-shadow(0 0 10px white);
+	opacity: 0.5;
+}
+
+#darius { left: 77px; top: 562px; }
+#xerxes { left: 61px; top: 717px; }
+#artemisia { left: 167px; top: 799px; }
+#miltiades { left: 1179px; top: 305px; }
+#themistocles { left: 1156px; top: 153px; }
+#leonidas { left: 1068px; top: 41px; }
+#bridge {
+	background-image: url("icons/bridge.png");
+	width: 48px; height: 36px;
+	left: 932px; top: 655px;
+}

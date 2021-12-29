@@ -8,407 +8,13 @@
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/common/grid.css">
 <link rel="stylesheet" href="/common/battle_abc.css">
+<link rel="stylesheet" href="play.css">
 <script defer src="/socket.io/socket.io.min.js"></script>
 <script defer src="/common/client.js"></script>
 <script defer src="data.js"></script>
-<script defer src="ui.js"></script>
-<style>
-
-#grid_center { background-color: slategray; }
-#grid_role { background-color: silver; }
-#grid_top { background-color: gainsboro; }
-.Franks #grid_top.your_turn { background-color: #f7de46; /* 50% mix of khaki and gold */ }
-.Saracens #grid_top.your_turn { background-color: lightgreen; }
-.one .role_name { background-color: khaki; }
-.two .role_name { background-color: darkseagreen; }
-#turn_info { background-color: gainsboro; }
-
-#log { background-color: whitesmoke; }
-#log .st { background-color: #246; color: white; font-weight: bold; }
-#log .F { background-color: khaki; }
-#log .S { background-color: darkseagreen; }
-#log .bs { background-color: lightgray; }
-#log .br { font-style: italic; text-decoration: underline; }
-
-#map #timeline {
-	position: absolute;
-	width: 88px; height: 35px; top: 2410px;
-	background-image: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.3), rgba(255,255,255,0.8));
-}
-
-#map #timeline.year_1187 { left: 702px; }
-#map #timeline.year_1188 { left: 793px; width: 89px; }
-#map #timeline.year_1189 { left: 885px; }
-#map #timeline.year_1190 { left: 976px; width: 89px; }
-#map #timeline.year_1191 { left: 1068px; }
-#map #timeline.year_1192 { left: 1160px; width: 85px; }
-
-#turn {
-	padding: 8px 0px 8px 8px;
-	border-bottom: 1px solid black;
-	white-space: pre-wrap;
-	font-style: italic;
-	font-size: 12px;
-	line-height: 18px;
-	font-family: "Source Serif SmText";
-}
-
-.card {
-	width: 225px;
-	height: 350px;
-	border-radius: 15px;
-}
-
-.card.enabled:hover {
-	transform: scale(1.1);
-}
-
-.small_card.prior {
-	filter: grayscale(100%) contrast(70%) brightness(120%);
-}
-
-.role_info { padding: 15px; }
-.small_card { width: 90px; height: 140px; border-radius: 5px; }
-.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
-
-@media (max-height: 800px) {
-	.role_info { padding: 15px 0 0 0; }
-	.small_card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
-	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
-}
-
-@media (min-height: 1200px) {
-	.small_card { width: 180px; height: 280px; border-radius: 10px; }
-}
-
-/* MAP */
-
-#mapwrap {
-	position: relative;
-	background-color: #224467;
-	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
-	width: 1275px;
-	height: 2475px;
-}
-
-#map {
-	position: absolute;
-	width: 1275px;
-	height: 2475px;
-	background-repeat: no-repeat;
-	background-color: #224467;
-}
-
-#map > * {
-	position: absolute;
-}
-
-#map.hide_blocks #blocks {
-	visibility: hidden;
-}
-
-.town {
-	position: absolute;
-	opacity: 0.0;
-	z-index: 1;
-	border: 5px solid white;
-	width: 70px;
-	height: 70px;
-	border-radius: 50%;
-}
-.town.highlight {
-	cursor: pointer;
-	opacity: 0.6;
-	z-index: 9;
-}
-.town.muster {
-	opacity: 0.6;
-	border-color: brown;
-	z-index: 9;
-}
-.town.muster.highlight {
-	box-shadow: 0 0 0px 4px white;
-}
-
-#sea {
-	fill: skyblue;
-	fill-opacity: 0.4;
-}
-
-#sea { visibility: hidden; }
-#sea.highlight { visibility: visible; cursor: pointer; }
-
-/* BLOCKS */
-
-body.shift .block.known:hover {
-	filter: none;
-	transform: scale(2) !important;
-	transition: 100ms;
-	z-index: 100;
-}
-
-#battle .block { position: relative; }
-#map .block { position: absolute; z-index: 2; }
-#map .block.highlight { z-index: 3; }
-#map .block.selected { z-index: 4; }
-#map .block.known { z-index: 5; }
-#map .block.known:hover { z-index: 6; }
-
-.block {
-	background-size: cover;
-	background-repeat: no-repeat;
-	border-radius: 6px;
-	width: 60px;
-	height: 60px;
-	box-shadow: 0px 0px 4px 0px black;
-}
-
-.block.Franks { border: 3px solid darkkhaki; background-color: khaki; }
-.block.Saracens { border: 3px solid seagreen; background-color: darkseagreen; }
-.block.Saracens.known { background-color: darkgreen; }
-.block.Assassins { border: 3px solid rebeccapurple; background-color: rebeccapurple; }
-
-.block.Franks.highlight { border-color: white; }
-.block.Saracens.highlight { border-color: white; }
-.block.Assassins.highlight { border-color: white; }
-
-.block.Franks.selected { border-color: crimson; }
-.block.Saracens.selected { border-color: yellow; }
-.block.Assassins.selected { border-color: yellow; }
-
-.block.Franks.highlight:not(.selected) { box-shadow: 0 0 3px 0px white; }
-
-.hit .block.highlight { border-color: black; }
-.hit .block.Franks.highlight { box-shadow: 0 0 4px 0px black; }
-
-.block.highlight { cursor: pointer; }
-.block.moved { filter: brightness(80%) grayscale(40%); }
-.block.highlight.moved { filter: brightness(95%) grayscale(40%); }
-
-#map .block.castle.known { filter: grayscale(50%); }
-#map.stack_layout .block.castle { filter: grayscale(90%); }
-
-.block.castle:not(.known) {
-	background-image: url("badges/stone-tower.svg");
-	background-size: 60%;
-	background-position: center;
-}
-.block.besieging:not(.known) {
-	background-image: url("badges/trebuchet.svg");
-	background-size: 60%;
-	background-position: center;
-}
-.block.winter_campaign:not(.known) {
-	background-image: url("badges/camping-tent.svg");
-	background-size: 60%;
-	background-position: center;
-}
-.block.Franks.jihad:not(.known) {
-	background-image: url("badges/Cross_of_the_Knights_Templar.svg");
-	background-size: 60%;
-	background-position: center;
-}
-.block.Saracens.jihad:not(.known) {
-	background-image: url("badges/Star_and_Crescent.svg");
-	background-size: 60%;
-	background-position: center;
-}
-
-.block.besieging.Franks.jihad:not(.known) {
-	background-image: url("badges/trebuchet.svg"), url("badges/Cross_of_the_Knights_Templar.svg");
-	background-size: 60%, 40%;
-	background-position: 30% 80%, 85% 15%;
-}
-.block.besieging.Saracens.jihad:not(.known) {
-	background-image: url("badges/trebuchet.svg"), url("badges/Star_and_Crescent.svg");
-	background-size: 60%, 40%;
-	background-position: 30% 80%, 85% 15%;
-}
-
-.block.r0 { transform: rotate(0deg); }
-.block.r1 { transform: rotate(-90deg); }
-.block.r2 { transform: rotate(-180deg); }
-.block.r3 { transform: rotate(-270deg); }
-.block.r0.halfhit { transform: rotate(-15deg); }
-.block.r1.halfhit { transform: rotate(-105deg); }
-.block.r2.halfhit { transform: rotate(-195deg); }
-.block.r3.halfhit { transform: rotate(-285deg); }
-
-.block {
-	transition-property: top, left, transform;
-	transition-duration: 700ms, 700ms, 200ms;
-	transition-timing-function: ease;
-}
-
-/* LANDSCAPE MAP */
-
-@media (min-width: 2000px) {
-	#mapwrap:not(.fit) {
-		box-shadow: 1px 0px 10px rgba(0,0,0,0.5);
-		height: 1275px;
-		width: 2475px;
-		margin-bottom: 40px;
-		margin-top: 30px;
-	}
-	#mapwrap:not(.fit) #map {
-		transform: translateY(1275px) rotate(-90deg);
-		transform-origin: 0 0;
-	}
-	body.shift #mapwrap:not(.fit) #map .block.known:hover {
-		transform: rotate(90deg) scale(2) !important;
-	}
-	#mapwrap:not(.fit) #map .block { transform: rotate(90deg); }
-	#mapwrap:not(.fit) #map .block.r1 { transform: rotate(0deg); }
-	#mapwrap:not(.fit) #map .block.r2 { transform: rotate(-90deg); }
-	#mapwrap:not(.fit) #map .block.r3 { transform: rotate(-180deg); }
-}
-
-/* BATTLE BOARD */
-
-#battle {
-	background-color: tan;
-	min-width: 700px;
-}
-#battle_message {
-	background-color: gainsboro;
-	text-align: center;
-	border-top: 1px solid black;
-}
-#battle_header {
-	background-color: steelblue;
-	color: white;
-	text-align: center;
-	border-bottom: 1px solid black;
-}
-.battle_menu {
-	margin: 5px 5px;
-}
-
-#FF, #FC, #FR, #EF, #EC, #ER { margin: 0px auto; padding: 5px; }
-#EC { margin-bottom: 10px; }
-#FC { margin-bottom: 5px; }
-#EC .battle_menu_list { min-height: 0; }
-#ER .battle_menu_list { min-height: 0; }
-#FR .battle_menu_list { min-height: 0; }
-
-#FC, #EC {
-	background-size: cover;
-	background-repeat: no-repeat;
-	padding: 0;
-	height: 107px;
-	padding-top: 33px;
-	border-bottom: 5px solid dimgray;
-	filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5));
-	justify-content: left;
-}
-
-#FC.c1 .battle_menu:first-child { margin-left: 30px; }
-#FC.c2 .battle_menu:first-child { margin-left: 25px; }
-#FC.c3 .battle_menu:first-child { margin-left: 20px; }
-#FC.c4 .battle_menu:first-child { margin-left: 15px; }
-#EC.c1 .battle_menu:first-child { margin-left: 30px; }
-#EC.c2 .battle_menu:first-child { margin-left: 25px; }
-#EC.c3 .battle_menu:first-child { margin-left: 20px; }
-#EC.c4 .battle_menu:first-child { margin-left: 15px; }
-
-#FC.c0, #EC.c0 { display: none; }
-#FC.c1, #EC.c1 { background-image: url('castle_1.svg'); width: 140px; }
-#FC.c2, #EC.c2 { background-image: url('castle_2.svg'); width: 220px; }
-#FC.c3, #EC.c3 { background-image: url('castle_3.svg'); width: 300px; }
-#FC.c4, #EC.c4 { background-image: url('castle_4.svg'); width: 380px; }
-
-#FC, #EC, #FF, #EF { min-height: 107px; }
-#ER { min-height: 15px; }
-#FR { min-height: 15px; }
-
-/* CARD AND BLOCK IMAGES */
-
-.card_back{background-image:url('cards/card_back.jpg')}
-.card_assassins{background-image:url('cards/card_assassins.jpg')}
-.card_guide{background-image:url('cards/card_guide.jpg')}
-.card_intrigue{background-image:url('cards/card_intrigue.jpg')}
-.card_jihad{background-image:url('cards/card_jihad.jpg')}
-.card_manna{background-image:url('cards/card_manna.jpg')}
-.card_winter_campaign{background-image:url('cards/card_winter_campaign.jpg')}
-.card_1{background-image:url('cards/card_1.jpg')}
-.card_2{background-image:url('cards/card_2.jpg')}
-.card_3{background-image:url('cards/card_3.jpg')}
-
-.known.block_11{background-image:url(blocks/block_11.png)}
-.known.block_12{background-image:url(blocks/block_12.png)}
-.known.block_13{background-image:url(blocks/block_13.png)}
-.known.block_14{background-image:url(blocks/block_14.png)}
-.known.block_15{background-image:url(blocks/block_15.png)}
-.known.block_16{background-image:url(blocks/block_16.png)}
-.known.block_17{background-image:url(blocks/block_17.png)}
-.known.block_21{background-image:url(blocks/block_21.png)}
-.known.block_22{background-image:url(blocks/block_22.png)}
-.known.block_23{background-image:url(blocks/block_23.png)}
-.known.block_24{background-image:url(blocks/block_24.png)}
-.known.block_25{background-image:url(blocks/block_25.png)}
-.known.block_26{background-image:url(blocks/block_26.png)}
-.known.block_27{background-image:url(blocks/block_27.png)}
-.known.block_31{background-image:url(blocks/block_31.png)}
-.known.block_32{background-image:url(blocks/block_32.png)}
-.known.block_33{background-image:url(blocks/block_33.png)}
-.known.block_34{background-image:url(blocks/block_34.png)}
-.known.block_35{background-image:url(blocks/block_35.png)}
-.known.block_36{background-image:url(blocks/block_36.png)}
-.known.block_37{background-image:url(blocks/block_37.png)}
-.known.block_41{background-image:url(blocks/block_41.png)}
-.known.block_42{background-image:url(blocks/block_42.png)}
-.known.block_43{background-image:url(blocks/block_43.png)}
-.known.block_44{background-image:url(blocks/block_44.png)}
-.known.block_45{background-image:url(blocks/block_45.png)}
-.known.block_46{background-image:url(blocks/block_46.png)}
-.known.block_47{background-image:url(blocks/block_47.png)}
-.known.block_51{background-image:url(blocks/block_51.png)}
-.known.block_52{background-image:url(blocks/block_52.png)}
-.known.block_53{background-image:url(blocks/block_53.png)}
-.known.block_54{background-image:url(blocks/block_54.png)}
-.known.block_55{background-image:url(blocks/block_55.png)}
-.known.block_56{background-image:url(blocks/block_56.png)}
-.known.block_57{background-image:url(blocks/block_57.png)}
-.known.block_61{background-image:url(blocks/block_61.png)}
-.known.block_62{background-image:url(blocks/block_62.png)}
-.known.block_63{background-image:url(blocks/block_63.png)}
-.known.block_64{background-image:url(blocks/block_64.png)}
-.known.block_65{background-image:url(blocks/block_65.png)}
-.known.block_66{background-image:url(blocks/block_66.png)}
-.known.block_67{background-image:url(blocks/block_67.png)}
-.known.block_71{background-image:url(blocks/block_71.png)}
-.known.block_72{background-image:url(blocks/block_72.png)}
-.known.block_73{background-image:url(blocks/block_73.png)}
-.known.block_74{background-image:url(blocks/block_74.png)}
-.known.block_75{background-image:url(blocks/block_75.png)}
-.known.block_76{background-image:url(blocks/block_76.png)}
-.known.block_77{background-image:url(blocks/block_77.png)}
-.known.block_81{background-image:url(blocks/block_81.png)}
-.known.block_82{background-image:url(blocks/block_82.png)}
-.known.block_83{background-image:url(blocks/block_83.png)}
-.known.block_84{background-image:url(blocks/block_84.png)}
-.known.block_85{background-image:url(blocks/block_85.png)}
-.known.block_86{background-image:url(blocks/block_86.png)}
-.known.block_87{background-image:url(blocks/block_87.png)}
-.known.block_91{background-image:url(blocks/block_91.png)}
-.known.block_92{background-image:url(blocks/block_92.png)}
-.known.block_93{background-image:url(blocks/block_93.png)}
-.known.block_94{background-image:url(blocks/block_94.png)}
-.known.block_95{background-image:url(blocks/block_95.png)}
-.known.block_96{background-image:url(blocks/block_96.png)}
-.known.block_97{background-image:url(blocks/block_97.png)}
-
-</style>
+<script defer src="play.js"></script>
 </head>
 <body>
-
-<div id="status"></div>
-
-<div id="chat_window">
-<div id="chat_header">Chat</div>
-<div id="chat_text"></div>
-<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
-</div>
 
 <div id="battle">
 <div id="battle_header"></div>
@@ -421,80 +27,54 @@ body.shift .block.known:hover {
 <div id="battle_message"></div>
 </div>
 
-<div id="grid_window">
-
-	<div id="grid_top">
-
-		<div class="menu">
-			<div class="menu_title"><img src="/images/cog.svg"></div>
-			<div class="menu_popup">
-				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
-				<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
-				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
-				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
-				<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
-				<div class="resign menu_separator"></div>
-				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
-			</div>
+<header>
+	<div class="menu">
+		<div class="menu_title"><img src="/images/cog.svg"></div>
+		<div class="menu_popup">
+			<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
+			<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+			<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+			<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+			<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
+			<div class="resign menu_separator"></div>
+			<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
 		</div>
-
-		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
-		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
-
-		<div id="prompt">Connecting...</div>
-
-		<button id="eliminate_button" class="hide" onclick="on_button_eliminate()">Eliminate</button>
-		<button id="winter_campaign_button" class="hide" onclick="on_button_winter_campaign()">Winter campaign</button>
-		<button id="sea_move_button" class="hide" onclick="on_button_sea_move()">Sea move</button>
-		<button id="end_sea_move_button" class="hide" onclick="on_button_end_sea_move()">End sea move</button>
-		<button id="group_move_button" class="hide" onclick="on_button_group_move()">Group move</button>
-		<button id="end_group_move_button" class="hide" onclick="on_button_end_group_move()">End group move</button>
-		<button id="muster_button" class="hide" onclick="on_button_muster()">Muster</button>
-		<button id="end_muster_button" class="hide" onclick="on_button_end_muster()">End muster</button>
-		<button id="end_retreat_button" class="hide" onclick="on_button_end_retreat()">End retreat</button>
-		<button id="end_regroup_button" class="hide" onclick="on_button_end_regroup()">End regroup</button>
-		<button id="end_move_phase_button" class="hide" onclick="on_button_end_move_phase()">End move phase</button>
-		<button id="pass_button" class="hide" onclick="on_button_pass()">Pass</button>
-		<button id="next_button" class="hide" onclick="on_button_next()">Next</button>
-		<button id="undo_button" class="hide" onclick="on_button_undo()">Undo</button>
-
-		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
-		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
+	<div class="icon_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+	<div class="icon_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+	<div class="icon_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+	<div id="prompt"></div>
+	<div id="actions"></div>
+</header>
 
-	<div id="grid_role">
-
+<aside>
+	<div id="roles">
 		<div class="role one">
 			<div class="role_name">
 				Franks
-				<div class="role_vp" id="frank_vp"></div>
+				<div class="role_vp" id="frank_vp">VP</div>
 				<div class="role_user">-</div>
 			</div>
 			<div class="role_info"><div class="small_card card_back" id="frank_card"></div></div>
 		</div>
-
 		<div class="role two">
 			<div class="role_name">
 				Saracens
-				<div class="role_vp" id="saracen_vp"></div>
+				<div class="role_vp" id="saracen_vp">VP</div>
 				<div class="role_user">-</div>
 			</div>
 			<div class="role_info"><div class="small_card card_back" id="saracen_card"></div></div>
 		</div>
-
 		<div id="turn_info">-</div>
-
 	</div>
-
 	<div id="log"></div>
+</aside>
 
-	<div id="grid_center">
+<main>
 
 <div id="mapwrap">
 <div id="map">
@@ -545,7 +125,8 @@ body.shift .block.known:hover {
 <div id="back+6" class="card card_back"></div>
 </div>
 
-	</div>
+</main>
 
-</div>
+<footer id="status"></footer>
+
 </body>

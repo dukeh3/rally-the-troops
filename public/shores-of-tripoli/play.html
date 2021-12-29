@@ -8,325 +8,47 @@
 <link rel="icon" href="Flag_of_Tripoli_18th_century.svg">
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/common/grid.css">
+<link rel="stylesheet" href="play.css">
 <script defer src="/socket.io/socket.io.min.js"></script>
 <script defer src="/common/client.js"></script>
 <script defer src="data.js"></script>
-<script defer src="ui.js"></script>
-<style>
-
-#grid_center { background-color: slategray; }
-#grid_role { background-color: gainsboro; }
-.card_info { background-color: silver; }
-#grid_top { background-color: silver; }
-.Tripolitania #grid_top.your_turn { background-color: salmon; }
-.United_States #grid_top.your_turn { background-color: skyblue; }
-.one .role_name { background-color: skyblue; }
-.two .role_name { background-color: salmon; }
-
-#log { background-color: #eee; }
-#log .st { background-color: #777; color: white; font-weight: bold; padding:3px; text-align: center; }
-#log .ss { background-color: #ccc; color: #444; font-weight: bold; padding:3px; text-align: center; }
-#log .end { font-style: italic; }
-#log .us_tip { color: blue; text-decoration: dotted underline; cursor: help; }
-#log .tr_tip { color: #d00; text-decoration: dotted underline; cursor: help; }
-
-#turn {
-	padding: 8px 0px 8px 8px;
-	border-bottom: 1px solid black;
-	white-space: pre-wrap;
-	font-style: italic;
-	font-size: 12px;
-	line-height: 18px;
-	font-family: "Source Serif SmText";
-}
-
-.hand {
-	min-height: 300px;
-	justify-content: left;
-	max-width: 2476px;
-	margin: 15px auto;
-}
-
-.hand_separator {
-	border-bottom: 2px dotted gainsboro;
-}
-
-.Observer #grid_center > #hand_cards { display: none; }
-.Observer #grid_center > .hand_separator { display: none; }
-
-.card {
-	width: 250px;
-	height: 350px;
-	border-radius: 12px;
-}
-
-.card.blank {
-	background-color: dimgray;
-	transform: none !important;
-}
-
-.card_info {
-	border-bottom: 1px solid black;
-	padding: 10px 0;
-}
-
-.card_info .card {
-	margin: 0 auto;
-	width: 125px;
-	height: 175px;
-	border-radius: 6px;
-}
-
-#tr_info, #us_info {
-	white-space: pre-line;
-	font-family: "Source Serif SmText";
-	font-size: 12px;
-	text-align: center;
-	padding: 3px;
-}
-
-#tooltip.card {
-	position: fixed;
-	z-index: 100;
-	right: 240px;
-	top: 60px;
-}
-#tooltip.show {
-	display: block;
-}
-
-/* MAP */
-
-#mapwrap {
-	position: relative;
-	box-shadow: 0px 0px 15px rgba(0,0,0,0.8);
-	width: 2476px;
-	height: 801px;
-}
-
-#map {
-	position: absolute;
-	display: block;
-	width: 2476px;
-	height: 801px;
-	background-color: black;
-}
-
-svg {
-	position: absolute;
-}
-
-svg image {
-	pointer-events: none;
-}
-
-svg circle, .piece {
-	transition-property: x, y, cx, cy, top, left;
-	transition-duration: 1s;
-	transition-timing-function: ease;
-}
-
-.piece {
-	position: absolute;
-	pointer-events: none;
-	background-size: cover;
-	background-repeat: no-repeat;
-	filter: drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
-}
-
-.piece.highlight {
-	pointer-events: all;
-	cursor: pointer;
-	filter: brightness(150%) drop-shadow(0 0 3px white);
-}
-
-.piece.damaged {
-	filter: brightness(60%) drop-shadow(1px 1px 4px rgba(0,0,0,0.5));
-}
-
-.piece.us_frigate { width: 42px; height: 29px; background-image: url("icons/us_frigate.svg"); }
-.piece.se_frigate { width: 42px; height: 29px; background-image: url("icons/se_frigate.svg"); }
-.piece.tr_frigate { width: 42px; height: 29px; background-image: url("icons/tr_frigate.svg"); }
-.piece.us_gunboat { width: 33px; height: 27px; background-image: url("icons/us_gunboat.svg"); }
-.piece.tr_corsair { width: 33px; height: 27px; background-image: url("icons/tr_corsair.svg"); }
-.piece.al_corsair { width: 33px; height: 27px; background-image: url("icons/al_corsair.svg"); }
-.piece.us_marine { width: 21px; height: 21px; background-image: url("icons/us_marine.svg"); }
-.piece.ar_infantry { width: 21px; height: 21px; background-image: url("icons/ar_infantry.svg"); }
-.piece.tr_infantry { width: 21px; height: 21px; background-image: url("icons/tr_infantry.svg"); }
-.piece.gold { width: 40px; height: 40px; background-image: url("icons/gold.png"); }
-.piece.marker { width: 50px; height: 50px; border-radius: 50%; background-color: #444; border: 2px solid black; }
-
-.harbor {
-	fill-opacity: 0;
-	stroke: white;
-	stroke-width: 4;
-	opacity: 0;
-}
-
-.patrol_zone {
-	fill-opacity: 0;
-	stroke: white;
-	stroke-width: 4;
-	opacity: 0;
-}
-
-.patrol_zone.highlight, .harbor.highlight {
-	opacity: 1;
-	cursor: pointer;
-}
-
-#map .harbor.where {
-	opacity: 1;
-	fill-opacity: 0.5;
-	fill: gold;
-	stroke: gold;
-}
-
-#map .patrol_zone.where {
-	opacity: 1;
-	fill-opacity: 0.5;
-	fill: gold;
-	stroke: white;
-}
-
-/* CARD ACTION POPUP MENU */
-
-#popup {
-	position: fixed;
-	user-select: none;
-	background-color: gainsboro;
-	left: 10px;
-	top: 100px;
-	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3);
-	z-index: 200;
-	min-width: 20ex;
-	white-space: nowrap;
-	display: none;
-}
-#popup div { padding: 3pt 8pt; color: gray; display: none; }
-#popup div.enabled { color: black; display: block; }
-#popup div.enabled:hover { background-color: teal; color: white; }
-#popup div.always { display: block; }
-body.Tripolitania #popup div.tr_always { display: block; }
-body.United_States #popup div.us_always { display: block; }
-
-/* CARD IMAGES */
-
-.card {
-	text-align: center;
-	color: white;
-	font-weight: bold;
-	font-size: 25px;
-	line-height: 40px;
-}
-
-.tr_card_1{background-image:url('cards/tr_card_1.jpg')}
-.tr_card_2{background-image:url('cards/tr_card_2.jpg')}
-.tr_card_3{background-image:url('cards/tr_card_3.jpg')}
-.tr_card_4{background-image:url('cards/tr_card_4.jpg')}
-.tr_card_5{background-image:url('cards/tr_card_5.jpg')}
-.tr_card_6{background-image:url('cards/tr_card_5.jpg')}
-.tr_card_7{background-image:url('cards/tr_card_7.jpg')}
-.tr_card_8{background-image:url('cards/tr_card_7.jpg')}
-.tr_card_9{background-image:url('cards/tr_card_9.jpg')}
-.tr_card_10{background-image:url('cards/tr_card_9.jpg')}
-.tr_card_11{background-image:url('cards/tr_card_11.jpg')}
-.tr_card_12{background-image:url('cards/tr_card_12.jpg')}
-.tr_card_13{background-image:url('cards/tr_card_13.jpg')}
-.tr_card_14{background-image:url('cards/tr_card_14.jpg')}
-.tr_card_15{background-image:url('cards/tr_card_15.jpg')}
-.tr_card_16{background-image:url('cards/tr_card_16.jpg')}
-.tr_card_17{background-image:url('cards/tr_card_17.jpg')}
-.tr_card_18{background-image:url('cards/tr_card_18.jpg')}
-.tr_card_19{background-image:url('cards/tr_card_19.jpg')}
-.tr_card_20{background-image:url('cards/tr_card_20.jpg')}
-.tr_card_21{background-image:url('cards/tr_card_21.jpg')}
-.tr_card_22{background-image:url('cards/tr_card_22.jpg')}
-.tr_card_23{background-image:url('cards/tr_card_23.jpg')}
-.tr_card_24{background-image:url('cards/tr_card_24.jpg')}
-.tr_card_25{background-image:url('cards/tr_card_25.jpg')}
-.tr_card_26{background-image:url('cards/tr_card_26.jpg')}
-.tr_card_27{background-image:url('cards/tr_card_27.jpg')}
-.tr_card_28{background-image:url('cards/tr_card_28.jpg')}
-.tr_card_29{background-image:url('cards/tr_card_29.jpg')}
-.tr_card_30{background-image:url('cards/tr_card_30.jpg')}
-.tr_card_back{background-image:url('cards/tr_card_31.jpg')}
-
-.us_card_1{background-image:url('cards/us_card_1.jpg')}
-.us_card_2{background-image:url('cards/us_card_2.jpg')}
-.us_card_3{background-image:url('cards/us_card_3.jpg')}
-.us_card_4{background-image:url('cards/us_card_4.jpg')}
-.us_card_5{background-image:url('cards/us_card_5.jpg')}
-.us_card_6{background-image:url('cards/us_card_6.jpg')}
-.us_card_7{background-image:url('cards/us_card_6.jpg')}
-.us_card_8{background-image:url('cards/us_card_6.jpg')}
-.us_card_9{background-image:url('cards/us_card_6.jpg')}
-.us_card_10{background-image:url('cards/us_card_10.jpg')}
-.us_card_11{background-image:url('cards/us_card_11.jpg')}
-.us_card_12{background-image:url('cards/us_card_12.jpg')}
-.us_card_13{background-image:url('cards/us_card_13.jpg')}
-.us_card_14{background-image:url('cards/us_card_14.jpg')}
-.us_card_15{background-image:url('cards/us_card_15.jpg')}
-.us_card_16{background-image:url('cards/us_card_16.jpg')}
-.us_card_17{background-image:url('cards/us_card_17.jpg')}
-.us_card_18{background-image:url('cards/us_card_18.jpg')}
-.us_card_19{background-image:url('cards/us_card_19.jpg')}
-.us_card_20{background-image:url('cards/us_card_20.jpg')}
-.us_card_21{background-image:url('cards/us_card_21.jpg')}
-.us_card_22{background-image:url('cards/us_card_22.jpg')}
-.us_card_23{background-image:url('cards/us_card_23.jpg')}
-.us_card_24{background-image:url('cards/us_card_24.jpg')}
-.us_card_25{background-image:url('cards/us_card_25.jpg')}
-.us_card_26{background-image:url('cards/us_card_26.jpg')}
-.us_card_27{background-image:url('cards/us_card_27.jpg')}
-.us_card_back{background-image:url('cards/us_card_28.jpg')}
-
-</style>
+<script defer src="play.js"></script>
 </head>
 <body>
 
-<div id="status"></div>
 <div id="tooltip" class="card"></div>
 
-<div id="chat_window">
-<div id="chat_header">Chat</div>
-<div id="chat_text"></div>
-<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
+<div id="popup" onmouseleave="hide_popup_menu()">
+<div id="menu_card_event" class="always" onclick="on_card_event()">Play Event</div>
+<div id="menu_card_move_frigates" class="us_always" onclick="on_card_move_frigates()">Discard to move two frigates</div>
+<div id="menu_card_build_gunboat" class="us_always" onclick="on_card_build_gunboat()">Discard to build a gunboat</div>
+<div id="menu_card_pirate_raid" class="tr_always" onclick="on_card_pirate_raid()">Discard to pirate raid</div>
+<div id="menu_card_build_corsair" class="tr_always" onclick="on_card_build_corsair()">Discard to build a corsair</div>
+<div id="menu_card_take" onclick="on_card_take()">Place in hand</div>
 </div>
 
-<div id="grid_window">
-
-	<div id="grid_top">
-
-		<div class="menu">
-			<div class="menu_title"><img src="/images/cog.svg"></div>
-			<div class="menu_popup">
-				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
-				<div class="menu_item" onclick="window.open('info/history.html', '_blank')">History</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/tr_cards.html', '_blank')">Tripolitan Cards</div>
-				<div class="menu_item" onclick="window.open('info/us_cards.html', '_blank')">United States Cards</div>
-				<div class="resign menu_separator"></div>
-				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
-			</div>
+<header>
+	<div class="menu">
+		<div class="menu_title"><img src="/images/cog.svg"></div>
+		<div class="menu_popup">
+			<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+			<div class="menu_item" onclick="window.open('info/history.html', '_blank')">History</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/tr_cards.html', '_blank')">Tripolitan Cards</div>
+			<div class="menu_item" onclick="window.open('info/us_cards.html', '_blank')">United States Cards</div>
+			<div class="resign menu_separator"></div>
+			<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
 		</div>
-
-		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
-
-		<div id="prompt">Connecting...</div>
-
-		<button id="button_pass" onclick="on_pass()" class="hide">Pass</button>
-		<button id="button_next" onclick="on_next()" class="hide">Next</button>
-		<button id="button_undo" onclick="on_undo()" class="hide">Undo</button>
-
-		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
-		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
+	<div class="icon_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+	<div id="prompt"></div>
+	<div id="actions"></div>
+</header>
 
-	<div id="grid_role">
+<aside>
+	<div id="roles">
 		<div class="role one">
 			<div class="role_name">
 				United States
@@ -345,10 +67,10 @@ body.United_States #popup div.us_always { display: block; }
 		</div>
 		<div class="card_info"><div id="active_card" class="card show blank"></div></div>
 	</div>
-
 	<div id="log"></div>
+</aside>
 
-	<div id="grid_center">
+<main>
 
 <div id="mapwrap" class="fit">
 <div id="map">
@@ -515,16 +237,8 @@ body.United_States #popup div.us_always { display: block; }
 <div id="us_card_3" class="show card us_card_3 us_core"></div>
 </div>
 
-<div id="popup" onmouseleave="hide_popup_menu()">
-<div id="menu_card_event" class="always" onclick="on_card_event()">Play Event</div>
-<div id="menu_card_move_frigates" class="us_always" onclick="on_card_move_frigates()">Discard to move two frigates</div>
-<div id="menu_card_build_gunboat" class="us_always" onclick="on_card_build_gunboat()">Discard to build a gunboat</div>
-<div id="menu_card_pirate_raid" class="tr_always" onclick="on_card_pirate_raid()">Discard to pirate raid</div>
-<div id="menu_card_build_corsair" class="tr_always" onclick="on_card_build_corsair()">Discard to build a corsair</div>
-<div id="menu_card_take" onclick="on_card_take()">Place in hand</div>
-</div>
+</main>
 
-	</div>
+<footer id="status"></footer>
 
-</div>
 </body>

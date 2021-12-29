@@ -1,47 +1,37 @@
 "use strict";
 
-const LANCASTER = "Lancaster";
-const YORK = "York";
-const REBEL = "Rebel";
-const ENEMY = { York: "Lancaster", Lancaster: "York" }
+const ENGLAND = "England";
+const SCOTLAND = "Scotland";
+const ENEMY = { Scotland: "England", England: "Scotland" }
+const ENGLAND_BAG = "E. Bag";
+const SCOTLAND_BAG = "S. Bag";
 
-const POOL = "Pool";
-const MINOR = "Minor";
+const NOBLES = [
+	"Angus", "Argyll", "Atholl", "Bruce", "Buchan", "Comyn", "Dunbar",
+	"Galloway", "Lennox", "Mar", "Mentieth", "Ross", "Steward"
+];
 
-const KING_TEXT = "\u2756";
-const PRETENDER_TEXT = "";
+let block_style = window.localStorage['hammer-of-the-scots/block-style'] || 'oldblocks';
+document.querySelector("body").classList.remove("oldblocks");
+document.querySelector("body").classList.remove("newblocks");
+document.querySelector("body").classList.add(block_style);
 
-const LONG_NAME = {
-	"Somerset": "Duke of Somerset",
-	"Exeter": "Duke of Exeter",
-	"Devon": "Earl of Devon",
-	"Pembroke": "Earl of Pembroke",
-	"Wiltshire": "Earl of Wiltshire",
-	"Oxford": "Earl of Oxford",
-	"Beaumont": "Viscount Beaumont",
-	"Clifford": "Lord Clifford",
-	"Buckingham": "Duke of Buckingham",
-	"Northumberland": "Earl of Northumberland",
-	"Shrewsbury": "Earl of Shrewsbury",
-	"Westmoreland": "Earl of Westmoreland",
-	"Rivers": "Lord Rivers",
-	"Stanley": "Lord Stanley",
-	"Richmond": "Earl of Richmond",
-	"York": "Duke of York",
-	"Rutland": "Earl of Rutland",
-	"March": "Earl of March",
-	"Warwick": "Earl of Warwick",
-	"Salisbury": "Earl of Salisbury",
-	"Kent": "Earl of Kent",
-	"Norfolk": "Duke of Norfolk",
-	"Suffolk": "Duke of Suffolk",
-	"Arundel": "Earl of Arundel",
-	"Essex": "Earl of Essex",
-	"Worcester": "Earl of Worcester",
-	"Hastings": "Lord Hastings",
-	"Herbert": "Lord Herbert",
-	"Clarence": "Duke of Clarence",
-	"Gloucester": "Duke of Gloucester",
+function old_block_style() {
+	block_style = 'oldblocks';
+	document.querySelector("body").classList.remove("oldblocks");
+	document.querySelector("body").classList.remove("newblocks");
+	document.querySelector("body").classList.add(block_style);
+	window.localStorage['hammer-of-the-scots/block-style'] = block_style;
+	update_map();
+}
+
+function new_block_style() {
+	block_style = 'newblocks';
+	document.querySelector("body").classList.remove("oldblocks");
+	document.querySelector("body").classList.remove("newblocks");
+	document.querySelector("body").classList.add(block_style);
+	window.localStorage['hammer-of-the-scots/block-style'] = block_style;
+	update_map();
 }
 
 function toggle_blocks() {
@@ -53,7 +43,7 @@ let ui = {
 	card_backs: {},
 	areas: {},
 	known: {},
-	secret: { Lancaster: {}, York: {}, Rebel: {} },
+	secret: { England: {}, Scotland: {} },
 	battle_menu: {},
 	battle_block: {},
 	present: new Set(),
@@ -71,13 +61,13 @@ create_log_entry = function (text) {
 
 	if (text.match(/^~ .* ~$/))
 		p.className = 'br', text = text.substring(2, text.length-2);
-	else if (text.match(/^Start Lancaster turn/))
-		p.className = 'L';
-	else if (text.match(/^Start York turn/))
-		p.className = 'Y';
+	else if (text.match(/^Start England turn/))
+		p.className = 'E';
+	else if (text.match(/^Start Scotland turn/))
+		p.className = 'S';
 	else if (text.match(/^Start /))
 		p.className = 'st', text = text.replace(/\.$/, "");
-	else if (text.match(/^Battle in/))
+	else if (text.match(/^(Battle in|Defection battle in)/))
 		p.className = 'bs';
 
 	if (text.match(/^Start /))
@@ -89,18 +79,7 @@ create_log_entry = function (text) {
 
 function on_focus_area(evt) {
 	let where = evt.target.area;
-	let text = where;
-	if (AREAS[where].city)
-		text += " (" + AREAS[where].city + ")";
-	if (AREAS[where].crown)
-		text += " - Crown"; // " \u2655";
-	if (where === "South Yorks" || where === "Kent")
-		text += " - Church"; // " -" \u2657";
-	if (AREAS[where].major_port)
-		text += " - Port";
-	if (AREAS[where].shields.length > 0)
-		text += " - " + AREAS[where].shields.join(", ");
-	document.getElementById("status").textContent = text;
+	document.getElementById("status").textContent = where;
 }
 
 function on_blur_area(evt) {
@@ -113,29 +92,18 @@ function on_click_area(evt) {
 }
 
 const STEP_TEXT = [ 0, "I", "II", "III", "IIII" ];
-const HEIR_TEXT = [ 0, '\u00b9', '\u00b2', '\u00b3', '\u2074', '\u2075' ];
 
 function block_name(who) {
-	if (!who) return "Nobody";
-	let name = BLOCKS[who].name;
-	let long_name = LONG_NAME[name];
-	return long_name ? long_name : name;
-}
-
-function block_owner(who) {
-	if (who === REBEL) {
-		if (game.pretender)
-			return BLOCKS[game.pretender].owner;
-		if (game.king)
-			return ENEMY[BLOCKS[game.king].owner];
-		return YORK;
-	}
-	return BLOCKS[who].owner;
+	if (who === "Edward")
+		return game.edward === 1 ? "Edward I" : "Edward II";
+	if (who === "King")
+		return "Scottish King";
+	return BLOCKS[who].name;
 }
 
 function on_focus_secret_block(evt) {
 	let owner = evt.target.owner;
-	let text = owner;
+	let text = (owner === ENGLAND) ? "English" : "Scottish";
 	document.getElementById("status").textContent = text;
 }
 
@@ -149,14 +117,10 @@ function on_click_secret_block(evt) {
 function on_focus_map_block(evt) {
 	let b = evt.target.block;
 	let s = game.known[b][1];
-	let text = block_name(b) + " ";
-	if (BLOCKS[b].type === 'heir')
-		text += "H" + HEIR_TEXT[BLOCKS[b].heir] + "-";
-	if (BLOCKS[b].loyalty)
-		text += BLOCKS[b].loyalty + "-";
-	else if (BLOCKS[b].type === 'nobles')
-		text += "\u2740-";
-	text += STEP_TEXT[s] + "-" + BLOCKS[b].combat;
+	let text = block_name(b);
+	text += " " + BLOCKS[b].move + "-" + STEP_TEXT[s] + "-" + BLOCKS[b].combat;
+	if (BLOCKS[b].mortal)
+		text += ' \u271d';
 	document.getElementById("status").textContent = text;
 }
 
@@ -180,22 +144,14 @@ function is_battle_reserve(who, list) {
 function on_focus_battle_block(evt) {
 	let b = evt.target.block;
 	let msg = block_name(b);
-	if (is_battle_reserve(b, game.battle.LR))
-		msg = "Lancaster Reserve";
-	if (is_battle_reserve(b, game.battle.YR))
-		msg = "York Reserve";
-
+	if (is_battle_reserve(b, game.battle.ER))
+		msg = "English Reserve";
+	if (is_battle_reserve(b, game.battle.SR))
+		msg = "Scottish Reserve";
 	if (game.actions && game.actions.battle_fire && game.actions.battle_fire.includes(b))
 		msg = "Fire with " + msg;
-	else if (game.actions && game.actions.battle_retreat && game.actions.battle_retreat.includes(b))
-		msg = "Retreat with " + msg;
-	else if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(b))
-		msg = "Charge " + msg;
-	else if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(b))
-		msg = "Attempt treachery on " + msg;
-	else if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
+	if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(b))
 		msg = "Take hit on " + msg;
-
 	document.getElementById("status").textContent = msg;
 }
 
@@ -228,24 +184,6 @@ function on_focus_battle_hit(evt) {
 		"Take hit on " + block_name(evt.target.block);
 }
 
-function on_focus_battle_charge(evt) {
-	if (block_owner(evt.target.block) === game.active)
-		document.getElementById("status").textContent =
-			"Charge with " + block_name(evt.target.block);
-	else
-		document.getElementById("status").textContent =
-			"Charge " + block_name(evt.target.block);
-}
-
-function on_focus_battle_treachery(evt) {
-	if (block_owner(evt.target.block) === game.active)
-		document.getElementById("status").textContent =
-			"Attempt treachery with " + block_name(evt.target.block);
-	else
-		document.getElementById("status").textContent =
-			"Attempt treachery on " + block_name(evt.target.block);
-}
-
 function on_blur_battle_button(evt) {
 	document.getElementById("status").textContent = "";
 }
@@ -253,8 +191,6 @@ function on_blur_battle_button(evt) {
 function on_click_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
 function on_click_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
 function on_click_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
-function on_click_battle_charge(evt) { send_action('battle_charge', evt.target.block); }
-function on_click_battle_treachery(evt) { send_action('battle_treachery', evt.target.block); }
 
 function on_click_battle_pass(evt) {
 	if (window.confirm("Are you sure that you want to PASS with " + block_name(evt.target.block) + "?"))
@@ -266,52 +202,8 @@ function on_click_card(evt) {
 	send_action('play', c);
 }
 
-function on_button_undo(evt) {
-	send_action('undo');
-}
-
-function on_button_pass(evt) {
-	send_action('pass');
-}
-
-function on_button_end_action_phase(evt) {
-	send_action('end_action_phase');
-}
-
-function on_button_end_supply_phase(evt) {
-	send_action('end_supply_phase');
-}
-
-function on_button_end_political_turn(evt) {
-	send_action('end_political_turn');
-}
-
-function on_button_end_exile_limits(evt) {
-	send_action('end_exile_limits');
-}
-
-function on_button_end_regroup(evt) {
-	send_action('end_regroup');
-}
-
-function on_button_end_retreat(evt) {
-	send_action('end_retreat');
-}
-
-function on_button_eliminate(evt) {
-	send_action('eliminate');
-}
-
-function on_button_treachery(evt) {
-	send_action('treachery');
-}
-
-function on_button_execute_clarence(evt) {
-	send_action('execute_clarence');
-}
-
-function on_button_execute_exeter(evt) {
-	send_action('execute_exeter');
+function on_herald(noble) {
+	send_action('noble', noble);
 }
 
 function build_battle_button(menu, b, c, click, enter, img_src) {
@@ -341,19 +233,9 @@ function build_battle_block(b, block) {
 
 	let menu_list = document.createElement("div");
 	menu_list.classList.add("battle_menu_list");
-
-	build_battle_button(menu_list, b, "treachery",
-		on_click_battle_treachery, on_focus_battle_treachery,
-		"/images/rose.svg");
-	build_battle_button(menu_list, b, "charge",
-		on_click_battle_charge, on_focus_battle_charge,
-		"/images/mounted-knight.svg");
 	build_battle_button(menu_list, b, "hit",
 		on_click_battle_hit, on_focus_battle_hit,
 		"/images/cross-mark.svg");
-
-	// menu_list.appendChild(document.createElement("br"));
-
 	build_battle_button(menu_list, b, "fire",
 		on_click_battle_fire, on_focus_battle_fire,
 		"/images/pointy-sword.svg");
@@ -397,7 +279,7 @@ function build_secret_block(b, block) {
 }
 
 function build_map() {
-	let element;
+	let svgmap = document.getElementById("svgmap");
 
 	ui.blocks_element = document.getElementById("blocks");
 	ui.offmap_element = document.getElementById("offmap");
@@ -407,12 +289,12 @@ function build_map() {
 		ui.cards[c].addEventListener("click", on_click_card);
 	}
 
-	for (let c = 1; c <= 7; ++c)
+	for (let c = 1; c <= 5; ++c)
 		ui.card_backs[c] = document.getElementById("back+"+c);
 
 	for (let name in AREAS) {
 		let area = AREAS[name];
-		element = document.getElementById("svgmap").getElementById("area_"+name.replace(/ /g, "_"));
+		let element = svgmap.getElementById("area+"+name);
 		if (element) {
 			element.area = name;
 			element.addEventListener("mouseenter", on_focus_area);
@@ -420,13 +302,11 @@ function build_map() {
 			element.addEventListener("click", on_click_area);
 			ui.areas[name] = element;
 		}
-		ui.secret.Lancaster[name] = [];
-		ui.secret.York[name] = [];
-		ui.secret.Rebel[name] = [];
+		ui.secret.England[name] = [];
+		ui.secret.Scotland[name] = [];
 	}
-	ui.secret.Lancaster.offmap = [];
-	ui.secret.York.offmap = [];
-	ui.secret.Rebel.offmap = [];
+	ui.secret.England.offmap = [];
+	ui.secret.Scotland.offmap = [];
 
 	for (let b in BLOCKS) {
 		let block = BLOCKS[b];
@@ -436,20 +316,41 @@ function build_map() {
 	}
 }
 
+build_map();
+
 function update_steps(b, steps, element) {
-	element.classList.remove("r1");
-	element.classList.remove("r2");
-	element.classList.remove("r3");
+        element.classList.remove("r1");
+        element.classList.remove("r2");
+        element.classList.remove("r3");
 	element.classList.add("r"+(BLOCKS[b].steps - steps));
 }
 
-function layout_blocks(area, secret, known) {
-	let wrap = AREAS[area].wrap;
-	let s = secret.length;
-	let k = known.length;
+function layout_blocks(location, north, south) {
+	let wrap = 4;
+	let s = north.length;
+	let k = south.length;
 	let n = s + k;
 	let row, rows = [];
 	let i = 0;
+
+	switch (location) {
+	case ENGLAND_BAG:
+	case SCOTLAND_BAG:
+		wrap = 28;
+		break;
+	case "Selkirk":
+	case "Lothian":
+	case "Dunbar":
+	case "Lanark":
+	case "Lennox":
+	case "Argyll":
+	case "Garmoran":
+	case "Mentieth":
+		wrap = 3;
+		break;
+	case "England":
+		wrap = 5;
+	}
 
 	function new_line() {
 		rows.push(row = []);
@@ -458,53 +359,82 @@ function layout_blocks(area, secret, known) {
 
 	new_line();
 
-	while (secret.length > 0) {
+	while (north.length > 0) {
 		if (i === wrap)
 			new_line();
-		row.push(secret.shift());
+		row.push(north.shift());
 		++i;
 	}
 
-	// Break early if secret and known fit in exactly two rows, and more than three blocks total
-	if (s > 0 && s <= wrap && k > 0 && k <= wrap && n > 3)
+	// Break early if north and south fit in exactly two rows
+	if (s > 0 && s <= wrap && k > 0 && k <= wrap)
 		new_line();
 
-	while (known.length > 0) {
+	while (south.length > 0) {
 		if (i === wrap)
 			new_line();
-		row.push(known.shift());
+		row.push(south.shift());
 		++i;
 	}
-
-	if (AREAS[area].layout_minor > 0.5)
-		rows.reverse();
 
 	for (let j = 0; j < rows.length; ++j)
 		for (i = 0; i < rows[j].length; ++i)
-			position_block(area, j, rows.length, i, rows[j].length, rows[j][i]);
+			position_block(location, j, rows.length, i, rows[j].length, rows[j][i]);
 }
 
-function position_block(area, row, n_rows, col, n_cols, element) {
-	let space = AREAS[area];
+function position_block(location, row, n_rows, col, n_cols, element) {
+	let area = AREAS[location];
 	let block_size = 60+6;
 	let padding = 4;
 	let offset = block_size + padding;
 	let row_size = (n_rows-1) * offset;
 	let col_size = (n_cols-1) * offset;
-	let x = space.x - block_size/2;
-	let y = space.y - block_size/2;
+	let x = area.x - block_size/2;
+	let y = area.y - block_size/2;
 
-	if (space.layout_axis === 'X') {
-		x -= col_size * space.layout_major;
-		y -= row_size * space.layout_minor;
-		x += col * offset;
-		y += row * offset;
-	} else {
-		y -= col_size * space.layout_major;
-		x -= row_size * space.layout_minor;
-		y += col * offset;
-		x += row * offset;
+	let layout_major = 0.5;
+	let layout_minor = 0.5;
+	switch (location) {
+	case ENGLAND_BAG:
+	case SCOTLAND_BAG:
+		layout_major = 0;
+		layout_minor = 0;
+		break;
+	case ENGLAND:
+		layout_major = 1;
+		layout_minor = 1;
+		break;
+	case "Argyll":
+		layout_major = 0.5;
+		layout_minor = 1.0;
+		break;
+	case "Carrick":
+		layout_major = 0.75;
+		layout_minor = 0.5;
+		break;
+	case "Dunbar":
+		layout_major = 0.25;
+		layout_minor = 0.75;
+		break;
+	case "Fife":
+		layout_major = 0.25;
+		layout_minor = 0.5;
+		break;
+	case "Lennox":
+		layout_major = 0.75;
+		layout_minor = 0.75;
+		break;
+	case "Mentieth":
+		layout_major = 0.5;
+		layout_minor = 0.25;
+		break;
 	}
+
+	x -= col_size * layout_major;
+	y -= row_size * layout_minor;
+
+	x += col * offset;
+	y += row * offset;
 
 	element.style.left = (x|0)+"px";
 	element.style.top = (y|0)+"px";
@@ -521,20 +451,17 @@ function hide_block(element) {
 }
 
 function update_map() {
-	let overflow = { Lancaster: [], York: [], Rebel: [] };
+	let overflow = { England: [], Scotland: [] };
 	let layout = {};
 
-	document.getElementById("turn_info").textContent =
-		"Campaign " + game.campaign +
-		"\nKing: " + block_name(game.king) +
-		"\nPretender: " + block_name(game.pretender);
+	document.getElementById("turn").setAttribute("class", "turn year_" + game.year);
 
 	for (let area in AREAS)
-		layout[area] = { Lancaster: [], York: [] };
+		layout[area] = { Scotland: [], England: [] };
 
-	// Move secret blocks to overflow queue if there are too many in a area
+	// Move secret blocks to overflow queue if there are too many in a location
 	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
+		for (let color of [ENGLAND, SCOTLAND]) {
 			if (game.secret[color]) {
 				let max = game.secret[color][area] ? game.secret[color][area][0] : 0;
 				while (ui.secret[color][area].length > max) {
@@ -546,7 +473,7 @@ function update_map() {
 
 	// Add secret blocks if there are too few in a location
 	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
+		for (let color of [ENGLAND, SCOTLAND]) {
 			if (game.secret[color]) {
 				let max = game.secret[color][area] ? game.secret[color][area][0] : 0;
 				while (ui.secret[color][area].length < max) {
@@ -563,7 +490,7 @@ function update_map() {
 	}
 
 	// Remove any blocks left in the overflow queue
-	for (let color of [LANCASTER, YORK, REBEL]) {
+	for (let color of [ENGLAND, SCOTLAND]) {
 		while (overflow[color].length > 0) {
 			let element = overflow[color].pop();
 			hide_block(element);
@@ -580,7 +507,7 @@ function update_map() {
 
 	// Add secret blocks to layout
 	for (let area in AREAS) {
-		for (let color of [LANCASTER, YORK, REBEL]) {
+		for (let color of [ENGLAND, SCOTLAND]) {
 			let i = 0, n = 0, m = 0;
 			if (game.secret[color] && game.secret[color][area]) {
 				n = game.secret[color][area][0];
@@ -591,10 +518,7 @@ function update_map() {
 					element.classList.remove("moved");
 				else
 					element.classList.add("moved");
-				if (color === REBEL)
-					layout[area][BLOCKS[game.pretender].owner].push(element);
-				else
-					layout[area][color].push(element);
+				layout[area][color].push(element);
 			}
 		}
 	}
@@ -606,10 +530,11 @@ function update_map() {
 			let steps = game.known[b][1];
 			let moved = game.known[b][2];
 			let element = ui.known[b];
-			let color = block_owner(b);
+			let color = BLOCKS[b].owner;
+
+			layout[area][color].push(element);
 
 			show_block(element);
-			layout[area][color].push(element);
 			update_steps(b, steps, element);
 
 			if (moved)
@@ -620,17 +545,10 @@ function update_map() {
 	}
 
 	// Layout blocks on map
-	for (let area in AREAS) {
-		if (area === POOL) {
-			layout_blocks("LPool", layout[area].Lancaster, []);
-			layout_blocks("YPool", layout[area].York, []);
-		} else if (area === MINOR) {
-			layout_blocks("LMinor", layout[area].Lancaster, []);
-			layout_blocks("YMinor", layout[area].York, []);
-		} else {
-			layout_blocks(area, layout[area].Lancaster, layout[area].York);
-		}
-	}
+	for (let area in AREAS)
+		layout_blocks(area, layout[area].Scotland, layout[area].England);
+
+	// Mark selections and highlights
 
 	for (let where in AREAS) {
 		if (ui.areas[where]) {
@@ -669,7 +587,7 @@ function update_cards() {
 
 	if (player === 'Observer') {
 		let n = game.hand.length;
-		for (let c = 1; c <= 7; ++c)
+		for (let c = 1; c <= 5; ++c)
 			if (c <= n)
 				ui.card_backs[c].classList.add("show");
 			else
@@ -681,14 +599,14 @@ function update_cards() {
 			ui.cards[c].classList.add('enabled');
 	}
 
-	if (!game.l_card)
-		document.getElementById("lancaster_card").className = "small_card card_back";
+	if (!game.e_card)
+		document.getElementById("england_card").className = "small_card card_back";
 	else
-		document.getElementById("lancaster_card").className = "small_card " + CARDS[game.l_card].image;
-	if (!game.y_card)
-		document.getElementById("york_card").className = "small_card card_back";
+		document.getElementById("england_card").className = "small_card " + CARDS[game.e_card].image;
+	if (!game.s_card)
+		document.getElementById("scotland_card").className = "small_card card_back";
 	else
-		document.getElementById("york_card").className = "small_card " + CARDS[game.y_card].image;
+		document.getElementById("scotland_card").className = "small_card " + CARDS[game.s_card].image;
 }
 
 function update_battle() {
@@ -710,8 +628,6 @@ function update_battle() {
 			ui.battle_menu[block].classList.remove('fire');
 			ui.battle_menu[block].classList.remove('retreat');
 			ui.battle_menu[block].classList.remove('pass');
-			ui.battle_menu[block].classList.remove('charge');
-			ui.battle_menu[block].classList.remove('treachery');
 
 			if (game.actions && game.actions.block && game.actions.block.includes(block))
 				ui.battle_block[block].classList.add("highlight");
@@ -723,10 +639,6 @@ function update_battle() {
 				ui.battle_menu[block].classList.add('pass');
 			if (game.actions && game.actions.battle_hit && game.actions.battle_hit.includes(block))
 				ui.battle_menu[block].classList.add('hit');
-			if (game.actions && game.actions.battle_charge && game.actions.battle_charge.includes(block))
-				ui.battle_menu[block].classList.add('charge');
-			if (game.actions && game.actions.battle_treachery && game.actions.battle_treachery.includes(block))
-				ui.battle_menu[block].classList.add('treachery');
 
 			update_steps(block, steps, ui.battle_block[block], false);
 			if (reserve)
@@ -754,50 +666,63 @@ function update_battle() {
 		}
 	}
 
-	if (player === LANCASTER) {
-		fill_cell("FR", game.battle.LR, true);
-		fill_cell("FA", game.battle.LA, false);
-		fill_cell("FB", game.battle.LB, false);
-		fill_cell("FC", game.battle.LC, false);
-		fill_cell("FD", game.battle.LD, false);
-		fill_cell("EA", game.battle.YA, false);
-		fill_cell("EB", game.battle.YB, false);
-		fill_cell("EC", game.battle.YC, false);
-		fill_cell("ED", game.battle.YD, false);
-		fill_cell("ER", game.battle.YR, true);
+	if (player === ENGLAND) {
+		fill_cell("FR", game.battle.ER, true);
+		fill_cell("FA", game.battle.EA, false);
+		fill_cell("FB", game.battle.EB, false);
+		fill_cell("FC", game.battle.EC, false);
+		fill_cell("EA", game.battle.SA, false);
+		fill_cell("EB", game.battle.SB, false);
+		fill_cell("EC", game.battle.SC, false);
+		fill_cell("ER", game.battle.SR, true);
 	} else {
-		fill_cell("ER", game.battle.LR, true);
-		fill_cell("EA", game.battle.LA, false);
-		fill_cell("EB", game.battle.LB, false);
-		fill_cell("EC", game.battle.LC, false);
-		fill_cell("ED", game.battle.LD, false);
-		fill_cell("FA", game.battle.YA, false);
-		fill_cell("FB", game.battle.YB, false);
-		fill_cell("FC", game.battle.YC, false);
-		fill_cell("FD", game.battle.YD, false);
-		fill_cell("FR", game.battle.YR, true);
+		fill_cell("ER", game.battle.ER, true);
+		fill_cell("EA", game.battle.EA, false);
+		fill_cell("EB", game.battle.EB, false);
+		fill_cell("EC", game.battle.EC, false);
+		fill_cell("FA", game.battle.SA, false);
+		fill_cell("FB", game.battle.SB, false);
+		fill_cell("FC", game.battle.SC, false);
+		fill_cell("FR", game.battle.SR, true);
 	}
 }
 
 function on_update() {
-	show_action_button("#undo_button", "undo");
-	show_action_button("#pass_button", "pass");
-	show_action_button("#end_action_phase_button", "end_action_phase");
-	show_action_button("#end_supply_phase_button", "end_supply_phase");
-	show_action_button("#end_political_turn_button", "end_political_turn");
-	show_action_button("#end_exile_limits_button", "end_exile_limits");
-	show_action_button("#end_regroup_button", "end_regroup");
-	show_action_button("#end_retreat_button", "end_retreat");
-	show_action_button("#eliminate_button", "eliminate");
-	show_action_button("#execute_clarence_button", "execute_clarence");
-	show_action_button("#execute_exeter_button", "execute_exeter");
+	action_button("crown_bruce", "Crown Bruce");
+	action_button("crown_comyn", "Crown Comyn");
+	action_button("return_of_the_king", "Return of the King");
+	action_button("play_event", "Play event");
+	action_button("winter", "Winter");
+	action_button("eliminate", "Eliminate");
+	action_button("disband", "Disband");
+	action_button("end_move_phase", "End move phase");
+	action_button("end_regroup", "End regroup");
+	action_button("end_retreat", "End retreat");
+	action_button("end_disbanding", "End disbanding");
+	action_button("end_builds", "End builds");
+	action_button("end_pillage", "End pillage");
+	action_button("pass", "Pass");
+	action_button("undo", "Undo");
 
-	let king = block_owner(game.king);
-	document.getElementById("lancaster_vp").textContent = (king === LANCASTER ? KING_TEXT : PRETENDER_TEXT);
-	document.getElementById("york_vp").textContent = (king === YORK ? KING_TEXT : PRETENDER_TEXT);
+	document.getElementById("england_vp").textContent = game.e_vp;
+	document.getElementById("scotland_vp").textContent = game.s_vp;
+	document.getElementById("turn_info").textContent = `Turn ${game.turn} of Year ${game.year}`;
 
 	update_cards();
 	update_map();
+
+	if (game.actions && game.actions.noble) {
+		document.getElementById("herald").classList.add("show");
+		for (let noble of NOBLES) {
+			let element = document.getElementById("herald+" + noble);
+			if (game.actions.noble.includes(noble))
+				element.classList.add("show");
+			else
+				element.classList.remove("show");
+		}
+	} else {
+		document.getElementById("herald").classList.remove("show");
+	}
 
 	if (game.battle) {
 		document.getElementById("battle_header").textContent = game.battle.title;
@@ -809,10 +734,9 @@ function on_update() {
 	}
 }
 
-build_map();
-
 drag_element_with_mouse("#battle", "#battle_header");
-scroll_with_middle_mouse("#grid_center", 2);
+drag_element_with_mouse("#herald", "#herald_header");
+scroll_with_middle_mouse("main", 2);
 init_map_zoom();
 init_shift_zoom();
-init_client(["Lancaster", "York"]);
+init_client([ "England", "Scotland" ]);

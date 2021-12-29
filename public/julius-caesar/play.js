@@ -214,7 +214,7 @@ function build_map() {
 		element.addEventListener("mouseenter", on_focus_block);
 		element.addEventListener("mouseleave", on_blur_block);
 		element.addEventListener("click", on_click_map_block);
-		document.getElementById("known_blocks").appendChild(element);
+		document.getElementById("blocks").appendChild(element);
 		element.style.visibility = 'hidden';
 		element.block = b;
 		ui.known[b] = element;
@@ -227,7 +227,7 @@ function build_map() {
 		element.classList.add("secret");
 		element.classList.add(color);
 		element.addEventListener("click", select_secret_block);
-		document.getElementById("secret_blocks").appendChild(element);
+		document.getElementById("blocks").appendChild(element);
 		element.style.visibility = 'hidden';
 		element.owner = BLOCKS[b].owner;
 		ui.secret[color].offmap.unshift(element);
@@ -714,9 +714,9 @@ function on_update() {
 	else
 		document.getElementById("turn_info").textContent = `Turn ${game.turn} of Year ${game.year}`;
 
-	show_action_button("#undo_button", "undo");
-	show_action_button("#surprise_button", "surprise");
-	show_action_button("#pass_button", "pass", true);
+	action_button("surprise", "Surprise!");
+	action_button("pass");
+	action_button("undo", "Undo");
 
 	ui.seen.clear();
 
@@ -779,10 +779,6 @@ function select_secret_block(evt) {
 	}
 }
 
-function select_surprise() { send_action('surprise'); }
-function select_pass() { send_action('pass'); }
-function select_undo() { send_action('undo'); }
-
 function select_battle_hit(evt) { send_action('battle_hit', evt.target.block); }
 function select_battle_fire(evt) { send_action('battle_fire', evt.target.block); }
 function select_battle_retreat(evt) { send_action('battle_retreat', evt.target.block); }
@@ -799,7 +795,7 @@ document.getElementById("blocks").classList.add(label_style+'-labels');
 document.getElementById("battle").classList.add(label_style+'-labels');
 
 drag_element_with_mouse("#battle", "#battle_header");
-scroll_with_middle_mouse("#grid_center");
+scroll_with_middle_mouse("main");
 init_map_zoom();
 init_shift_zoom();
 init_client([ "Caesar", "Pompeius" ]);

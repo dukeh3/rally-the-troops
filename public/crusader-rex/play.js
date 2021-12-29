@@ -230,21 +230,6 @@ function on_click_card(evt) {
 	send_action('play', c);
 }
 
-function on_button_next(evt) { send_action('next'); }
-function on_button_pass(evt) { send_action('pass'); }
-function on_button_undo(evt) { send_action('undo'); }
-function on_button_winter_campaign(evt) { send_action('winter_campaign'); }
-function on_button_group_move(evt) { send_action('group_move'); }
-function on_button_end_group_move(evt) { send_action('end_group_move'); }
-function on_button_sea_move(evt) { send_action('sea_move'); }
-function on_button_end_sea_move(evt) { send_action('end_sea_move'); }
-function on_button_muster(evt) { send_action('muster'); }
-function on_button_end_muster(evt) { send_action('end_muster'); }
-function on_button_end_move_phase(evt) { send_action('end_move_phase'); }
-function on_button_end_regroup(evt) { send_action('end_regroup'); }
-function on_button_end_retreat(evt) { send_action('end_retreat'); }
-function on_button_eliminate(evt) { send_action('eliminate'); }
-
 function build_battle_button(menu, b, c, click, enter, img_src) {
 	let img = new Image();
 	img.draggable = false;
@@ -774,20 +759,20 @@ function start_flash() {
 }
 
 function on_update() {
-	show_action_button("#next_button", "next");
-	show_action_button("#pass_button", "pass");
-	show_action_button("#undo_button", "undo");
-	show_action_button("#winter_campaign_button", "winter_campaign");
-	show_action_button("#group_move_button", "group_move");
-	show_action_button("#end_group_move_button", "end_group_move");
-	show_action_button("#sea_move_button", "sea_move");
-	show_action_button("#end_sea_move_button", "end_sea_move");
-	show_action_button("#muster_button", "muster");
-	show_action_button("#end_muster_button", "end_muster");
-	show_action_button("#end_move_phase_button", "end_move_phase");
-	show_action_button("#end_regroup_button", "end_regroup");
-	show_action_button("#end_retreat_button", "end_retreat");
-	show_action_button("#eliminate_button", "eliminate");
+	action_button("eliminate_button", "Eliminate");
+	action_button("winter_campaign_button", "Winter campaign");
+	action_button("sea_move_button", "Sea move");
+	action_button("end_sea_move_button", "End sea move");
+	action_button("group_move_button", "Group move");
+	action_button("end_group_move_button", "End group move");
+	action_button("muster_button", "Muster");
+	action_button("end_muster_button", "End muster");
+	action_button("end_retreat_button", "End retreat");
+	action_button("end_regroup_button", "End regroup");
+	action_button("end_move_phase_button", "End move phase");
+	action_button("pass", "Pass");
+	action_button("next", "Next");
+	action_button("undo", "Undo");
 
 	document.getElementById("frank_vp").textContent = game.f_vp;
 	document.getElementById("saracen_vp").textContent = game.s_vp;
@@ -810,7 +795,7 @@ function on_update() {
 build_map();
 
 drag_element_with_mouse("#battle", "#battle_header");
-scroll_with_middle_mouse("#grid_center", 3);
+scroll_with_middle_mouse("main", 3);
 init_map_zoom();
 init_shift_zoom();
 init_client(["Franks", "Saracens"]);

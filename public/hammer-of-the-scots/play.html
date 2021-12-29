@@ -8,264 +8,13 @@
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/common/grid.css">
 <link rel="stylesheet" href="/common/battle_abc.css">
-<link rel="stylesheet" href="blocks.css">
+<link rel="stylesheet" href="play.css">
 <script defer src="/socket.io/socket.io.min.js"></script>
 <script defer src="/common/client.js"></script>
 <script defer src="data.js"></script>
-<script defer src="ui.js"></script>
-<style>
-
-#grid_center { background-color: slategray; }
-#grid_role { background-color: silver; }
-#grid_top { background-color: silver; }
-#grid_top.your_turn { background-color: orange; }
-.one .role_name { background-color: salmon; }
-.two .role_name { background-color: skyblue; }
-#turn_info { background-color: gainsboro; }
-
-#log { background-color: whitesmoke; }
-#log .st { background-color: darkslategray; color: white; font-weight: bold; }
-#log .S { background-color: pink; }
-#log .E { background-color: lightblue; }
-#log .bs { background-color: gainsboro; }
-#log .br { font-style: italic; text-decoration: underline; }
-
-/* CARDS */
-
-.card_back{background-image: url('cards/card_back.svg')}
-.card_truce{background-image:url('cards/card_truce.jpg')}
-.card_herald{background-image:url('cards/card_herald.jpg')}
-.card_sea_move{background-image:url('cards/card_sea_move.jpg')}
-.card_pillage{background-image:url('cards/card_pillage.jpg')}
-.card_victuals{background-image:url('cards/card_victuals.jpg')}
-.card_1{background-image:url('cards/card_1.jpg')}
-.card_2{background-image:url('cards/card_2.jpg')}
-.card_3{background-image:url('cards/card_3.jpg')}
-
-.card, .small_card {
-	background-color: #893739;
-}
-
-.card {
-	width: 225px;
-	height: 350px;
-	border-radius: 10px;
-	background-color: #883737;
-}
-
-.card.enabled:hover {
-	transform: scale(1.1);
-}
-
-.role_info { padding: 15px; }
-.small_card { width: 90px; height: 140px; border-radius: 4px; }
-.small_card:hover { width: 180px; height: 280px; border-radius: 8px; }
-
-@media (max-height: 800px) {
-	.role_info { padding: 15px 0 0 0; }
-	.small_card { width: 180px; height: 80px; border-radius: 8px 8px 0 0; }
-	.small_card:hover { width: 180px; height: 280px; border-radius: 8px; margin-bottom: 15px; }
-}
-
-@media (min-height: 1200px) {
-	.small_card { width: 180px; height: 280px; border-radius: 8px; }
-}
-
-/* MAP */
-
-#mapwrap {
-	position: relative;
-	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
-	width: 1688px;
-	height: 1950px;
-}
-
-#map {
-	position: absolute;
-	background-color: darkslategray;
-	width: 1688px;
-	height: 1950px;
-}
-
-#map svg {
-	position: absolute;
-}
-
-#map svg image {
-	pointer-events: none;
-}
-
-#map svg path.area {
-	opacity: 0;
-	fill-opacity: 0.4;
-	fill: white;
-}
-#map svg path.area.where {
-	opacity: 1;
-	fill: darkslategray;
-}
-#map svg path.area.highlight {
-	cursor: pointer;
-	opacity: 1;
-	fill: white;
-}
-
-#map.hide_blocks #blocks {
-	visibility: hidden;
-}
-
-/* TURN MARKER */
-
-div.turn {
-	pointer-events: none;
-	position: absolute;
-	width: 66px;
-	height: 66px;
-	background-size: cover;
-	background-repeat: no-repeat;
-	background-image: url(turn_marker.jpg);
-	box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-	border-radius: 4px;
-	transition: 700ms ease;
-}
-
-
-div.turn.year_1297 { left: 1511px; top: 221px; }
-div.turn.year_1298 { left: 1511px; top: 306px; }
-div.turn.year_1299 { left: 1511px; top: 392px; }
-div.turn.year_1300 { left: 1511px; top: 478px; }
-div.turn.year_1301 { left: 1511px; top: 563px; }
-div.turn.year_1302 { left: 1511px; top: 649px; }
-div.turn.year_1303 { left: 1511px; top: 734px; }
-div.turn.year_1304 { left: 1511px; top: 820px; }
-div.turn.year_1305 { left: 1511px; top: 906px; }
-div.turn.year_1306 { left: 1511px; top: 992px; }
-div.turn.year_1307 { left: 1511px; top: 1077px; }
-div.turn.year_1308 { left: 1511px; top: 1163px; }
-div.turn.year_1309 { left: 1511px; top: 1249px; }
-div.turn.year_1310 { left: 1511px; top: 1334px; }
-div.turn.year_1311 { left: 1511px; top: 1420px; }
-div.turn.year_1312 { left: 1511px; top: 1506px; }
-div.turn.year_1313 { left: 1511px; top: 1591px; }
-div.turn.year_1314 { left: 1511px; top: 1677px; }
-
-/* BLOCKS */
-
-body.shift .block.known:hover {
-	transform: scale(2) !important;
-	transition: 100ms;
-	z-index: 100;
-}
-
-.oldblocks div.block { border-radius: 8px; }
-.newblocks div.block { border-radius: 4px; }
-
-#map div.block {
-	position: absolute;
-}
-
-#battle div.block {
-	position: relative;
-}
-
-div.block {
-	background-size: cover;
-	background-repeat: no-repeat;
-	width: 60px;
-	height: 60px;
-	box-shadow: 0px 0px 3px black;
-}
-
-.oldblocks div.block.England { border: 3px solid brown; background-color: brown; }
-.oldblocks div.block.Scotland { border: 3px solid #06a; background-color: #06a; }
-.oldblocks div.block.highlight { border-color: white; }
-.oldblocks div.block.selected { border-color: yellow; }
-.oldblocks div.block.highlight { box-shadow: 0px 0px 4px 1px white; }
-.oldblocks div.block.selected { box-shadow: 0 0 4px 1px yellow; }
-
-.newblocks div.block.England { border: 2px solid #a12; background-color: #a12; }
-.newblocks div.block.Scotland { border: 2px solid #059; background-color: #059; }
-.newblocks div.block.highlight { box-shadow: 0px 0px 2px 3px white; }
-.newblocks div.block.selected { box-shadow: 0px 0px 2px 3px yellow; }
-
-.oldblocks .battle_menu.hit div.block.highlight { border: 3px solid black; box-shadow: 0px 0px 3px black; }
-.newblocks .battle_menu.hit div.block.highlight { box-shadow: 0px 0px 2px 3px black; }
-
-div.block.highlight { cursor: pointer; }
-div.block.moved { filter: grayscale(50%) brightness(80%); }
-div.block.highlight.moved { filter: grayscale(60%) brightness(95%); }
-
-div.block.r1 { transform: rotate(-90deg); }
-div.block.r2 { transform: rotate(-180deg); }
-div.block.r3 { transform: rotate(-270deg); }
-
-div.block:hover { z-index: 1; }
-
-div.block {
-	transition-property: top, left, transform;
-	transition-duration: 700ms, 700ms, 200ms;
-	transition-timing-function: ease;
-}
-
-/* HERALD DIALOG */
-
-.herald {
-	background-color: white;
-	border: 1px solid black;
-	position: absolute;
-	top: 100px;
-	left: 100px;
-	box-shadow: 0px 5px 10px 0px rgba(0,0,0,0.5);
-	z-index: 50;
-	user-select: none;
-	visibility: hidden;
-}
-.herald.show {
-	visibility: visible;
-}
-.herald_header {
-	font-weight: bold;
-	cursor: move;
-	border-bottom: 1px solid black;
-	background-color: lightsteelblue;
-	padding: 3px 1em;
-}
-.herald_noble {
-	padding: 3px 1em;
-	display: none;
-}
-.herald_noble:hover {
-	color: white;
-	background-color: black;
-}
-.herald_noble.show {
-	display: block;
-}
-
-/* BATTLE BOARD */
-
-#battle { background-color: silver; }
-#battle_message { background-color: lightsteelblue; }
-#battle_header { background-color: steelblue; color: white; }
-.battle_separator { background-color: steelblue; }
-
-.battle_line.enemy .battle_menu_list { min-height: 0; }
-.battle_reserves > td > div { height: 66px; }
-.battle_a_cell > div { min-width: 240px; }
-.battle_b_cell > div { min-width: 240px; }
-.battle_c_cell > div { min-width: 240px; }
-
-</style>
+<script defer src="play.js"></script>
 </head>
 <body class="oldblocks">
-
-<div id="status"></div>
-
-<div id="chat_window">
-<div id="chat_header">Chat</div>
-<div id="chat_text"></div>
-<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
-</div>
 
 <table id="battle">
 <tr>
@@ -288,8 +37,8 @@ div.block {
 <th id="battle_message" colspan=4></th>
 </table>
 
-<div class="herald">
-<div class="herald_header">Name an enemy noble:</div>
+<div id="herald">
+<div id="herald_header">Name an enemy noble:</div>
 <div id="herald+Angus" class="herald_noble" onclick="on_herald('Angus')">Angus</div>
 <div id="herald+Argyll" class="herald_noble" onclick="on_herald('Argyll')">Argyll</div>
 <div id="herald+Atholl" class="herald_noble" onclick="on_herald('Atholl')">Atholl</div>
@@ -305,85 +54,32 @@ div.block {
 <div id="herald+Steward" class="herald_noble" onclick="on_herald('Steward')">Steward</div>
 </div>
 
-<div id="grid_window">
-
-	<div id="grid_top">
-		<div class="menu">
-			<div class="menu_title"><img src="/images/cog.svg"></div>
-			<div class="menu_popup">
-				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="old_block_style()">Classic labels</div>
-				<div class="menu_item" onclick="new_block_style()">New labels</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
-				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
-				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
-				<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
-				<div class="resign menu_separator"></div>
-				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
-			</div>
+<header>
+	<div class="menu">
+		<div class="menu_title"><img src="/images/cog.svg"></div>
+		<div class="menu_popup">
+			<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="old_block_style()">Classic labels</div>
+			<div class="menu_item" onclick="new_block_style()">New labels</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+			<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+			<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+			<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
+			<div class="resign menu_separator"></div>
+			<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
 		</div>
-
-		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
-		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
-
-		<div id="prompt">Connecting...</div>
-
-		<button id="end_pillage_button" onclick="on_button_end_pillage()" class="hide">
-			End pillage
-		</button>
-		<button id="end_builds_button" onclick="on_button_end_builds()" class="hide">
-			End builds
-		</button>
-		<button id="end_disbanding_button" onclick="on_button_end_disbanding()" class="hide">
-			End disbanding
-		</button>
-		<button id="winter_button" onclick="on_button_winter()" class="hide">
-			Winter
-		</button>
-		<button id="disband_button" onclick="on_button_disband()" class="hide">
-			Disband
-		</button>
-		<button id="eliminate_button" onclick="on_button_eliminate()" class="hide">
-			Eliminate
-		</button>
-		<button id="end_retreat_button" onclick="on_button_end_retreat()" class="hide">
-			End retreat
-		</button>
-		<button id="end_regroup_button" onclick="on_button_end_regroup()" class="hide">
-			End regroup
-		</button>
-		<button id="end_move_phase_button" onclick="on_button_end_move_phase()" class="hide">
-			End move phase
-		</button>
-		<button id="crown_bruce_button" onclick="on_crown_bruce()" class="hide">
-			Coronation: Bruce
-		</button>
-		<button id="crown_comyn_button" onclick="on_crown_comyn()" class="hide">
-			Coronation: Comyn
-		</button>
-		<button id="return_of_the_king_button" onclick="on_return_of_the_king()" class="hide">
-			Return of the King
-		</button>
-		<button id="play_event_button" onclick="on_button_play_event()" class="hide">
-			Play event
-		</button>
-		<button id="pass_button" onclick="on_button_pass()" class="hide">
-			Pass
-		</button>
-		<button id="undo_button" onclick="on_button_undo()" class="hide">
-			Undo
-		</button>
-
-		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
-		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
+	<div class="icon_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+	<div class="icon_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+	<div class="icon_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+	<div id="prompt"></div>
+	<div id="actions"></div>
+</header>
 
-	<div id="grid_role">
-
+<aside>
+	<div id="roles">
 		<div class="role one">
 			<div class="role_name">
 				England
@@ -394,7 +90,6 @@ div.block {
 				<div class="small_card card_back" id="england_card"></div>
 			</div>
 		</div>
-
 		<div class="role two">
 			<div class="role_name">
 				Scotland
@@ -405,13 +100,12 @@ div.block {
 				<div class="small_card card_back" id="scotland_card"></div>
 			</div>
 		</div>
-
 		<div id="turn_info">-</div>
 	</div>
-
 	<div id="log"></div>
+</aside>
 
-	<div id="grid_center">
+<main>
 
 <div id="mapwrap">
 <div id="map">
@@ -889,11 +583,10 @@ c50 53 55 80 28 143 -18 42 -21 62 -16 107 17 147 18 179 6 245 -15 91 -56
 <div id="turn" class="turn year_1297"></div>
 <div id="blocks"></div>
 <div id="offmap" style="visibility:hidden"></div>
-
 </div>
 </div>
 
-<div class="hand">
+<div id="cards" class="hand">
 <div id="card+1" class="card card_herald"></div>
 <div id="card+2" class="card card_pillage"></div>
 <div id="card+3" class="card card_sea_move"></div>
@@ -926,7 +619,8 @@ c50 53 55 80 28 143 -18 42 -21 62 -16 107 17 147 18 179 6 245 -15 91 -56
 <div id="back+5" class="card card_back"></div>
 </div>
 
-	</div>
+</main>
 
-</div>
+<footer id="status"></footer>
+
 </body>

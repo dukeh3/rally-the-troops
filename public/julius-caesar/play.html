@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>JULIUS CAESAR</title>
 <link rel="icon" href="Vexilloid_of_the_Roman_Empire.svg">
 <link rel="stylesheet" href="/fonts/fonts.css">
@@ -10,376 +10,133 @@
 <link rel="stylesheet" href="/common/battle_abc.css">
 <link rel="stylesheet" href="blocks_simple.css">
 <link rel="stylesheet" href="blocks_columbia.css">
+<link rel="stylesheet" href="play.css">
 <script defer src="/socket.io/socket.io.min.js"></script>
 <script defer src="/common/client.js"></script>
 <script defer src="data.js"></script>
-<script defer src="ui.js"></script>
-<style>
-
-#grid_center { background-color: #461145; }
-#grid_role { background-color: tan; }
-#grid_top { background-color: tan; }
-#grid_top.your_turn { background-color: orange; }
-.one .role_name { background-color: salmon; }
-.two .role_name { background-color: #eb5; }
-#turn_info { background-color: burlywood; }
-
-#log { background-color: wheat; }
-#log .st { background-color: brown; color: gold; font-weight: bold; }
-#log .C { background-color: salmon; }
-#log .P { background-color: #eb5; }
-#log .bs { background-color: tan; }
-#log .br { font-style: italic; text-decoration: underline; }
-
-/* CARDS */
-
-.card_back { background-image: url('cards/card_back.jpg'); }
-.card_apollo { background-image: url('cards/card_apollo.jpg'); }
-.card_jupiter { background-image: url('cards/card_jupiter.jpg'); }
-.card_mars { background-image: url('cards/card_mars.jpg'); }
-.card_mercury { background-image: url('cards/card_mercury.jpg'); }
-.card_neptune { background-image: url('cards/card_neptune.jpg'); }
-.card_pluto { background-image: url('cards/card_pluto.jpg'); }
-.card_vulcan { background-image: url('cards/card_vulcan.jpg'); }
-.card_12 { background-image: url('cards/card_12.jpg'); }
-.card_13 { background-image: url('cards/card_13.jpg'); }
-.card_21 { background-image: url('cards/card_21.jpg'); }
-.card_22 { background-image: url('cards/card_22.jpg'); }
-.card_23 { background-image: url('cards/card_23.jpg'); }
-.card_31 { background-image: url('cards/card_31.jpg'); }
-.card_32 { background-image: url('cards/card_32.jpg'); }
-.card_41 { background-image: url('cards/card_41.jpg'); }
-
-.card {
-	background-color: white;
-	width: 225px;
-	height: 350px;
-	border-radius: 12px;
-}
-
-.card.enabled:hover {
-	transform: scale(1.1);
-}
-
-.small_card.prior {
-	filter: grayscale(100%);
-}
-
-.card, .small_card { background-color: white; }
-.card_back { background-color: #822c1f; }
-
-.role_info { padding: 15px; }
-.small_card { width: 90px; height: 140px; border-radius: 5px; }
-.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
-
-@media (max-height: 800px) {
-	.role_info { padding: 15px 0 0 0; }
-	.small_card { width: 135px; height: 80px; border-radius: 8px 8px 0 0; }
-	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
-}
-
-@media (min-height: 1200px) {
-	.small_card { width: 180px; height: 280px; border-radius: 10px; }
-}
-
-/* BATTLE BOARD */
-
-#battle { background-color: tan; }
-#battle_message { background-color: wheat; }
-#battle_header { background-color: brown; color: lemonchiffon; }
-.battle_separator { background-color: brown; }
-
-.battle_line.enemy .battle_menu_list { min-height: 0; }
-.battle_reserves .battle_menu_list { min-height: 0; }
-.battle_reserves > td > div { height: 75px; padding: 5px; }
-.battle_a_cell > div { min-width: 90px; padding: 5px 5px; }
-.battle_b_cell > div { min-width: 270px; padding: 5px 5px; }
-.battle_c_cell > div { min-width: 270px; padding: 5px 5px; }
-.battle_d_cell > div { min-width: 90px; padding: 5px 5px; }
-
-/* MAP WITH BLOCKS AND SPACES */
-
-#mapwrap {
-	position: relative;
-	width: 2475px;
-	height: 1275px;
-}
-
-#map {
-	position: absolute;
-	width: 2475px;
-	height: 1275px;
-	background-image: url("map.jpg");
-	background-size: cover;
-}
-
-#turn {
-	position: absolute;
-	width: 75px;
-	height: 75px;
-	left: 51px;
-	border-radius: 12px;
-	border: 3px solid white;
-	box-shadow: 0 0 12px white;
-}
-#turn.year_705 { top: 384px; }
-#turn.year_706 { top: 301px; }
-#turn.year_707 { top: 218px; }
-#turn.year_708 { top: 135px; }
-#turn.year_709 { top: 51px; }
-
-.space {
-	position: absolute;
-	opacity: 0;
-	z-index: 1;
-	border: 5px solid white;
-}
-.space.city {
-	width: 60px;
-	height: 60px;
-	border-radius: 50%;
-}
-.space.sea {
-	width: 70px;
-	height: 70px;
-	border-radius: 50%;
-}
-.space.highlight {
-	cursor: pointer;
-	opacity: 0.8;
-	z-index: 9;
-}
-
-#blocks.hide_blocks {
-	display: none;
-}
-
-body.shift .block.known:hover {
-	transform: scale(2) !important;
-	transition: 100ms;
-	z-index: 100;
-}
-
-#battle .block { position: relative; }
-#map .block { position: absolute; z-index: 2; }
-#map .block.highlight { z-index: 3; }
-#map .block.selected { z-index: 4; }
-#map .block.known:hover { z-index: 5; }
-
-.block.highlight { cursor: pointer; }
-
-.simple-labels .block { width: 48px; height: 48px; border-radius: 6px; }
-
-.simple-labels .block.Caesar { background-color: #b22; border: 2px solid #822; }
-.simple-labels .block.Pompeius { background-color: #eb2; border: 2px solid #862; }
-.simple-labels .block.Cleopatra { background-color: #09b; border: 2px solid #067; }
-.simple-labels .block.highlight { border: 2px solid white; }
-.simple-labels .block.selected { border: 2px solid yellow; }
-.simple-labels .block.moved { filter: grayscale(70%); }
-
-.columbia-labels .block{ width: 56px; height: 56px; border-radius: 6px; }
-
-.columbia-labels .block.Caesar { background-color: #c22; border: 3px solid #822; }
-.columbia-labels .block.Pompeius { background-color: #c91; border: 3px solid #862; }
-.columbia-labels .block.Cleopatra { background-color: #09a; border: 3px solid #067; }
-.columbia-labels .block.known.Caesar { background-color: #822; }
-.columbia-labels .block.known.Pompeius { background-color: #862; }
-.columbia-labels .block.known.Cleopatra { background-color: #067; }
-.columbia-labels .block.highlight { border: 3px solid white; }
-.columbia-labels .block.selected { border: 3px solid yellow; }
-.columbia-labels .block.moved { filter: grayscale(70%); }
-
-.battle_menu.hit .block.highlight { border-color: black; }
-
-.columbia-labels .block.r0 { transform: rotate(0deg); }
-.columbia-labels .block.r1 { transform: rotate(-90deg); }
-.columbia-labels .block.r2 { transform: rotate(-180deg); }
-.columbia-labels .block.r3 { transform: rotate(-270deg); }
-
-.block.mars {
-	background-image: url("mars.svg");
-	background-size: 80%;
-	background-position: center;
-}
-.block.neptune {
-	background-image: url("neptune.svg");
-	background-size: 80%;
-	background-position: center;
-}
-.block.jupiter:not(.known) {
-	background-image: url("jupiter.svg");
-	background-size: 80%;
-	background-position: center;
-}
-
-body.Observer .simple-labels .known.jupiter.Caesar { border: 2px solid #862; }
-body.Observer .simple-labels .known.jupiter.Pompeius { border: 2px solid #822; }
-body.Observer .simple-labels .known.jupiter.Cleopatra { border: 2px solid #822; }
-body.Observer .columbia-labels .known.jupiter.Caesar { border: 3px solid #862; }
-body.Observer .columbia-labels .known.jupiter.Pompeius { border: 3px solid #822; }
-body.Observer .columbia-labels .known.jupiter.Cleopatra { border: 3px solid #822; }
-
-.block { box-shadow: 0px 0px 4px 0px black; }
-
-.block {
-	transition-property: top, left, transform, filter;
-	transition-duration: 700ms, 700ms, 300ms, 300ms;
-	transition-timing-function: ease;
-}
-
-</style>
+<script defer src="play.js"></script>
 </head>
 <body>
 
-<div id="status"></div>
-
-<div id="chat_window">
-<div id="chat_header">Chat</div>
-<div id="chat_text"></div>
-<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
-</div>
-
 <table id="battle">
 <tr>
-<th id="battle_header" colspan=4></th>
+<th id="battle_header" colspan=4>
 <tr class="battle_reserves enemy">
-<td colspan=4><div id="ER"></div></td>
+<td colspan=4><div id="ER"></div>
 <tr class="battle_line enemy">
-<td class="battle_a_cell"><div id="EA"></div></td>
-<td class="battle_b_cell"><div id="EB"></div></td>
-<td class="battle_c_cell"><div id="EC"></div></td>
-<td class="battle_d_cell"><div id="ED"></div></td>
+<td class="battle_a_cell"><div id="EA"></div>
+<td class="battle_b_cell"><div id="EB"></div>
+<td class="battle_c_cell"><div id="EC"></div>
+<td class="battle_d_cell"><div id="ED"></div>
 <tr class="battle_separator">
 <td colspan=4>
 <tr class="battle_line friendly">
-<td class="battle_a_cell"><div id="FA"></div></td>
-<td class="battle_b_cell"><div id="FB"></div></td>
-<td class="battle_c_cell"><div id="FC"></div></td>
-<td class="battle_d_cell"><div id="FD"></div></td>
+<td class="battle_a_cell"><div id="FA"></div>
+<td class="battle_b_cell"><div id="FB"></div>
+<td class="battle_c_cell"><div id="FC"></div>
+<td class="battle_d_cell"><div id="FD"></div>
 <tr class="battle_reserves friendly">
-<td colspan=4><div id="FR"></div></td>
+<td colspan=4><div id="FR"></div>
 <tr>
-<th id="battle_message" colspan=4></th>
+<th id="battle_message" colspan=4>
 </table>
 
-<div id="grid_window">
-
-	<div id="grid_top">
-
-		<div class="menu">
-			<div class="menu_title"><img src="/images/cog.svg"></div>
-			<div class="menu_popup">
-				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="set_columbia_labels()">Columbia labels</div>
-				<div class="menu_item" onclick="set_simple_labels()">Simple labels</div>
-				<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
-				<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
-				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
-				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
-				<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
-				<div class="resign menu_separator"></div>
-				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
-			</div>
+<header>
+	<div class="menu">
+		<div class="menu_title"><img src="/images/cog.svg"></div>
+		<div class="menu_popup">
+			<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="set_columbia_labels()">Columbia labels</div>
+			<div class="menu_item" onclick="set_simple_labels()">Simple labels</div>
+			<div class="menu_item" onclick="set_spread_layout()">Spread blocks</div>
+			<div class="menu_item" onclick="set_stack_layout()">Stack blocks</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+			<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+			<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+			<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
+			<div class="resign menu_separator"></div>
+			<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
 		</div>
-
-		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
-		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
-
-		<div id="prompt">Connecting...</div>
-
-		<button id="surprise_button" onclick="select_surprise()" class="hide">Surprise!</button>
-		<button id="pass_button" onclick="select_pass()" class="hide">Pass</button>
-		<button id="undo_button" onclick="select_undo()" class="hide">Undo</button>
-
-		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
-		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
+	<div class="icon_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+	<div class="icon_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+	<div class="icon_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+	<div id="prompt"></div>
+	<div id="actions"></div>
+</header>
 
-	<div id="grid_role">
-
+<aside>
+	<div id="roles">
 		<div class="role one">
 			<div class="role_name">
 				Caesar
-				<div class="role_vp" id="caesar_vp">1 VP</div>
+				<div class="role_vp" id="caesar_vp">VP</div>
 				<div class="role_user">-</div>
 			</div>
 			<div class="role_info"><div class="small_card card_back" id="caesar_card"></div></div>
 		</div>
-
 		<div class="role two">
 			<div class="role_name">
 				Pompeius
-				<div class="role_vp" id="pompeius_vp">7 VP</div>
+				<div class="role_vp" id="pompeius_vp">VP</div>
 				<div class="role_user">-</div>
 			</div>
 			<div class="role_info">
 				<div class="small_card card_back" id="pompeius_card"></div>
 			</div>
 		</div>
-
 		<div id="turn_info">-</div>
 	</div>
-
 	<div id="log"></div>
+</aside>
 
-	<div id="grid_center">
-
-		<div id="mapwrap">
+<main>
+	<div id="mapwrap">
 		<div id="map">
-			<div id="blocks">
-				<div id="secret_blocks"></div>
-				<div id="known_blocks"></div>
-			</div>
+			<div id="blocks"></div>
 			<div id="spaces"></div>
 			<div id="turn" class="year_705"></div>
 		</div>
-		</div>
-
-		<div class="hand">
-
-<div id="card+1" class="card card_apollo" onclick="select_card(1)"></div>
-<div id="card+2" class="card card_jupiter" onclick="select_card(2)"></div>
-<div id="card+3" class="card card_mars" onclick="select_card(3)"></div>
-<div id="card+4" class="card card_mercury" onclick="select_card(4)"></div>
-<div id="card+5" class="card card_neptune" onclick="select_card(5)"></div>
-<div id="card+6" class="card card_pluto" onclick="select_card(6)"></div>
-<div id="card+7" class="card card_vulcan" onclick="select_card(7)"></div>
-<div id="card+8" class="card card_41" onclick="select_card(8)"></div>
-<div id="card+9" class="card card_32" onclick="select_card(9)"></div>
-<div id="card+10" class="card card_32" onclick="select_card(10)"></div>
-<div id="card+11" class="card card_31" onclick="select_card(11)"></div>
-<div id="card+12" class="card card_31" onclick="select_card(12)"></div>
-<div id="card+13" class="card card_31" onclick="select_card(13)"></div>
-<div id="card+14" class="card card_23" onclick="select_card(14)"></div>
-<div id="card+15" class="card card_23" onclick="select_card(15)"></div>
-<div id="card+16" class="card card_23" onclick="select_card(16)"></div>
-<div id="card+17" class="card card_23" onclick="select_card(17)"></div>
-<div id="card+18" class="card card_22" onclick="select_card(18)"></div>
-<div id="card+19" class="card card_22" onclick="select_card(19)"></div>
-<div id="card+20" class="card card_22" onclick="select_card(20)"></div>
-<div id="card+21" class="card card_22" onclick="select_card(21)"></div>
-<div id="card+22" class="card card_21" onclick="select_card(22)"></div>
-<div id="card+23" class="card card_21" onclick="select_card(23)"></div>
-<div id="card+24" class="card card_21" onclick="select_card(24)"></div>
-<div id="card+25" class="card card_13" onclick="select_card(25)"></div>
-<div id="card+26" class="card card_12" onclick="select_card(26)"></div>
-<div id="card+27" class="card card_12" onclick="select_card(27)"></div>
-
-<div id="back+1" class="card card_back"></div>
-<div id="back+2" class="card card_back"></div>
-<div id="back+3" class="card card_back"></div>
-<div id="back+4" class="card card_back"></div>
-<div id="back+5" class="card card_back"></div>
-<div id="back+6" class="card card_back"></div>
-
-		</div>
-
 	</div>
+	<div id="cards" class="hand">
+		<div id="card+1" class="card card_apollo" onclick="select_card(1)"></div>
+		<div id="card+2" class="card card_jupiter" onclick="select_card(2)"></div>
+		<div id="card+3" class="card card_mars" onclick="select_card(3)"></div>
+		<div id="card+4" class="card card_mercury" onclick="select_card(4)"></div>
+		<div id="card+5" class="card card_neptune" onclick="select_card(5)"></div>
+		<div id="card+6" class="card card_pluto" onclick="select_card(6)"></div>
+		<div id="card+7" class="card card_vulcan" onclick="select_card(7)"></div>
+		<div id="card+8" class="card card_41" onclick="select_card(8)"></div>
+		<div id="card+9" class="card card_32" onclick="select_card(9)"></div>
+		<div id="card+10" class="card card_32" onclick="select_card(10)"></div>
+		<div id="card+11" class="card card_31" onclick="select_card(11)"></div>
+		<div id="card+12" class="card card_31" onclick="select_card(12)"></div>
+		<div id="card+13" class="card card_31" onclick="select_card(13)"></div>
+		<div id="card+14" class="card card_23" onclick="select_card(14)"></div>
+		<div id="card+15" class="card card_23" onclick="select_card(15)"></div>
+		<div id="card+16" class="card card_23" onclick="select_card(16)"></div>
+		<div id="card+17" class="card card_23" onclick="select_card(17)"></div>
+		<div id="card+18" class="card card_22" onclick="select_card(18)"></div>
+		<div id="card+19" class="card card_22" onclick="select_card(19)"></div>
+		<div id="card+20" class="card card_22" onclick="select_card(20)"></div>
+		<div id="card+21" class="card card_22" onclick="select_card(21)"></div>
+		<div id="card+22" class="card card_21" onclick="select_card(22)"></div>
+		<div id="card+23" class="card card_21" onclick="select_card(23)"></div>
+		<div id="card+24" class="card card_21" onclick="select_card(24)"></div>
+		<div id="card+25" class="card card_13" onclick="select_card(25)"></div>
+		<div id="card+26" class="card card_12" onclick="select_card(26)"></div>
+		<div id="card+27" class="card card_12" onclick="select_card(27)"></div>
+		<div id="back+1" class="card card_back"></div>
+		<div id="back+2" class="card card_back"></div>
+		<div id="back+3" class="card card_back"></div>
+		<div id="back+4" class="card card_back"></div>
+		<div id="back+5" class="card card_back"></div>
+		<div id="back+6" class="card card_back"></div>
+	</div>
+</main>
 
-</div>
+<footer id="status"></footer>
+
 </body>

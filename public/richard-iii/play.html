@@ -2,277 +2,19 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <title>RICHARD III</title>
 <link rel="icon" href="icons/Red_Rose_Badge_of_Lancaster.svg">
 <link rel="stylesheet" href="/fonts/fonts.css">
 <link rel="stylesheet" href="/common/grid.css">
 <link rel="stylesheet" href="/common/battle_abc.css">
+<link rel="stylesheet" href="play.css">
 <script defer src="/socket.io/socket.io.min.js"></script>
 <script defer src="/common/client.js"></script>
 <script defer src="data.js"></script>
-<script defer src="ui.js"></script>
-<style>
-
-#grid_center { background-color: #788; }
-#grid_role { background-color: silver; }
-#grid_top { background-color: silver; }
-#grid_top.your_turn { background-color: orange; }
-.one .role_name { background-color: salmon; }
-.two .role_name { background-color: ghostwhite; }
-#turn_info { background-color: gainsboro; }
-
-#log { background-color: ghostwhite; }
-#log .st { background-color: steelblue; color: white; font-weight: bold; }
-#log .L { background-color: pink; }
-#log .Y { background-color: gainsboro; }
-#log .bs { background-color: lightsteelblue; }
-#log .br { font-style: italic; text-decoration: underline; }
-
-.hand {
-	min-height: 300px;
-}
-
-.card {
-	width: 180px;
-	height: 280px;
-	border-radius: 12px;
-}
-
-.card.enabled:hover {
-	transform: scale(1.1);
-}
-
-.role_info { padding: 15px; }
-.small_card { width: 90px; height: 140px; border-radius: 5px; }
-.small_card:hover { width: 180px; height: 280px; border-radius: 10px; }
-
-@media (max-height: 800px) {
-	.role_info { padding: 15px 0 0 0; }
-	.small_card { width: 180px; height: 80px; border-radius: 10px 10px 0 0; }
-	.small_card:hover { width: 180px; height: 280px; border-radius: 10px; margin-bottom: 15px; }
-}
-
-@media (min-height: 1200px) {
-	.small_card { width: 180px; height: 280px; border-radius: 10px; }
-}
-
-/* MAP */
-
-#mapwrap {
-	position: relative;
-	box-shadow: 0px 1px 10px rgba(0,0,0,0.5);
-	width: 1688px;
-	height: 1950px;
-}
-
-#map {
-	position: absolute;
-	width: 1688px;
-	height: 1950px;
-}
-
-#map svg {
-	position: absolute;
-}
-
-#map svg image {
-	pointer-events: none;
-}
-
-#map svg path.area {
-	fill: green;
-	stroke: green;
-	stroke-width: 20px;
-	fill-opacity: 0.4;
-	stroke-opacity: 0.8;
-	opacity: 0;
-}
-
-#map svg #area_France { fill: white; stroke: white; }
-#map svg #area_Calais { fill: dodgerblue; stroke: dodgerblue; }
-#map svg #area_English_Channel { fill: dodgerblue; stroke: dodgerblue; }
-#map svg #area_Irish_Sea { fill: dodgerblue; stroke: dodgerblue; }
-#map svg #area_North_Sea { fill: dodgerblue; stroke: dodgerblue; }
-
-#map svg path.area.highlight {
-	cursor: pointer;
-	opacity: 1;
-}
-#map svg path.area.where {
-	opacity: 1;
-	fill: darkslategray;
-	stroke: darkslategray;
-}
-#map svg path.area.where.highlight {
-	stroke: white;
-}
-
-#map.hide_blocks #blocks {
-	visibility: hidden;
-}
-
-/* BLOCKS */
-
-body.shift .block.known:hover {
-	transform: scale(2) !important;
-	transition: 100ms;
-	z-index: 100;
-}
-
-#battle div.block {
-	position: relative;
-}
-
-#map div.block {
-	position: absolute;
-}
-
-div.block {
-	border-radius: 6px;
-	width: 60px;
-	height: 60px;
-}
-
-div.block { background-size: cover; background-repeat: no-repeat; }
-
-div.block { box-shadow: 0px 0px 3px 0px black; }
-
-div.block.Lancaster { border: 3px solid brown; background-color: indianred; }
-div.block.York { border: 3px solid gainsboro; background-color: whitesmoke; }
-div.block.Rebel { border: 3px solid dimgray; background-color: gray; }
-
-div.block.Lancaster.highlight { border-color: white; }
-div.block.York.highlight { border-color: white; }
-div.block.Rebel.highlight { border-color: white; }
-
-.hit div.block.highlight { border-color: black; box-shadow: 0 0 3px 0px black; }
-
-div.block.Lancaster.selected { border-color: yellow; }
-div.block.York.selected { border-color: yellow; }
-div.block.Rebel.selected { border-color: yellow; }
-
-div.block.highlight { cursor: pointer; box-shadow: 0 0 3px 1px white; }
-div.block.selected { box-shadow: 0 0 3px 1px yellow; }
-div.block.moved { filter: grayscale(50%) brightness(85%); }
-div.block.highlight.moved { filter: grayscale(60%) brightness(95%); }
-
-div.block:hover { z-index: 1; }
-
-div.block.r1 { transform: rotate(-90deg); }
-div.block.r2 { transform: rotate(-180deg); }
-div.block.r3 { transform: rotate(-270deg); }
-
-div.block {
-	transition-property: top, left, transform;
-	transition-duration: 700ms, 700ms, 200ms;
-	transition-timing-function: ease;
-}
-
-/* BATTLE BOARD */
-
-#battle { background-color: silver; }
-#battle_message { background-color: lightsteelblue; }
-#battle_header { background-color: steelblue; color: white; }
-.battle_separator { background-color: steelblue; }
-
-.battle_reserves > td > div { height: 75px; padding: 5px; }
-.battle_a_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_b_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_c_cell > div { min-width: 180px; padding: 5px 10px; }
-.battle_d_cell > div { min-width: 90px; padding: 5px 10px; }
-
-/* CARD AND BLOCK IMAGES */
-
-.card, .small_card { background-color: #d3b37b; }
-.card_back { background-color: black; }
-
-.card_back{background-image:url('cards/card_back.jpg')}
-.card_force_march{background-image:url('cards/card_force_march.jpg')}
-.card_muster{background-image:url('cards/card_muster.jpg')}
-.card_piracy{background-image:url('cards/card_piracy.jpg')}
-.card_plague{background-image:url('cards/card_plague.jpg')}
-.card_surprise{background-image:url('cards/card_surprise.jpg')}
-.card_treason{background-image:url('cards/card_treason.jpg')}
-.card_2{background-image:url('cards/card_2.jpg')}
-.card_3{background-image:url('cards/card_3.jpg')}
-.card_4{background-image:url('cards/card_4.jpg')}
-
-.known.block_11{background-image:url(blocks/block_11.jpg)}
-.known.block_12{background-image:url(blocks/block_12.jpg)}
-.known.block_13{background-image:url(blocks/block_13.jpg)}
-.known.block_14{background-image:url(blocks/block_14.jpg)}
-.known.block_15{background-image:url(blocks/block_15.jpg)}
-.known.block_16{background-image:url(blocks/block_16.jpg)}
-.known.block_17{background-image:url(blocks/block_17.jpg)}
-.known.block_21{background-image:url(blocks/block_21.jpg)}
-.known.block_22{background-image:url(blocks/block_22.jpg)}
-.known.block_23{background-image:url(blocks/block_23.jpg)}
-.known.block_24{background-image:url(blocks/block_24.jpg)}
-.known.block_25{background-image:url(blocks/block_25.jpg)}
-.known.block_26{background-image:url(blocks/block_26.jpg)}
-.known.block_27{background-image:url(blocks/block_27.jpg)}
-.known.block_31{background-image:url(blocks/block_31.jpg)}
-.known.block_32{background-image:url(blocks/block_32.jpg)}
-.known.block_33{background-image:url(blocks/block_33.jpg)}
-.known.block_34{background-image:url(blocks/block_34.jpg)}
-.known.block_35{background-image:url(blocks/block_35.jpg)}
-.known.block_36{background-image:url(blocks/block_36.jpg)}
-.known.block_37{background-image:url(blocks/block_37.jpg)}
-.known.block_41{background-image:url(blocks/block_41.jpg)}
-.known.block_42{background-image:url(blocks/block_42.jpg)}
-.known.block_43{background-image:url(blocks/block_43.jpg)}
-.known.block_44{background-image:url(blocks/block_44.jpg)}
-.known.block_45{background-image:url(blocks/block_45.jpg)}
-.known.block_46{background-image:url(blocks/block_46.jpg)}
-.known.block_47{background-image:url(blocks/block_47.jpg)}
-.known.block_51{background-image:url(blocks/block_51.jpg)}
-.known.block_52{background-image:url(blocks/block_52.jpg)}
-.known.block_53{background-image:url(blocks/block_53.jpg)}
-.known.block_54{background-image:url(blocks/block_54.jpg)}
-.known.block_55{background-image:url(blocks/block_55.jpg)}
-.known.block_56{background-image:url(blocks/block_56.jpg)}
-.known.block_57{background-image:url(blocks/block_57.jpg)}
-.known.block_61{background-image:url(blocks/block_61.jpg)}
-.known.block_62{background-image:url(blocks/block_62.jpg)}
-.known.block_63{background-image:url(blocks/block_63.jpg)}
-.known.block_64{background-image:url(blocks/block_64.jpg)}
-.known.block_65{background-image:url(blocks/block_65.jpg)}
-.known.block_66{background-image:url(blocks/block_66.jpg)}
-.known.block_67{background-image:url(blocks/block_67.jpg)}
-.known.block_71{background-image:url(blocks/block_71.jpg)}
-.known.block_72{background-image:url(blocks/block_72.jpg)}
-.known.block_73{background-image:url(blocks/block_73.jpg)}
-.known.block_74{background-image:url(blocks/block_74.jpg)}
-.known.block_75{background-image:url(blocks/block_75.jpg)}
-.known.block_76{background-image:url(blocks/block_76.jpg)}
-.known.block_77{background-image:url(blocks/block_77.jpg)}
-.known.block_81{background-image:url(blocks/block_81.jpg)}
-.known.block_82{background-image:url(blocks/block_82.jpg)}
-.known.block_83{background-image:url(blocks/block_83.jpg)}
-.known.block_84{background-image:url(blocks/block_84.jpg)}
-.known.block_85{background-image:url(blocks/block_85.jpg)}
-.known.block_86{background-image:url(blocks/block_86.jpg)}
-.known.block_87{background-image:url(blocks/block_87.jpg)}
-.known.block_91{background-image:url(blocks/block_91.jpg)}
-.known.block_92{background-image:url(blocks/block_92.jpg)}
-.known.block_93{background-image:url(blocks/block_93.jpg)}
-.known.block_94{background-image:url(blocks/block_94.jpg)}
-.known.block_95{background-image:url(blocks/block_95.jpg)}
-.known.block_96{background-image:url(blocks/block_96.jpg)}
-.known.block_97{background-image:url(blocks/block_97.jpg)}
-
-</style>
+<script defer src="play.js"></script>
 </head>
 <body>
-
-<div id="status"></div>
-
-<div id="chat_window">
-<div id="chat_header">Chat</div>
-<div id="chat_text"></div>
-<form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
-</div>
 
 <table id="battle">
 <tr>
@@ -297,74 +39,29 @@ div.block {
 <th id="battle_message" colspan=4></th>
 </table>
 
-<div id="grid_window">
-
-	<div id="grid_top">
-
-		<div class="menu">
-			<div class="menu_title"><img src="/images/cog.svg"></div>
-			<div class="menu_popup">
-				<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
-				<div class="menu_separator"></div>
-				<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
-				<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
-				<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
-				<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
-				<div class="resign menu_separator"></div>
-				<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
-			</div>
+<header>
+	<div class="menu">
+		<div class="menu_title"><img src="/images/cog.svg"></div>
+		<div class="menu_popup">
+			<div class="menu_item" onclick="toggle_fullscreen()">Fullscreen</div>
+			<div class="menu_separator"></div>
+			<div class="menu_item" onclick="window.open('info/notes.html', '_blank')">Notes</div>
+			<div class="menu_item" onclick="window.open('info/rules.html', '_blank')">Rules</div>
+			<div class="menu_item" onclick="window.open('info/cards.html', '_blank')">Cards</div>
+			<div class="menu_item" onclick="window.open('info/blocks.html', '_blank')">Blocks</div>
+			<div class="resign menu_separator"></div>
+			<div class="resign menu_item" onclick="confirm_resign()">Resign</div>
 		</div>
-
-		<div class="image_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
-		<div class="image_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
-		<div class="image_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
-		<div id="chat_button" class="image_button" onclick="toggle_chat()"><img src="/images/chat-bubble.svg"></div>
-
-		<div id="prompt">Connecting...</div>
-
-		<button id="execute_clarence_button" onclick="on_button_execute_clarence()" class="hide">
-			Execute Clarence
-		</button>
-		<button id="execute_exeter_button" onclick="on_button_execute_exeter()" class="hide">
-			Execute Exeter
-		</button>
-		<button id="treachery_button" onclick="on_button_treachery()" class="hide">
-			Treachery
-		</button>
-		<button id="eliminate_button" onclick="on_button_eliminate()" class="hide">
-			Eliminate
-		</button>
-		<button id="end_retreat_button" onclick="on_button_end_retreat()" class="hide">
-			End retreat
-		</button>
-		<button id="end_regroup_button" onclick="on_button_end_regroup()" class="hide">
-			End regroup
-		</button>
-		<button id="end_political_turn_button" onclick="on_button_end_political_turn()" class="hide">
-			End political turn
-		</button>
-		<button id="end_supply_phase_button" onclick="on_button_end_supply_phase()" class="hide">
-			End supply phase
-		</button>
-		<button id="end_action_phase_button" onclick="on_button_end_action_phase()" class="hide">
-			End action phase
-		</button>
-		<button id="end_exile_limits_button" onclick="on_button_end_exile_limits()" class="hide">
-			End exile limits
-		</button>
-		<button id="pass_button" onclick="on_button_pass()" class="hide">
-			Pass
-		</button>
-		<button id="undo_button" onclick="on_button_undo()" class="hide">
-			Undo
-		</button>
-
-		<div id="rematch_button" class="image_button hide" onclick="send_rematch()"><img src="/images/cycle.svg"></div>
-		<div id="exit_button" class="image_button hide" onclick="send_exit()"><img src="/images/exit-door.svg"></div>
 	</div>
+	<div class="icon_button" onclick="toggle_blocks()"><img src="/images/earth-africa-europe.svg"></div>
+	<div class="icon_button" onclick="toggle_zoom()"><img src="/images/magnifying-glass.svg"></div>
+	<div class="icon_button" onclick="toggle_log()"><img src="/images/scroll-quill.svg"></div>
+	<div id="prompt"></div>
+	<div id="actions"></div>
+</header>
 
-	<div id="grid_role">
-
+<aside>
+	<div id="roles">
 		<div class="role one">
 			<div class="role_name">
 				Lancaster
@@ -373,7 +70,6 @@ div.block {
 			</div>
 			<div class="role_info"><div class="small_card card_back" id="lancaster_card"></div></div>
 		</div>
-
 		<div class="role two">
 			<div class="role_name">
 				York
@@ -382,15 +78,12 @@ div.block {
 			</div>
 			<div class="role_info"><div class="small_card card_back" id="york_card"></div></div>
 		</div>
-
 		<div id="turn_info">-</div>
-
 	</div>
-
 	<div id="log"></div>
+</aside>
 
-	<div id="grid_center">
-
+<main>
 <div id="mapwrap">
 <div id="map">
 
@@ -1556,11 +1249,10 @@ c20 -20 41 -80 41 -116 0 -27 -18 -45 -46 -45 -40 0 -54 25 -54 99 0 37 3 71
 
 <div id="blocks"></div>
 <div id="offmap" style="visibility:hidden"></div>
-
 </div>
 </div>
 
-<div class="hand">
+<div id="cards" class="hand">
 <div id="card+1" class="card card_force_march"></div>
 <div id="card+2" class="card card_muster"></div>
 <div id="card+3" class="card card_piracy"></div>
@@ -1595,7 +1287,8 @@ c20 -20 41 -80 41 -116 0 -27 -18 -45 -46 -45 -40 0 -54 25 -54 99 0 37 3 71
 <div id="back+7" class="card card_back"></div>
 </div>
 
-	</div>
+</main>
 
-</div>
+<footer id="status"></footer>
+
 </body>
